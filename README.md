@@ -120,7 +120,7 @@ cd <path to>/SCA/output/RECOUNT3
 mkdir -p ESR1_BRCA_test
 cd ESR1_BRCA_test
 # Now, run the RECOUNT3 prepare script on the BRCA data, investigating the gene ESR1, with all outputs
-~/tools/SCA/bin/R3_analyse_GOI.sh -p BRCA -g ESR1 -s mRNA -t 3 -a
+<path to>/SCA/bin/R3_analyse_GOI.sh -p BRCA -g ESR1 -s mRNA -t 3 -a
 
 ### GDC-TCGA
 # SCA saves output in the run folder so best to create one specifically for each run 
@@ -128,7 +128,7 @@ cd <path to>/SCA/output/GDC
 mkdir -p ESR1_BRCA_test
 cd ESR1_BRCA_test
 # Now, run the GDC-TCGA prepare script on the BRCA data, investigating the gene ESR1, with all outputs
-~/tools/SCA/bin/GDC_TCGA_analyse_GOI.sh -p TCGA-BRCA -g ESR1 -s mRNA -t 3 -a
+<path to>/SCA/bin/GDC_TCGA_analyse_GOI.sh -p TCGA-BRCA -g ESR1 -s mRNA -t 3 -a
 
 ### GTEx
 # SCA saves output in the run folder so best to create one specifically for each run 
@@ -136,7 +136,7 @@ cd <path to>/SCA/output/GTEx
 mkdir -p ESR1_Breast_test
 cd ESR1_Breast_test
 # Now, run the GTEx prepare script on the Breast data, investigating the gene ESR1, with all outputs
-~/tools/SCA/bin/GTEx_analyse_GOI.sh -p Breast -g ESR1 -s mRNA -t 5 -a
+<path to>/SCA/bin/GTEx_analyse_GOI.sh -p Breast -g ESR1 -s mRNA -t 5 -a
 ```
 
 ## Output
