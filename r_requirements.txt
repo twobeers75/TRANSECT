@@ -1,0 +1,14 @@
+calibrate
+data.table
+DEFormats
+dplyr
+edgeR
+ggforce
+ggplot2
+Glimma
+gplots
+RColorBrewer
+recount
+recount3
+tibble
+tidyr
