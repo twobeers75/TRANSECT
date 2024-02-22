@@ -10,12 +10,12 @@
 #########
 SCRIPT_FOLDER=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 BASE_FOLDER=`dirname ${SCRIPT_FOLDER}`
-DATA_FOLDER="${BASE_FOLDER}/data/RECOUNT3"
+DATA_FOLDER="/data/projects/RECOUNT3"
 REF_FILES_FOLDER="${BASE_FOLDER}/REF_FILES"
 GSEA_EXE="${SCRIPT_FOLDER}/GSEA_Linux_4.2.3/gsea-cli.sh"
 
 ### and record where we start from
-working_folder=`pwd`
+#working_folder=`pwd`
 
 ##########################################################################################################
 #### Functions
@@ -23,8 +23,13 @@ working_folder=`pwd`
 corr_analysis( ) {
 	echo "Preparing to run Corr Analysis for ${GOI}"
 	R3_z2n=(${DATA_FOLDER}/${R3_code}/R3-*_tpm-mRNA.tsv)
-	Rscript --vanilla ${SCRIPT_FOLDER}/r3_analyse_correlation_plots.R ${GOI} ${R3_z2n[0]} ${REF_FILES_FOLDER}
-	cd ${working_folder}
+	Rscript --vanilla ${SCRIPT_FOLDER}/r3_analyse_correlation_plots.R ${GOI} ${output_folder} ${R3_z2n[0]} ${REF_FILES_FOLDER}
+	return_code=$?
+	if [[ $return_code -ne 0 ]]
+	then
+		return $return_code
+	fi 
+	cd ${output_folder}
 }
 
 de_analysis( ) {
@@ -32,8 +37,13 @@ de_analysis( ) {
 	R3_tpm=(${DATA_FOLDER}/${R3_code}/R3-*_tpm-mRNA.tsv)
 	R3_counts=(${DATA_FOLDER}/${R3_code}/R3-*_count-mRNA.tsv)
 	R3_rpm=""
-	Rscript --vanilla ${SCRIPT_FOLDER}/r3_analyse_stratify_edgeR.R ${GOI} ${strat_by} ${percentile} ${REF_FILES_FOLDER} ${GSEA_EXE} ${R3_tpm[0]} ${R3_counts[0]} ${R3_rpm[0]}
-	cd ${working_folder}
+	Rscript --vanilla ${SCRIPT_FOLDER}/r3_analyse_stratify_edgeR.R ${GOI} ${output_folder} ${strat_by} ${percentile} ${REF_FILES_FOLDER} ${GSEA_EXE} ${R3_tpm[0]} ${R3_counts[0]} ${R3_rpm[0]}
+	return_code=$?
+	if [[ $return_code -ne 0 ]]
+	then
+		return $return_code
+	fi 
+	cd ${output_folder}
 }
 
 
@@ -49,6 +59,7 @@ tflag=false
 do_all=false
 do_corr=false
 do_de=false
+output_flag=false
 
 ### Parse command line options
 usage="Differential expression analysis of RECOUNT3 data stratified into high and low groups by gene of interest 
@@ -58,7 +69,7 @@ NOTE: Composite analyses can be run using the plus charater (+) for additive com
 by using the modulus character (%) for ratio. The two special characters are used between gene names like so
 Additive example: ESR1+PGR+ERBB2 or Ratio example: ESRP1%ZEB1
 
-USAGE: $(basename $0) [-h] -p <RECOUNT3 projectID> -g <GOI> -s <StratifyBy> -t <Percentile> -a -c -d
+USAGE: $(basename $0) [-h] -p <RECOUNT3 projectID> -g <GOI> -s <StratifyBy> -t <Percentile> -a -c -d -o
 	where:
 	-h Show this help text
 	-p RECOUNT3 tissue id: needs to be valid RECOUNT3 tissue id as at RECOUNT3 (ie. BRCA for TCGA or BREAST for GTEx). Required
@@ -71,13 +82,14 @@ USAGE: $(basename $0) [-h] -p <RECOUNT3 projectID> -g <GOI> -s <StratifyBy> -t <
 "
 
 ### parse all command line options
-while getopts hg:p:s:t:acd opt; do
+while getopts hg:p:s:t:o:acd opt; do
 	case "$opt" in
 		h) echo "$usage"; exit;;
 		p) pflag=true; project_id=$OPTARG;;
 		g) gflag=true; GOI=$OPTARG;;
 		s) sflag=true; strat_by=$OPTARG;;
 		t) tflag=true; percentile=$OPTARG;;
+		o) output_flag=true; output_folder=$OPTARG;;
 		a) do_all=true;;
 		c) do_corr=true;;
 		d) do_de=true;;
@@ -88,11 +100,30 @@ while getopts hg:p:s:t:acd opt; do
 done
 
 ### check that all required flags have been given
-if ! (${pflag} && ${gflag} && ${sflag} && ${tflag})
-then
-	echo "Missing arguments. Please check your commanline call" >&2
-	echo""; echo "${usage}"
-	exit 1
+#if ! (${pflag} && ${gflag} && ${sflag} && ${tflag} && ${output_flag})
+#then
+#	echo "Missing arguments. Please check your commanline call" >&2
+#	echo""; echo "${usage}"
+#	exit 1
+#fi
+
+### check that all required flags have been given
+# changed such that we no longer need to provide s/tflag for correlation analysis only
+if (${do_all} || ${do_de})
+then 
+	if ! (${pflag} && ${gflag} && ${sflag} && ${tflag} && ${output_flag})
+	then
+		echo "Missing arguments. Please check your commanline call" >&2
+		echo""; echo "${usage}"
+		exit 1
+	fi
+else
+	if ! (${pflag} && ${gflag} && ${output_flag})
+	then
+		echo "Missing arguments. Please check your commanline call" >&2
+		echo""; echo "${usage}"
+		exit 1
+	fi
 fi
 
 ### check if user input a valid RECOUNT3 code
@@ -123,19 +154,22 @@ else
 fi
 
 ### check if user input a valid RNA species
-if [ "${strat_by}" != "mRNA" ]
+if (${do_all} || ${do_de})
 then
-	echo "Stratification can only be done by mRNA" >&2
-	echo""; echo "${usage}"
-	exit 1
-fi
+	if [ "${strat_by}" != "mRNA" ]
+	then
+		echo "Stratification can only be done by mRNA" >&2
+		echo""; echo "${usage}"
+		exit 1
+	fi
 
-### check if user input a valid integer
-if ((${percentile} < 2 || ${percentile} > 25))
-then
-	echo "Percentile must be an integer in the range 2 - 25" >&2
-	echo""; echo "${usage}"
-	exit 1
+	### check if user input a valid integer
+	if ((${percentile} < 2 || ${percentile} > 25))
+	then
+		echo "Percentile must be an integer in the range 2 - 25" >&2
+		echo""; echo "${usage}"
+		exit 1
+	fi
 fi
 
 ### if no analysis defined ask for one
@@ -163,16 +197,26 @@ if (${do_all} || ${do_corr})
 then
 	echo "Corr Analysis selected"
 	corr_analysis
+	return_code=$?
+	if [[ $return_code -ne 0 ]]
+	then
+		exit $return_code
+	fi 
 fi
 
 if (${do_all} || ${do_de})
 then
 	echo "DE Analysis selected"
 	de_analysis
+	return_code=$?
+	if [[ $return_code -ne 0 ]]
+	then
+		exit $return_code
+	fi 
 fi
 
 ### Final clean up
-cd $working_folder
+cd $output_folder
 find . -type d -empty -delete
 
 ### Sign off

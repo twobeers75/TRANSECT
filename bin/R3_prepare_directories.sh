@@ -10,7 +10,7 @@
 #########
 SCRIPT_FOLDER=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 BASE_FOLDER=`dirname ${SCRIPT_FOLDER}`
-DATA_FOLDER="${BASE_FOLDER}/data/RECOUNT3"
+DATA_FOLDER="/data/projects/RECOUNT3"
 REF_FILES_FOLDER="${BASE_FOLDER}/REF_FILES"
 
 

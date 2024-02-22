@@ -546,8 +546,8 @@ message(paste("Finished DE Analysis for", GOI))
 ###*****************************************************************************
 message(paste("Starting GSEA Analysis for", GOI))
 
-dir.create(file.path(outdir, "DE_Analysis"))
-setwd(file.path(outdir, "DE_Analysis"))
+dir.create(file.path(main_dir, "GSEA"))
+outdir <- paste(main_dir, "GSEA", sep="/")
 
 if (rna_species == "mRNA"){
   ### Hallmark
