@@ -1,5 +1,7 @@
 #!/usr/bin/env Rscript
 
+.libPaths( c( "/data/RLibs" , .libPaths() ) )
+
 ###*****************************************************************************
 ### Create correlation table and plots from RECODE3 data
 ### JToubia - January 2023

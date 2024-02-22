@@ -1,5 +1,7 @@
 #!/usr/bin/env Rscript
 
+.libPaths( c( "/data/RLibs" , .libPaths() ) )
+
 ###*****************************************************************************
 ### DO DE analysis on GTEx stratified data
 ### JToubia - January 2021

@@ -1,5 +1,7 @@
 #!/usr/bin/env Rscript
 
+.libPaths( c( "/data/RLibs" , .libPaths() ) )
+
 ###*****************************************************************************
 ### Retrieve RECOUNT3 data
 ### JToubia - January 2023

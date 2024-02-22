@@ -1,5 +1,7 @@
 #!/usr/bin/env Rscript
 
+.libPaths( c( "/data/RLibs" , .libPaths() ) )
+
 ###*****************************************************************************
 ### Create correlation table and plots from gtex data
 ### JToubia - January 2021
