@@ -25,32 +25,34 @@ if (length(args)==0) {
 	stop("At least one argument must be supplied (GOI).n", call.=FALSE)
 } else if (length(args)==1) {
 	# default to
-  args[2] = "mRNA"
-  args[3] = 5
-  args[4] = "SCA/REF_FILES"
-  args[5] = "SCA/bin/GSEA_Linux_4.2.3/gsea-cli.sh GSEAPreranked" 
-  args[6] = list.files("SCA/data/GDC/", "BRCA/mRNA_expression_fpkm", "GDC_TCGA-BRCA.*FPKM-mRNA_toTPM_all.tsv", full.names=TRUE)
-  args[7] = list.files("SCA/data/GDC/", "BRCA/mRNA_expression_counts", "GDC_TCGA-BRCA.*Count-mRNA_all.tsv", full.names=TRUE)
-  args[8] = list.files("SCA/data/GDC/", "BRCA/isomiR_expression_rpm", "GDC_TCGA-BRCA.*RPM-miRNAisoform_all.tsv", full.names=TRUE)
-  args[9] = ""
+  args[2] = "/home/jtoubia/Desktop/Projects/SRt" # output
+  args[3] = "mRNA"
+  args[4] = 5
+  args[5] = "SCA/REF_FILES"
+  args[6] = "SCA/bin/GSEA_Linux_4.2.3/gsea-cli.sh GSEAPreranked" 
+  args[7] = list.files("SCA/data/GDC/", "BRCA/mRNA_expression_fpkm", "GDC_TCGA-BRCA.*FPKM-mRNA_toTPM_all.tsv", full.names=TRUE)
+  args[8] = list.files("SCA/data/GDC/", "BRCA/mRNA_expression_counts", "GDC_TCGA-BRCA.*Count-mRNA_all.tsv", full.names=TRUE)
+  args[9] = list.files("SCA/data/GDC/", "BRCA/isomiR_expression_rpm", "GDC_TCGA-BRCA.*RPM-miRNAisoform_all.tsv", full.names=TRUE)
+  args[10] = ""
 }
 
 GOI <- args[1]
-rna_species <- args[2]
-percentile <- as.integer(args[3])
-ref_files_folder <- args[4]
-gsea_exe <- paste(args[5], "GSEAPreranked", sep =" ")
-gene_fpkm_filename <- args[6]
-gene_counts_filename <- args[7]
-isomir_rpm_filename <- args[8]
+outdir <- args[2] # above seems to be no longer in use
+rna_species <- args[3]
+percentile <- as.integer(args[4])
+ref_files_folder <- args[5]
+gsea_exe <- paste(args[6], "GSEAPreranked", sep =" ")
+gene_fpkm_filename <- args[7]
+gene_counts_filename <- args[8]
+isomir_rpm_filename <- args[9]
 normals <- ""
 
 ###*****************************************************************************
 ### Setup for analyses ####
 ###*****************************************************************************
-main_dir <- getwd()
-dir.create(file.path(main_dir, "DE_Analysis"))
-setwd(file.path(main_dir, "DE_Analysis"))
+
+dir.create(file.path(outdir, "DE_Analysis"))
+setwd(file.path(outdir, "DE_Analysis"))
 
 strat_do_multi_GOI_analysis <- FALSE
 strat_do_ratio_GOI_analysis <- FALSE
@@ -544,9 +546,8 @@ message(paste("Finished DE Analysis for", GOI))
 ###*****************************************************************************
 message(paste("Starting GSEA Analysis for", GOI))
 
-main_dir <- getwd()
-dir.create(file.path(main_dir, "GSEA"))
-outdir <- paste(main_dir, "GSEA", sep="/")
+dir.create(file.path(outdir, "DE_Analysis"))
+setwd(file.path(outdir, "DE_Analysis"))
 
 if (rna_species == "mRNA"){
   ### Hallmark

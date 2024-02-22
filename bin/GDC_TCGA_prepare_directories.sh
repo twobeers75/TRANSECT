@@ -10,7 +10,7 @@
 #########
 SCRIPT_FOLDER=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 BASE_FOLDER=`dirname ${SCRIPT_FOLDER}`
-DATA_FOLDER="${BASE_FOLDER}/data/GDC"
+DATA_FOLDER="/data/projects/GDC"
 REF_FILES_FOLDER="${BASE_FOLDER}/REF_FILES"
 
 ##########################################################################################################
@@ -27,7 +27,7 @@ process_folder( ) {
 #	echo "Processing ${folder_name}"
 	get_files
 	process_files
-	#if [ ${rna_type} = "mRNA" ]; then extract_files; fi # no longer required
+	if [ ${rna_type} = "mRNA" ]; then extract_files; fi
 	rename_files
 	get_clin_data
 	create_summary

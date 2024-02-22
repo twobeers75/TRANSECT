@@ -20,24 +20,29 @@ if (length(args)==0) {
   stop("At least one argument must be supplied (GOI).n", call.=FALSE)
 } else if (length(args)==1) {
   # default to
-  args[2] = list.files("/home/jtoubia/Desktop/Projects/SRt/GDC/BRCA", "GDC_TCGA-BRCA.*gene_mir_exp_zero2nan.tsv", full.names=TRUE)
-  args[3] = "/home/jtoubia/Desktop/Projects/SRt/REF_FILES"
+  args[3] = list.files("/home/jtoubia/Desktop/Projects/SRt/GDC/BRCA", "GDC_TCGA-BRCA.*gene_mir_exp_zero2nan.tsv", full.names=TRUE)
+  args[4] = "/home/jtoubia/Desktop/Projects/SRt/REF_FILES"
 }
 
 GOI <- args[1]
-tcga_z2n <- args[2]
-ref_files_folder <- args[3]
+outdir <- args[2]
+tcga_z2n <- args[3]
+ref_files_folder <- args[4]
 
 ###*****************************************************************************
 ### Setup for analyses ####
 ###*****************************************************************************
-main_dir <- getwd()
+#main_dir <- getwd()
 gencode_miRBase_lookup <- "gencode.v22.annotation-miRBase_21.lookup"
 
 ###*****************************************************************************
 ### Start ####
 ###*****************************************************************************
 message(paste("Beginning Corr Analysis for", GOI))
+
+dir.create(file.path(outdir, "Corr_Analysis"))
+dir.create(file.path(outdir, "Corr_Analysis", "plots"))
+setwd(file.path(outdir, "Corr_Analysis"))
 
 ###*****************************************************************************
 ### Read in TCGA data ####
@@ -57,10 +62,6 @@ if (gene1 %in% colnames(df_tcga_data)) {
     stop("Ending this process") 
   }
 }
-
-dir.create(file.path(main_dir, "Corr_Analysis"))
-dir.create(file.path(main_dir, "Corr_Analysis", "plots"))
-setwd(file.path(main_dir, "Corr_Analysis"))
 
 ###*****************************************************************************
 ### Create Pairs ####
@@ -144,7 +145,7 @@ with(subset(df_target_pairs, logExp_FDR < 1E-150 & logExp_Cor > 0.7), points(log
 with(subset(df_target_pairs, logExp_FDR < 1E-150 & logExp_Cor < -0.7), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.75, col="blue"))
 invisible(dev.off())
 
-setwd(main_dir)
+setwd(outdir)
 
 ### all done, sign off
 message(paste("Finished Corr Analysis for", GOI))
