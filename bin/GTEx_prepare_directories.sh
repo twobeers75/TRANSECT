@@ -10,7 +10,7 @@
 #########
 SCRIPT_FOLDER=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 BASE_FOLDER=`dirname ${SCRIPT_FOLDER}`
-DATA_FOLDER="${BASE_FOLDER}/data/GTEx"
+DATA_FOLDER="/data/projects/GTEx"
 REF_FILES_FOLDER="${BASE_FOLDER}/REF_FILES"
 
 ### Add required variables for GTEx files
