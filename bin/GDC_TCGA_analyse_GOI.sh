@@ -24,7 +24,7 @@ GSEA_EXE="${SCRIPT_FOLDER}/GSEA_Linux_4.2.3/gsea-cli.sh"
 corr_analysis( ) {
 	echo "Preparing to run Corr Analysis for ${GOI}"
 	tcga_z2n=(${DATA_FOLDER}/${tcga_code}/GDC_*_zero2nan.tsv)
-	Rscript --vanilla ${SCRIPT_FOLDER}/gdc_tcga_analyse_correlation_plots.R ${GOI} ${tcga_z2n[0]} ${REF_FILES_FOLDER}
+	Rscript --vanilla ${SCRIPT_FOLDER}/gdc_tcga_analyse_correlation_plots.R ${GOI} ${output_folder}  ${tcga_z2n[0]} ${REF_FILES_FOLDER}
 	return_code=$?
 	if [[ $return_code -ne 0 ]]
 	then
