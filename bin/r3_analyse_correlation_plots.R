@@ -63,7 +63,8 @@ if (gene1 %in% colnames(df_r3_data)) {
   gene1_exp_value <- as.numeric(unlist(df_r3_data[,gene1]))
   if (sum(is.finite(gene1_exp_value)) < 50 || sum(gene1_exp_value > 1, na.rm=T) < 10) {
     message(paste("Unfortunately, there is not enough observations in this dataset for", GOI))
-    stop("Ending this process") 
+    message("Ending this process")
+    quit("no", 2, FALSE)
   }
 }
 

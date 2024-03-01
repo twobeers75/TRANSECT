@@ -312,7 +312,8 @@ message(paste("Finished stratification of", GOI))
 ###*****************************************************************************
 if (!run_DE) {
   message(paste("Unfortunately, there is not enough observations in this dataset for", GOI))
-  stop("Ending this process") 
+  message(("Ending this process") )
+  quit("no", 2, FALSE)
 }
 
 message(paste("Beginning DE Analysis for", GOI))
