@@ -43,7 +43,7 @@ sudo apt install python3-pip libfontconfig1-dev libcurl4-openssl-dev libssl-dev 
 python3 -m pip install -r pip_requirements.txt
 ```
 
-Install R, the "pacman" package and two Bioconductor specific packages.
+Install R, the "pacman" package and Bioconductor specific packages.
 
 ```sh
 ### There are many wikis on how to install R on Ubuntu, here is just one
