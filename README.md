@@ -61,8 +61,10 @@ R
 ### Also install required Bioconductor packages (these take quite some time to install!)
 > if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
+> BiocManager::install(version = "3.18")
 > BiocManager::install("edgeR")
 > BiocManager::install("Glimma")
+> BiocManager::install("DEFormats")
 
 # Once successfully completed you can quit R
 >  q()
