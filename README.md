@@ -90,7 +90,7 @@ Example prepare commands;
 # change into the top directory of SCA
 cd <path to>/SCA
 # run the RECOUNT3 prepare script for BRCA requiring a complete download
-bin/R3_prepare_directories.sh -p BRCA -a
+bin/R3_prepare_directories.sh -p BRCA
 
 ### GDC-TCGA
 # change into the top directory of SCA
