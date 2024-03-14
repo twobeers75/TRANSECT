@@ -14,7 +14,8 @@ Currently, there are many global efforts to collect and collate tissue-specific 
 ## Hardware requirements
 
 64 bit Linux (tested solely on Ubuntu 22.04)
-minimum 10GB of RAM (12+ recommended) 
+
+minimum 10GB of RAM (12+ recommended)
 
 ## Software dependencies
 
