@@ -70,9 +70,7 @@ R
 > if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 > BiocManager::install(version = "3.18")
-> BiocManager::install("edgeR")
-> BiocManager::install("Glimma")
-> BiocManager::install("DEFormats")
+> BiocManager::install(c("edgeR","Glimma","DEFormats"))
 
 # Once successfully completed you can quit R
 >  q()
