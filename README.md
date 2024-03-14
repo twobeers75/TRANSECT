@@ -14,6 +14,7 @@ Currently, there are many global efforts to collect and collate tissue-specific 
 ## Hardware requirements
 
 64 bit Linux (tested solely on Ubuntu 22.04)
+minimum 8GB of RAM (10+ recommended) 
 
 ## Software dependencies
 
@@ -23,6 +24,7 @@ Currently, there are many global efforts to collect and collate tissue-specific 
   - see r_requirements.txt for a complete list of required R packages
 
 ## Installation
+NOTE: SCA requires and depends on numerous packages and applications. These take some time to install if not alreadt present. A fresh install on a vanilla Ubuntu 22.04 can take 30-45mins depending on your PC and network speeds. 
 
 Clone the repo
 
