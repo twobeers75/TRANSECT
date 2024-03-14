@@ -46,7 +46,7 @@ USAGE: $(basename $0) [-h] -p <RECOUNT3 Project ID>
 	-p RECOUNT3 project id: needs to be valid RECOUNT3 project id (ie. BRCA for TCGA data OR breast for GTEx). Required
 	
 To retrieve and prepare more than one RECOUNT dataset use a bash for loop like this;
-for r3_code in COAD SARC LAML; do R3_prepare_directories.sh -a -p \$r3_code ; done
+for r3_code in COAD SARC LAML; do R3_prepare_directories.sh -p \$r3_code ; done
 
 "
 ### parse all command line options

@@ -6,11 +6,8 @@ TCGA-LGG	Brain Lower Grade Glioma
 TCGA-BRCA	Breast invasive carcinoma
 TCGA-CESC	Cervical squamous cell carcinoma and endocervical adenocarcinoma
 TCGA-CHOL	Cholangiocarcinoma
-TCGA-LCML	Chronic Myelogenous Leukemia
 TCGA-COAD	Colon adenocarcinoma
-TCGA-CNTL	Controls
 TCGA-ESCA	Esophageal carcinoma
-TCGA-FPPP	FFPE Pilot Phase II
 TCGA-GBM	Glioblastoma multiforme
 TCGA-HNSC	Head and Neck squamous cell carcinoma
 TCGA-KICH	Kidney Chromophobe
@@ -21,7 +18,6 @@ TCGA-LUAD	Lung adenocarcinoma
 TCGA-LUSC	Lung squamous cell carcinoma
 TCGA-DLBC	Lymphoid Neoplasm Diffuse Large B-cell Lymphoma
 TCGA-MESO	Mesothelioma
-TCGA-MISC	Miscellaneous
 TCGA-OV	Ovarian serous cystadenocarcinoma
 TCGA-PAAD	Pancreatic adenocarcinoma
 TCGA-PCPG	Pheochromocytoma and Paraganglioma
@@ -36,4 +32,3 @@ TCGA-THCA	Thyroid carcinoma
 TCGA-UCS	Uterine Carcinosarcoma
 TCGA-UCEC	Uterine Corpus Endometrial Carcinoma
 TCGA-UVM	Uveal Melanoma
-TARGET-NBL	Neuroblastoma
