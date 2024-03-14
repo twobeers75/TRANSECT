@@ -24,7 +24,7 @@ Currently, there are many global efforts to collect and collate tissue-specific 
 
 ## Installation
 
-clone the repo
+Clone the repo
 
 ```sh
 git clone https://github.com/twobeers75/SCA.git
@@ -38,7 +38,7 @@ unzip SCA-main.zip
 mv SCA-main SAC
 ```
 
-install python3 pip and all python dependencies (NOTE: Python 3 comes preinstalled with Ubuntu)
+Install python3 pip and all python dependencies (NOTE: Python 3 comes preinstalled with Ubuntu)
 
 ```sh
 ### change into the top directory of the downloaded folder (SCA)
