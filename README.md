@@ -65,9 +65,10 @@ echo "deb [signed-by=/usr/share/keyrings/r-project.gpg] https://cloud.r-project.
 sudo apt update
 sudo apt install r-base
 
-### Start R from the terminal and install pacman (follow the prompts and choose (if asked) to install into a personal library)
+### Start R from the terminal and install pacman and devtools (follow the prompts and choose (if asked) to install into a personal library)
 R
-> install.packages("pacman")
+> install.packages(c("pacman","devtools"))
+> install_github("https://github.com/mjkallen/rlogging.git")
 
 ### Also install required Bioconductor packages (these take quite some time to install!)
 > if (!require("BiocManager", quietly = TRUE))
