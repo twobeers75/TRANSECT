@@ -1,7 +1,7 @@
 # SCA - Stratified Cohort Analysis
-SCA is an application designed solely to run in a Linux Terminal. In general, SCA stratifies large cohort data into user defined subsets which are subsequently compared one to the other. This version of SCA is tuned specifically for the interrogation of gene/s from publicly available tissue-specific gene expression data.
+SCA is an application designed solely to run in a Linux Terminal. In brief, SCA stratifies large cohort data into user defined subsets which are subsequently compared one to the other. This version of SCA is tuned specifically for the interrogation of gene/s from publicly available tissue-specific gene expression data.
 
-Currently, there are many global efforts to collect and collate tissue-specific gene expression (RNA-sequencing) data from large cohorts of diseased and non-diseased subjects for public use (GTEx, TCGA, ….). These data sets are used to bolster and aid in the investigation of gene specific expression and regulation as well as several other biological queries. One such application that is currently underutilised and (to our knowledge) not currently offered as an accessible public resource, is the stratification and subsequent differential expression of single or composite genes in order to assess "transcriptome fate". This type of analysis has only in recent times become feasible thanks to the large number of participants in these cohort studies and, will only intensify in power and usefulness as these collections continue to grow in number and diversity. The results from this type of analysis can be used to rapidly investigate transcriptome state within natural physiological expression levels without economical burden. This can be applied before mass-parallel laboratory investigations and/or between the transition from *in vitro* to *in vivo* studies in order to assess the feasibility of further, possibly expensive, experimentation.
+Currently, there are many global efforts to collect and collate tissue-specific gene expression (RNA-sequencing) data from large cohorts of diseased and non-diseased subjects for public use (GTEx, TCGA, …, to name only a few). These data sets are used to bolster and aid in the investigation of gene specific expression and regulation as well as several other biological queries. One such application that is currently underutilised and (to our knowledge) not currently offered as an accessible public resource, is the stratification and subsequent differential expression of single or composite genes in order to assess "transcriptome fate". This type of analysis has only in recent times become feasible thanks to the large number of participants in cohort studies and, will only intensify in power and usefulness as these collections continue to grow in number and diversity. The results from this type of analysis can be used to rapidly investigate transcriptome state within natural physiological expression levels without economical burden. This can be applied before mass-parallel laboratory investigations and/or between the transition from *in vitro* to *in vivo* studies in order to assess the feasibility of further, possibly expensive, experimentation.
 
 ## Version
 
@@ -15,7 +15,7 @@ Currently, there are many global efforts to collect and collate tissue-specific 
 
 64 bit Linux (tested solely on Ubuntu 22.04)
 
-minimum 10GB of RAM (12+ recommended)
+>10GB RAM (12+ recommended)
 
 ## Software dependencies
 
@@ -33,12 +33,12 @@ Clone the repo
 git clone https://github.com/twobeers75/SCA.git
 ```
 
-Or, download the package and extract
+Or, download the package and extract it
 Browse to https://github.com/twobeers75/SCA, click on the green "Code" button followed by "Download ZIP" (note the download location). 
 Find the downloaded ZIP file and move it if required before extracting the contents and renaming the folder
 ```sh
 unzip SCA-main.zip
-mv SCA-main SAC
+mv SCA-main SCA
 ```
 
 Install python3 pip and all python dependencies (NOTE: Python 3 comes preinstalled with Ubuntu)
@@ -85,7 +85,7 @@ R
 
 
 
-NOTE: SCA requires additional R packages however these are all installed on demand the first time (and only the first time) you run each one of the different SCA commands.
+NOTE: SCA requires many additional R packages however these are all installed on demand the first time (and only the first time) you run each one of the different SCA commands. Please keep this in mind on your first run as it will take substantially longer compared to all subsequent runs.
 
 ## Usage
 
