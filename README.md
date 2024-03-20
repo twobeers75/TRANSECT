@@ -15,7 +15,7 @@ Currently, there are many global efforts to collect and collate tissue-specific 
 
 64 bit Linux (tested solely on Ubuntu 22.04)
 
->10GB RAM (12+ recommended)
+10GB RAM (12+ recommended)
 
 ## Software dependencies
 
