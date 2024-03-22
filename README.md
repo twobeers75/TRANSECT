@@ -47,8 +47,8 @@ Install python3 pip and all python dependencies (NOTE: Python 3 comes preinstall
 ### change into the top directory of the downloaded folder (SCA)
 cd <path to>/SCA
 
-### install pip and other requirements
-sudo apt install python3-pip libfontconfig1-dev libcurl4-openssl-dev libssl-dev libxml2-dev
+### install pip and other deb requirements
+sudo apt install python3-pip libfontconfig1-dev libcurl4-openssl-dev libssl-dev libxml2-dev libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev
 
 ### install python modules
 python3 -m pip install -r pip_requirements.txt
