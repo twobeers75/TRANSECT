@@ -10,7 +10,10 @@
 ###*****************************************************************************
 suppressMessages(if (!require("pacman")) install.packages("pacman"))
 p_load(edgeR, Glimma, dplyr, tidyr, data.table, tibble, 
-       ggplot2, ggforce, calibrate, gplots, RColorBrewer)
+       ggplot2, ggforce, calibrate, gplots, RColorBrewer,
+       rlogging)
+
+SetLogFile(base.file=NULL)
 
 ###*****************************************************************************
 #### Hard coded system variables ####
@@ -27,22 +30,24 @@ if (length(args)==0) {
 	# default to
   args[2] = "mRNA"
   args[3] = 5
-  args[4] = "SCA/REF_FILES"
-  args[5] = "SCA/bin/GSEA_Linux_4.2.3/gsea-cli.sh GSEAPreranked" 
-  args[6] = list.files("SCA/data/", "GTEx/GTEx-v8/Breast", "GTEx-Breast-*_tpm-mRNA.tsv", full.names=TRUE)
-  args[7] = list.files("SCA/data/", "GTEx/GTEx-v8/Breast", "GTEx-Breast-*_count-mRNA.tsv", full.names=TRUE)
-  args[8] = ""
-  arg2[9] = ""
+  args[4] = "false"
+  args[5] = "SCA/REF_FILES"
+  args[6] = "SCA/bin/GSEA_Linux_4.2.3/gsea-cli.sh GSEAPreranked" 
+  args[7] = list.files("SCA/data/", "GTEx/GTEx-v8/Breast", "GTEx-Breast-*_tpm-mRNA.tsv", full.names=TRUE)
+  args[8] = list.files("SCA/data/", "GTEx/GTEx-v8/Breast", "GTEx-Breast-*_count-mRNA.tsv", full.names=TRUE)
+  args[9] = ""
+  arg2[10] = ""
 }
 
 GOI <- args[1]
 rna_species <- args[2]
 percentile <- as.integer(args[3])
-ref_files_folder <- args[4]
-gsea_exe <- paste(args[5], "GSEAPreranked", sep =" ")
-gene_fpkm_filename <- args[6]
-gene_counts_filename <- args[7]
-isomir_rpm_filename <- args[8]
+switch <- args[4]
+ref_files_folder <- args[5]
+gsea_exe <- args[6]
+gene_fpkm_filename <- args[7]
+gene_counts_filename <- args[8]
+isomir_rpm_filename <- args[9]
 normals <- ""
 
 ###*****************************************************************************
@@ -116,6 +121,7 @@ if (grepl( "+", GOI, fixed = TRUE)){
 ### subset data for G/sOI only
 GOI_exp_raw <- as.data.frame(t(exp_data[GsOI_split, ]))
 GOI_exp_raw <- na.omit(GOI_exp_raw)
+GOI_exp <- GOI_exp_raw
 GOI_exp_raw_OG <- GOI_exp_raw
 ### save the table here
 write.table(round(GOI_exp_raw,2), "GOI_exp_raw.tsv", sep='\t', col.names=NA)
@@ -131,18 +137,19 @@ if (multi_GOI_analysis){
   GOI_exp_sep_long$expression <- log2(GOI_exp_sep_long$expression)
   GOI_exp_scaled <- data.frame(row.names = rownames(GOI_exp_raw))
   for (gene in GsOI_split){
-    col_id <- paste(gene,"percentile", sep="_")
-    GOI_exp_scaled[col_id] <- ntile(GOI_exp_raw[gene],100)
+    col_id <- paste(gene,"rank", sep="_")
+    GOI_exp_scaled[col_id] <- ntile(GOI_exp_raw[gene], nrow(GOI_exp_raw))
     GOI_exp_scaled <- GOI_exp_scaled %>%
       transmute(average=rowMeans(across(where(is.numeric))))
+    colnames(GOI_exp_scaled) <- "ranking_score"
   }
   ### now sum all raw expression values for plotting
-  GOI_exp_raw <- GOI_exp_raw %>%
+  GOI_exp_raw_sum <- GOI_exp_raw %>%
     transmute(sum=rowSums(across(where(is.numeric))))
+  colnames(GOI_exp_raw_sum) <- GOI
   ### now cbind on index
-  GOI_exp_raw <- cbind(GOI_exp_raw, GOI_exp_scaled)
-  # GOI <- paste(GOI, collapse="+")
-  colnames(GOI_exp_raw) <- c(GOI, "ranking_score")
+  GOI_exp_raw <- cbind(GOI_exp_raw_sum, GOI_exp_scaled)
+  GOI_exp <- cbind(GOI_exp_raw_OG, GOI_exp_raw_sum, GOI_exp_scaled)
 }
 if (ratio_GOI_analysis){
   GOI_exp_raw = GOI_exp_raw + 1
@@ -153,13 +160,13 @@ if (ratio_GOI_analysis){
   ### reset GOI variable
   # GOI <- paste(GOI, collapse="%")
   GOI_exp_raw <- rename(GOI_exp_raw, !!GOI := div)
+  GOI_exp <- GOI_exp_raw
 }
 
 if (rna_species == "miRNA"){
   GOI_exp_raw <- subset(GOI_exp_raw, rownames(GOI_exp_raw) %in% mRNA_ids)
+  GOI_exp <- GOI_exp_raw
 }
-
-GOI_exp <- GOI_exp_raw
 
 if (multi_GOI_analysis | ratio_GOI_analysis){
   GOI_exp <- GOI_exp %>% arrange(ranking_score)
@@ -210,7 +217,7 @@ write.table(design, "design.tsv", col.names=NA)
 ## require that the max value > 5
 GsOI_medians <- GOI_exp_raw_OG %>% summarise_at(GsOI_split, median)
 GsOI_maxs <- GOI_exp_raw_OG %>% summarise_at(GsOI_split, max)
-if (min(GsOI_medians) < 3 || min(GsOI_maxs) < 5) {
+if (min(GsOI_medians) < 2 || min(GsOI_maxs) < 5) {
   # set DE flag to false but continue on to produce descriptive plots 
   run_DE <- FALSE
 } else {
@@ -304,6 +311,11 @@ message(paste("Finished stratification of", GOI))
 ###*****************************************************************************
 ### Setup for DE ####
 ###*****************************************************************************
+if (!run_DE) {
+  warning(paste("Unfortunately, there is not enough observations in this dataset for", GOI))
+  stop("Ending this process") 
+}
+
 message(paste("Beginning DE Analysis for", GOI))
 
 hi <- 'hi'
@@ -414,7 +426,14 @@ write.csv(cbind(y$genes[rownames(log_norm_cpm),1],log_norm_cpm), "gene_normalise
 ###*****************************************************************************
 #### Do DE test (exact) ####
 ###*****************************************************************************
-de <- exactTest(y, pair=c(lo, hi))
+### first check if switch comparison requested 
+if (switch == "true") {
+  comp <- c(hi, lo)
+} else {
+  comp <- c(lo, hi)
+}
+
+de <- exactTest(y, pair=comp)
 dt <- decideTests(de,lfc=1)
 message(paste("Differential expression using exact test performed", ":", 
               summary(dt)[[1]], "genes down regulated and", 
@@ -533,88 +552,152 @@ write.csv(DE_logcounts[rev(h$rowInd),], file=paste("High_Vs_Low", GOI_label,"hea
 message(paste("Finished DE Analaysis for", GOI))
 
 ###*****************************************************************************
-### Do GSEA ####
+### Do GSEA / WebGestalt ####
 ###*****************************************************************************
-message(paste("Starting GSEA Analysis for", GOI))
-
-main_dir <- getwd()
-dir.create(file.path(main_dir, "GSEA"))
-outdir <- paste(main_dir, "GSEA", sep="/")
-
-if (rna_species == "mRNA"){
-  ### Hallmark
-  message(paste("Passing DE results to GSEA using MSigDB Hallmark collection:", GOI))
-  gsea_gmx <- "--gmx ftp.broadinstitute.org://pub/gsea/gene_sets/h.all.v2023.1.Hs.symbols.gmt"
-  gsea_rnk <- "-rnk top_tags_ranked.rnk"
-  # gsea_res <- "-res gene_normalised_expression_data_raw_gsea.txt" 
-  # gsea_cls <- "-cls gene_normalised_expression_data_raw_gsea.cls"
-  gsea_chip <- "-chip ftp.broadinstitute.org://pub/gsea/annotations_versioned/Human_HGNC_ID_MSigDB.v7.4.chip"
-  gsea_label <- paste("-rpt_label ", GOI_label, "_Strat_Vs_Hallmark", sep="")
-  gsea_params1 <- "-collapse No_Collapse -mode Max_probe -norm meandiv -nperm 1000 -scoring_scheme weighted" 
-  gsea_params2 <- "-create_svgs true -include_only_symbols true -make_sets true -plot_top_x 20"
-  gsea_params3 <- "-rnd_seed timestamp -set_max 2000 -set_min 15 -zip_report false"
-  gsea_out <- paste("-out ", outdir, sep="")
-  gsea_command <- paste(gsea_exe, gsea_gmx, gsea_rnk, gsea_chip, gsea_label, gsea_params1, gsea_params2, gsea_params3, gsea_out, sep=" ") 
+if (gsea_exe != "false"){
+  gsea_exe <- paste(gsea_exe, "GSEAPreranked", sep =" ")
+  message(paste("Starting GSEA Analysis for", GOI))
   
-  system(gsea_command, ignore.stdout=TRUE, ignore.stderr=TRUE, wait=TRUE)
+  main_dir <- getwd()
+  dir.create(file.path(main_dir, "GSEA"))
+  outdir <- paste(main_dir, "GSEA", sep="/")
   
-  ### Curated
-  message(paste("Passing DE results to GSEA using MSigDB Curated collection:", GOI))
-  gsea_gmx <- "-gmx ftp.broadinstitute.org://pub/gsea/gene_sets/c2.all.v2023.1.Hs.symbols.gmt"
-  gsea_label <- paste("-rpt_label ", GOI_label, "_Strat_Vs_Curated", sep="")
-  gsea_command <- paste(gsea_exe, gsea_gmx, gsea_rnk, gsea_chip, gsea_label, gsea_params1, gsea_params2, gsea_params3, gsea_out, sep=" ")
+  if (rna_species == "mRNA"){
+    ### Hallmark
+    message(paste("Passing DE results to GSEA using MSigDB Hallmark collection:", GOI))
+    gsea_gmx <- "--gmx ftp.broadinstitute.org://pub/gsea/gene_sets/h.all.v2023.1.Hs.symbols.gmt"
+    gsea_rnk <- "-rnk top_tags_ranked.rnk"
+    # gsea_res <- "-res gene_normalised_expression_data_raw_gsea.txt" 
+    # gsea_cls <- "-cls gene_normalised_expression_data_raw_gsea.cls"
+    gsea_chip <- "-chip ftp.broadinstitute.org://pub/gsea/annotations_versioned/Human_HGNC_ID_MSigDB.v7.4.chip"
+    gsea_label <- paste("-rpt_label ", GOI_label, "_Strat_Vs_Hallmark", sep="")
+    gsea_params1 <- "-collapse No_Collapse -mode Max_probe -norm meandiv -nperm 1000 -scoring_scheme weighted" 
+    gsea_params2 <- "-create_svgs true -include_only_symbols true -make_sets true -plot_top_x 20"
+    gsea_params3 <- "-rnd_seed timestamp -set_max 2000 -set_min 15 -zip_report false"
+    gsea_out <- paste("-out ", outdir, sep="")
+    gsea_command <- paste(gsea_exe, gsea_gmx, gsea_rnk, gsea_chip, gsea_label, gsea_params1, gsea_params2, gsea_params3, gsea_out, sep=" ") 
+    
+    system(gsea_command, ignore.stdout=TRUE, ignore.stderr=TRUE, wait=TRUE)
+    
+    ### Curated
+    message(paste("Passing DE results to GSEA using MSigDB Curated collection:", GOI))
+    gsea_gmx <- "-gmx ftp.broadinstitute.org://pub/gsea/gene_sets/c2.all.v2023.1.Hs.symbols.gmt"
+    gsea_label <- paste("-rpt_label ", GOI_label, "_Strat_Vs_Curated", sep="")
+    gsea_command <- paste(gsea_exe, gsea_gmx, gsea_rnk, gsea_chip, gsea_label, gsea_params1, gsea_params2, gsea_params3, gsea_out, sep=" ")
+    
+    system(gsea_command, ignore.stdout=TRUE, ignore.stderr=TRUE, wait=TRUE)
+  }
   
-  system(gsea_command, ignore.stdout=TRUE, ignore.stderr=TRUE, wait=TRUE)
-}
-
-if (rna_species == "miRNA"){
-  message(paste("Passing DE results to GSEA using Custom TargetScan collection:", GOI))
-  gmx_file <- paste(ref_files_folder, "CSCS_Hs_8mer_CSfiltered.gmx", sep="/")
-  ### In-house Targetscan collection
-  gsea_gmx <- paste("-gmx", gmx_file, sep=" ")
-  gsea_rnk <- "-rnk top_tags_ranked.rnk" 
-  gsea_chip <- "-chip ftp.broadinstitute.org://pub/gsea/annotations_versioned/Human_HGNC_ID_MSigDB.v7.4.chip"
-  gsea_label <- paste("-rpt_label ", GOI_label, "_Strat_Vs_Inhouse-TargetScan", sep="")
-  gsea_params1 <- "-collapse No_Collapse -mode Max_probe -norm meandiv -nperm 1000 -scoring_scheme weighted" 
-  gsea_params2 <- "-create_svgs true -include_only_symbols true -make_sets true -plot_top_x 20"
-  gsea_params3 <- "-rnd_seed timestamp -set_max 2000 -set_min 15 -zip_report false"
-  gsea_out <- paste("-out ", outdir, sep="")
-  gsea_command <- paste(gsea_exe, gsea_gmx, gsea_rnk, gsea_chip, gsea_label, gsea_params1, gsea_params2, gsea_params3, gsea_out, sep=" ") 
+  if (rna_species == "miRNA"){
+    message(paste("Passing DE results to GSEA using Custom TargetScan collection:", GOI))
+    gmx_file <- paste(ref_files_folder, "CSCS_Hs_8mer_CSfiltered.gmx", sep="/")
+    ### In-house Targetscan collection
+    gsea_gmx <- paste("-gmx", gmx_file, sep=" ")
+    gsea_rnk <- "-rnk top_tags_ranked.rnk" 
+    gsea_chip <- "-chip ftp.broadinstitute.org://pub/gsea/annotations_versioned/Human_HGNC_ID_MSigDB.v7.4.chip"
+    gsea_label <- paste("-rpt_label ", GOI_label, "_Strat_Vs_Inhouse-TargetScan", sep="")
+    gsea_params1 <- "-collapse No_Collapse -mode Max_probe -norm meandiv -nperm 1000 -scoring_scheme weighted" 
+    gsea_params2 <- "-create_svgs true -include_only_symbols true -make_sets true -plot_top_x 20"
+    gsea_params3 <- "-rnd_seed timestamp -set_max 2000 -set_min 15 -zip_report false"
+    gsea_out <- paste("-out ", outdir, sep="")
+    gsea_command <- paste(gsea_exe, gsea_gmx, gsea_rnk, gsea_chip, gsea_label, gsea_params1, gsea_params2, gsea_params3, gsea_out, sep=" ") 
+    
+    system(gsea_command, ignore.stdout=TRUE, ignore.stderr=TRUE, wait=TRUE)
+  }
   
-  system(gsea_command, ignore.stdout=TRUE, ignore.stderr=TRUE, wait=TRUE)
-}
-
-# C3 not in use: ftp.broadinstitute.org://pub/gsea/gene_sets/c3.all.v7.4.symbols.gmt
-
-### Create summary plots
-Sys.sleep(10)
-### get dir and file names and process iteratively
-GSEA_output_dirs <- list.dirs(outdir, full.names=TRUE, recursive=FALSE)
-for (GSEA_output_dir in GSEA_output_dirs){
-  combined_gsea_sig_results <- data.frame()
-  GSEA_output_report_files <- list.files(path=GSEA_output_dir, pattern="gsea_report.*tsv", full.names=TRUE)
-  for (GSEA_output_report_file in GSEA_output_report_files){
-    sample_name <- strsplit(basename(GSEA_output_dir),"[.]")[[1]][1]
-    gsea_report <- read.csv(GSEA_output_report_file, sep="\t", row.names=1)
-    gsea_report <- Filter(function(x)!all(is.na(x)), gsea_report)
-    temp_gsea_sig_results <- gsea_report[gsea_report$FDR.q.val < 0.05, ] # & abs(gsea_report$NES) > 2
-    temp_gsea_sig_results <- head(temp_gsea_sig_results, n=10)
-    combined_gsea_sig_results <- rbind(combined_gsea_sig_results, temp_gsea_sig_results)
-    combined_gsea_sig_results <- combined_gsea_sig_results[order(combined_gsea_sig_results$NES),]
-    if (GSEA_output_report_file == GSEA_output_report_files[length(GSEA_output_report_files)]){
-      ### all reports merged so create the plot
-      combined_gsea_sig_results$NES <- as.numeric(combined_gsea_sig_results$NES)
-      combined_gsea_sig_results$bar_color <- ifelse(combined_gsea_sig_results$NES > 0, "red", "blue")
-      pdf(file=paste(outdir, "/",sample_name, ".pdf", sep=""),width=15,height=10)
-      par(las=2) ; par(mar=c(10,50,10,5))
-      barplot(combined_gsea_sig_results$NES, main=sample_name, horiz=TRUE, names.arg=row.names(combined_gsea_sig_results), xlab="Normalise Enrichment Score", cex.main=2, cex.lab=1.5, cex.axis=1.0, col=combined_gsea_sig_results$bar_color)
-      invisible(dev.off())
-      write.csv(combined_gsea_sig_results[,1:(length(combined_gsea_sig_results)-2)], 
-                paste(outdir, "/",sample_name, ".csv", sep=""), row.names=FALSE)
+  # C3 not in use: ftp.broadinstitute.org://pub/gsea/gene_sets/c3.all.v7.4.symbols.gmt
+  
+  ### Create summary plots
+  Sys.sleep(10)
+  ### get dir and file names and process iteratively
+  GSEA_output_dirs <- list.dirs(outdir, full.names=TRUE, recursive=FALSE)
+  for (GSEA_output_dir in GSEA_output_dirs){
+    combined_gsea_sig_results <- data.frame()
+    GSEA_output_report_files <- list.files(path=GSEA_output_dir, pattern="gsea_report.*tsv", full.names=TRUE)
+    for (GSEA_output_report_file in GSEA_output_report_files){
+      sample_name <- strsplit(basename(GSEA_output_dir),"[.]")[[1]][1]
+      gsea_report <- read.csv(GSEA_output_report_file, sep="\t", row.names=1)
+      gsea_report <- Filter(function(x)!all(is.na(x)), gsea_report)
+      temp_gsea_sig_results <- gsea_report[gsea_report$FDR.q.val < 0.05, ] # & abs(gsea_report$NES) > 2
+      temp_gsea_sig_results <- head(temp_gsea_sig_results, n=10)
+      combined_gsea_sig_results <- rbind(combined_gsea_sig_results, temp_gsea_sig_results)
+      combined_gsea_sig_results <- combined_gsea_sig_results[order(combined_gsea_sig_results$NES),]
+      if (GSEA_output_report_file == GSEA_output_report_files[length(GSEA_output_report_files)]){
+        ### all reports merged so create the plot
+        combined_gsea_sig_results$NES <- as.numeric(combined_gsea_sig_results$NES)
+        combined_gsea_sig_results$bar_color <- ifelse(combined_gsea_sig_results$NES > 0, "red", "blue")
+        pdf(file=paste(outdir, "/",sample_name, ".pdf", sep=""),width=15,height=10)
+        par(las=2) ; par(mar=c(10,50,10,5))
+        barplot(combined_gsea_sig_results$NES, main=sample_name, horiz=TRUE, names.arg=row.names(combined_gsea_sig_results), xlab="Normalise Enrichment Score", cex.main=2, cex.lab=1.5, cex.axis=1.0, col=combined_gsea_sig_results$bar_color)
+        invisible(dev.off())
+        write.csv(combined_gsea_sig_results[,1:(length(combined_gsea_sig_results)-2)], 
+                  paste(outdir, "/",sample_name, ".csv", sep=""), row.names=FALSE)
+      }
     }
   }
+  
+  ### All done for GSEA
+  message(paste("Finished GSEA Analysis for", GOI))
+  
+  ### Do WebGestalt
+  message(paste("Starting WebGestalt Analysis for", GOI))
+  p_load(WebGestaltR)
+  
+  main_dir <- getwd()
+  dir.create(file.path(main_dir, "WebGestalt"))
+  WG_outdir <- paste(main_dir, "WebGestalt", sep="/")
+  
+  ### setup gene lists
+  # subset all sig-up and sig-down regulated genes. If more than 500, take only top 500 
+  FDR_sig_df_up <- FDR_sig_df[FDR_sig_df$logFC > 0,]
+  FDR_sig_df_down <- FDR_sig_df[FDR_sig_df$logFC < 0,]
+  FDR_sig_df_ord_up <- FDR_sig_df_up[order(FDR_sig_df_up$logFC, decreasing = TRUE), ]$gene_name
+  FDR_sig_df_ord_down <- FDR_sig_df_down[order(FDR_sig_df_down$logFC), ]$gene_name
+  if (length(FDR_sig_df_ord_up) > 500) { FDR_sig_df_ord_up <- FDR_sig_df_ord_up[1:500] }
+  if (length(FDR_sig_df_ord_down) > 500) { FDR_sig_df_ord_down <- FDR_sig_df_ord_down[1:500] }
+  
+  ### setup reference list
+  reference_geneset <- tt$table$gene_name
+  
+  ### setup databases required
+  enrichDatabaseGO <- c("geneontology_Biological_Process_noRedundant","geneontology_Molecular_Function_noRedundant")
+  enrichDatabasePW <- c("pathway_KEGG","pathway_Reactome")
+  enrichDatabaseDS <- c("disease_Disgenet","disease_GLAD4U","disease_OMIM")
+  enrichDBs <- list(enrichDatabaseGO = enrichDatabaseGO, enrichDatabasePW = enrichDatabasePW, enrichDatabaseDS = enrichDatabaseDS)
+  
+  ### Run each analysis
+  message("Passing DE UP regulated geneset to WebGestalt ORA")
+  sink(nullfile()) # don't want console messages
+  for (i in 1:length(enrichDBs)) { 
+    enrichResult <- WebGestaltR(enrichMethod="ORA", 
+                                organism="hsapiens", 
+                                enrichDatabase=enrichDBs[[i]], 
+                                interestGene=FDR_sig_df_ord_up, 
+                                interestGeneType="genesymbol", 
+                                #referenceGene=reference_geneset, 
+                                referenceSet="genome_protein-coding", 
+                                referenceGeneType="genesymbol", 
+                                minNum=5, maxNum=2000, sigMethod="top", reportNumr=40,  
+                                isOutput=TRUE, 
+                                outputDirectory=WG_outdir, 
+                                projectName=paste(names(enrichDBs[i]), "UP-Reg", sep = "_"))
+  }
+  message("Passing DE Down regulated geneset to WebGestalt ORA")
+  for (i in 1:length(enrichDBs)) { 
+    enrichResult <- WebGestaltR(enrichMethod="ORA", 
+                                organism="hsapiens", 
+                                enrichDatabase=enrichDBs[[i]], 
+                                interestGene=FDR_sig_df_ord_down, 
+                                interestGeneType="genesymbol", 
+                                #referenceGene=reference_geneset, 
+                                referenceSet="genome_protein-coding", 
+                                referenceGeneType="genesymbol", 
+                                isOutput=TRUE, 
+                                outputDirectory=WG_outdir, 
+                                projectName=paste(names(enrichDBs[i]), "DOWN-Reg", sep = "_"))
+  }
+  sink()
+  ### All done for WebGestalt. Sign off now
+  message(paste("Finished WebGestalt Analysis for", GOI))
 }
-
-### All done for GSEA so sign off
-message(paste("Finished GSEA Analaysis for", GOI))
 

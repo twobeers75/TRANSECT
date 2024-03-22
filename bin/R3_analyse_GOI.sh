@@ -32,20 +32,28 @@ de_analysis( ) {
 	R3_tpm=(${DATA_FOLDER}/${R3_code}/R3-*_tpm-mRNA.tsv)
 	R3_counts=(${DATA_FOLDER}/${R3_code}/R3-*_count-mRNA.tsv)
 	R3_rpm=""
-	Rscript --vanilla ${SCRIPT_FOLDER}/r3_analyse_stratify_edgeR.R ${GOI} ${strat_by} ${percentile} ${REF_FILES_FOLDER} ${GSEA_EXE} ${R3_tpm[0]} ${R3_counts[0]} ${R3_rpm[0]}
+	Rscript --vanilla ${SCRIPT_FOLDER}/r3_analyse_stratify_edgeR.R ${GOI} ${strat_by} ${percentile} ${switch} ${REF_FILES_FOLDER} ${GSEA_EXE} ${R3_tpm[0]} ${R3_counts[0]} ${R3_rpm[0]}
 	cd ${working_folder}
 }
 
+trace () {
+stamp=`date +%Y-%m-%d_%H:%M:%S`
+echo $stamp: $* >> SCA_command.log
+}
 
 ##########################################################################################################
 #### Start the process
 #########
+trace Starting SCA
+trace $0 $@
 
 ### Set default command line options
 pflag=false
 gflag=false
 sflag=false
 tflag=false
+gsea=false
+switch=false
 do_all=false
 do_corr=false
 do_de=false
@@ -58,26 +66,30 @@ NOTE: Composite analyses can be run using the plus charater (+) for additive com
 by using the modulus character (%) for ratio. The two special characters are used between gene names like so
 Additive example: ESR1+PGR+ERBB2 or Ratio example: ESRP1%ZEB1
 
-USAGE: $(basename $0) [-h] -p <RECOUNT3 projectID> -g <GOI> -s <StratifyBy> -t <Percentile> -a -c -d
+USAGE: $(basename $0) [-h] -p <RECOUNT3 projectID> -g <GOI> -s <StratifyBy> -t <Percentile> -e -S -a -c -d
 	where:
 	-h Show this help text
 	-p RECOUNT3 tissue id: needs to be valid RECOUNT3 tissue id as at RECOUNT3 (ie. BRCA for TCGA or BREAST for GTEx). Required
 	-g Gene of interest: needs to be a valid HGNC symbol (ie. ZEB1). Required
 	-s Stratify by molecule: Must match -g and can only be mRNA at present. Required
 	-t Percentile: startify data into top and bottom x percentil (valid x between 2 and 25). Required
+	-e Enrichment analyses: Run GSEA and WebGestalt on DE results (Default: False)
+	-S Switch pairwise comparison: find genes DE in low group compared to high group (Default: high compared to low)
 	-a Do all analyses
 	-c Do correlation analysis only
 	-d Do differential expression analysis only 
 "
 
 ### parse all command line options
-while getopts hg:p:s:t:acd opt; do
+while getopts hg:p:s:t:eSacd opt; do
 	case "$opt" in
 		h) echo "$usage"; exit;;
 		p) pflag=true; project_id=$OPTARG;;
 		g) gflag=true; GOI=$OPTARG;;
 		s) sflag=true; strat_by=$OPTARG;;
 		t) tflag=true; percentile=$OPTARG;;
+		e) gsea=true;;
+		S) switch=true;;
 		a) do_all=true;;
 		c) do_corr=true;;
 		d) do_de=true;;
@@ -109,7 +121,10 @@ fi
 ### check if user input a valid gene name
 if [[ "${GOI}" == *"+"* ]] || [[ "${GOI}" == *"%"* ]]
 then
-	echo "complex analysis selected, not checking gene names yet"
+	echo "Complex analysis selected, not checking gene names, deactivating Corr Analyses"
+	do_all=false
+	do_corr=false
+	do_de=true
 else
 	if grep -Fxq "${GOI^^}" <(cut -f 2 ${REF_FILES_FOLDER}/gencode.v26.annotation.lookup)
 	then
@@ -146,17 +161,16 @@ then
 	exit 1
 fi
 
-### check if user input a complex gene name (additive or ratio)
-if [[ "${GOI}" == *"+"* ]] || [[ "${GOI}" == *"%"* ]]
-then
-	echo "Looks like a complex expression analysis, deactivating Corr Analyses" >&2
-	do_all=false
-	do_corr=false
-	do_de=true
+### check if enrichment analysis selected otherwise clear GSEA_EXE variable
+if (${gsea})
+then 
+	echo "Enrichment analyses requested. Note: run time will be extended significantly"
+else
+	GSEA_EXE="false"
 fi
 
 ### Sign on
-echo "Starting Correlation and DE analysis for ${GOI} using RECOUNT3 subset: ${project_id}"
+echo "Starting analysis for ${GOI} using RECOUNT3 subset: ${project_id}"
 
 ### iterate through the objectives
 if (${do_all} || ${do_corr})
@@ -168,12 +182,20 @@ fi
 if (${do_all} || ${do_de})
 then
 	echo "DE Analysis selected"
+	
+	### check if user requested to switch DE groups
+	if (${switch})
+	then 
+		echo "Switch groups requested, evaluating changes in low group compared to high"
+	fi
+	
 	de_analysis
 fi
 
 ### Final clean up
 cd $working_folder
 find . -type d -empty -delete
+trace Finished SCA
 
 ### Sign off
 echo "Finished running all analyses for ${GOI}"

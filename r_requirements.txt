@@ -1,3 +1,6 @@
+pacman
+devtools
+rlogging
 calibrate
 data.table
 DEFormats

@@ -31,6 +31,7 @@ process_folder( ) {
 	rename_files
 	get_clin_data
 	create_summary
+	if ! ${keep_data} ; then cleanup; fi
 	cd ${working_folder}
 }
 
@@ -88,6 +89,18 @@ combine_summary( ) {
 	"${working_folder}/isomiR_expression_rpm/GDC_${tcga_id_mod}_RPM-miRNAisoform_all.tsv" ${tcga_id_mod} 
 }
 
+cleanup( ) {
+	echo "removing data that is no longer required"
+	cd ${working_folder}/${folder_name}
+	rm -rf original
+	if [ -d "mRNA_gene_expr_files" ]
+	then
+		rm -rf mRNA_gene_expr_files
+	else
+		rm -rf miR_gene_expr_files
+	fi
+}
+
 
 ##########################################################################################################
 #### Start the script
@@ -99,18 +112,20 @@ retrieve_all=false
 retrieve_counts=false
 retrieve_miR_rpms=false
 retrieve_isomiR_rpms=false
+keep_data=false
 
 ### Parse command line options
 usage="Retrieve and prepare TCGA RNA-seq data for in-house custom analyses.
 
-USAGE: $(basename $0) [-h] -p <TCGA Project ID> [-a -c -r -R]
+USAGE: $(basename $0) [-h] -p <TCGA Project ID> [-a -c -r -R -k]
 	where:
 	-h Show this help text
 	-p TCGA project id: needs to be valid TCGA project id as at the GDC (ie. TCGA-BRCA). Required
-	-a retrieve all expression data (mRNA counts and FPKM as well as miR and isomiR RPMs)
+	-a retrieve all expression data (mRNA counts and TPMs as well as miR and isomiR RPMs)
 	-c retrieve only mRNA counts
 	-r retrieve only miR RPMs
 	-R retrieve only isomiR RPMs
+	-k keep all data (Default: False)
 
 To retrieve and prepare more than one TCGA cancer dataset use a bash for loop like this;
 for tcga_code in TCGA-COAD TCGA-SARC TCGA-LAML; do GDC_TCGA_prepare_directories.sh -p \$tcga_code; done
@@ -119,7 +134,7 @@ To retrieve and prepare all TCGA cancer datasets you can loop through all lines 
 while read tcga_code; do GDC_TCGA_prepare_directories.sh -p \$tcga_code; done < <(cut -f1 GDC_API/TCGA_Study_Abbreviations.tsv | tail -n +2)
 "
 ### parse all command line options
-while getopts hp:acfrR opt; do
+while getopts hp:acrRk opt; do
 	case "$opt" in
 		h) echo "$usage"; exit;;
 		p) pflag=true; project_id=$OPTARG;;
@@ -127,6 +142,7 @@ while getopts hp:acfrR opt; do
 		c) retrieve_counts=true;;
 		r) retrieve_miR_rpms=true;;
 		R) retrieve_isomiR_rpms=true;;
+		k) keep_data=true;;
 		:)echo -e "Option -$OPTARG requires an argument.\n" >&2; echo "$usage" >&2; exit 1;;
 		\?) echo ""; echo "$usage" >&2; exit 1;;
 		*) echo ""; echo "$usage" >&2; exit 1;;

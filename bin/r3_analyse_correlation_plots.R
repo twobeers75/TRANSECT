@@ -9,8 +9,10 @@
 ### Import libraries ####
 ###*****************************************************************************
 suppressMessages(if (!require("pacman")) install.packages("pacman"))
-p_load(data.table)
+p_load(data.table, rlogging)
 #suppressMessages(library(data.table))
+
+SetLogFile(base.file=NULL)
 
 ###*****************************************************************************
 ### Read in Args ####
