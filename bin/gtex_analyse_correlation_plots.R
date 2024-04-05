@@ -81,6 +81,8 @@ df_target_pairs$gene1_id <- gsub('-', '.', GOI)
 df_target_pairs$gene2_id <- gsub('-', '.', df_target_pairs$gene2_id)
 df_target_pairs[,c("Cor","Pvalue","logExp_Cor","logExp_Pvalue")] <- ""
 
+high_expr_df = data.frame(Names=df_gtex_data[,1])
+
 ###*****************************************************************************
 ### Corr Analysis ####
 ###*****************************************************************************
@@ -103,6 +105,9 @@ for (row in 1:nrow(df_target_pairs)) {
       
       if(!is.na(log_cor_stats$estimate)){
         if (abs(signif(as.numeric(log_cor_stats$estimate))) > 0.8) {
+          # adding exprs to new df, to be outputted in the outputs
+          high_expr_df[gene2] <- df_gtex_data[gene2]
+          
           png(paste("plots/", gene1, "_", gene2, ".png", sep=""))
           cor_1 <- log_cor_stats
           lm1 <- lm(log2(gene1_exp_value)~log2(gene2_exp_value))
@@ -121,6 +126,8 @@ for (row in 1:nrow(df_target_pairs)) {
     df_target_pairs[row, 3:6] <- "no data"
   }
 }
+
+write.table(high_expr_df, paste(GOI, "most_correlated_gene_exprs.tsv", sep="_"), sep='\t', row.names=FALSE)
 
 ###*****************************************************************************
 ### Filter/Sort/Padjust/Write to file and plot then return to main working dir
