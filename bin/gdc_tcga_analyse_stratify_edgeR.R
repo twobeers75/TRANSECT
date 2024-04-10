@@ -255,6 +255,7 @@ if (strat_do_multi_GOI_analysis){
   p + geom_sina(colour = strat_GOI_exp_sep_long$cols_column, size = strat_GOI_exp_sep_long$size_column, alpha = 0.7) + 
     theme_classic() + theme(text=element_text(size=30)) + ylab(paste("Log2(", strat_exp_type, ")", sep=""))
   invisible(ggsave(paste(GOI_label, "TPM_Boxplot_Sina.svg", sep="_"), last_plot(), width = 10, height = 8))
+  write.table(strat_GOI_exp_sep_long, "GOI_exp_raw.tsv", sep='\t', col.names=NA)
 }
 if (strat_do_single_GOI_analysis){
   ### Do Histogram
