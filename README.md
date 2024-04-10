@@ -68,6 +68,7 @@ sudo apt install r-base
 
 ### Start R from the terminal and install pacman and devtools (follow the prompts and choose (if asked) to install into a personal library)
 R
+# Note: run the following command and then go get a coffee (it takes a long time to finish!) 
 > install.packages(c("pacman","devtools"))
 
 ### Load devtools and install rlogging
@@ -75,6 +76,7 @@ R
 > install_github("https://github.com/mjkallen/rlogging.git")
 
 ### Also install required Bioconductor packages (these take quite some time to install!)
+# Note: run the following command and then go get another coffee (Sorry!)
 > if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 > BiocManager::install(version = "3.18")
