@@ -76,10 +76,10 @@ R
 > install_github("https://github.com/mjkallen/rlogging.git")
 
 ### Also install required Bioconductor packages (these take quite some time to install!)
-# Note: run the following command and then go get another coffee (Sorry!)
 > if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 > BiocManager::install(version = "3.18")
+# Note: run this final R command and go get another coffee (Sorry!)
 > BiocManager::install(c("edgeR","Glimma","DEFormats"))
 
 # Once successfully completed you can quit R
