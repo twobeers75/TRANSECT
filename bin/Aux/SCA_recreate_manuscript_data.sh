@@ -25,7 +25,7 @@ ${SCA_bindir}/GTEx_prepare_directories.sh -a; done
 ##########################################################################################################
 #### Single test
 #########
-test_prostate="${SCA_outdir}/Test/Prostate"
+test_prostate="${SCA_outdir}/TestManData_OG2/Prostate"
 mkdir -p ${test_prostate}
 cd ${test_prostate}
 mkdir -p R3_PRAD_ZEB1 R3_PROSTATE_ZEB1 TCGA_PRAD_ZEB1 GTEx_Prostrate_ZEB1
@@ -49,7 +49,7 @@ echo ""; echo ""
 ##########################################################################################################
 #### Additive test
 #########
-test_breast="${SCA_outdir}/Test/Breast"
+test_breast="${SCA_outdir}/TestManData_OG2/Breast"
 mkdir -p ${test_breast}
 cd ${test_breast}
 mkdir -p R3_BRCA_ESR1+PGR+ERBB2 R3_BREAST_ESR1+PGR+ERBB2 TCGA_BRCA_ESR1+PGR+ERBB2 GTEx_Breast_ESR1+PGR+ERBB2
@@ -70,28 +70,35 @@ cd ${test_breast}/GTEx_Breast_ESR1+PGR+ERBB2
 ${SCA_bindir}/GTEx_analyse_GOI.sh -p Breast -g ESR1+PGR+ERBB2 -s mRNA -t 6 -S -d -e
 echo ""; echo ""
 
+# additionally do the ER+PGR- analysis
+cd ${test_breast}
+mkdir -p R3_BRCA_ESR1-PGR
+cd R3_BRCA_ESR1-PGR
+${SCA_bindir}/R3_analyse_GOI.sh -p BRCA -g ESR1%PGR -s mRNA -t 2 -d -e
+echo ""; echo ""
+
 ##########################################################################################################
 #### Ratio test
 #########
-test_blood="${SCA_outdir}/Test/Blood"
+test_blood="${SCA_outdir}/TestManData_OG2/Blood"
 mkdir -p ${test_blood}
 cd ${test_blood}
 mkdir -p R3_LAML_IL3RA-CSF2RB R3_BLOOD_IL3RA-CSF2RB TCGA_LAML_IL3RA-CSF2RB GTEx_Blood_IL3RA-CSF2RB
 
 # RECOUNT3 Additive TNBC genes with switch
 cd ${test_blood}/R3_LAML_IL3RA-CSF2RB
-${SCA_bindir}/R3_analyse_GOI.sh -p LAML -g IL3RA%CSF2RB -s mRNA -t 15 -d -e
+${SCA_bindir}/R3_analyse_GOI.sh -p LAML -g IL3RA%CSF2RB -s mRNA -t 12 -d -e
 echo ""; echo ""
 cd ${test_blood}/R3_BLOOD_IL3RA-CSF2RB
-${SCA_bindir}/R3_analyse_GOI.sh -p BLOOD -g IL3RA%CSF2RB -s mRNA -t 20 -d -e
+${SCA_bindir}/R3_analyse_GOI.sh -p BLOOD -g IL3RA%CSF2RB -s mRNA -t 3 -d -e
 echo ""; echo ""
 # GDC Additive TNBC genes with switch
 cd ${test_blood}/TCGA_LAML_IL3RA-CSF2RB
-${SCA_bindir}/GDC_TCGA_analyse_GOI.sh -p TCGA-LAML -g IL3RA%CSF2RB -s mRNA -t 15 -d -e
+${SCA_bindir}/GDC_TCGA_analyse_GOI.sh -p TCGA-LAML -g IL3RA%CSF2RB -s mRNA -t 12 -d -e
 echo ""; echo ""
 # GTEx Additive TNBC genes with switch
 cd ${test_blood}/GTEx_Blood_IL3RA-CSF2RB
-${SCA_bindir}/GTEx_analyse_GOI.sh -p Blood -g IL3RA%CSF2RB -s mRNA -t 20 -d -e
+${SCA_bindir}/GTEx_analyse_GOI.sh -p Blood -g IL3RA%CSF2RB -s mRNA -t 3 -d -e
 echo ""; echo ""
 
 

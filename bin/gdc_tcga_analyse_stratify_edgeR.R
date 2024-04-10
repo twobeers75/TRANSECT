@@ -42,7 +42,7 @@ if (length(args)==0) {
 GOI <- args[1]
 rna_species <- args[2]
 percentile <- as.integer(args[3])
-switch <- args[4]
+switchDE <- args[4]
 ref_files_folder <- args[5]
 gsea_exe <- args[6]
 gene_fpkm_filename <- args[7]
@@ -113,80 +113,82 @@ if (grepl( "+", GOI, fixed = TRUE)){
   strat_do_single_GOI_analysis <- TRUE
 }
 
-### subset data for G/sOI only
+### subset data for G/sOI only. We require a few copies for histogram and boxplots (including the original (OG))
 tmp_col_num <- ncol(strat_exp_data)
-strat_GOI_exp_raw <- as.data.frame(t(strat_exp_data[GsOI_split, ][,1:tmp_col_num]))
-strat_GOI_exp <- strat_GOI_exp_raw
-strat_GOI_exp_raw_OG <- strat_GOI_exp_raw
+strat_GOI_exp_raw_OG <- as.data.frame(t(strat_exp_data[GsOI_split, ][,1:tmp_col_num]))
+strat_GOI_exp_hist <- strat_GOI_exp_raw_OG
+strat_GOI_exp_boxplot <- strat_GOI_exp_raw_OG
 ### save the table here
-write.table(round(strat_GOI_exp_raw,2), "GOI_exp_raw.tsv", sep='\t', col.names=NA)
+write.table(round(strat_GOI_exp_raw_OG,2), "GOI_exp_raw_OG.tsv", sep='\t', col.names=NA)
 
 ### check to see if multi/ratio flags set
 if (strat_do_multi_GOI_analysis){
   ### create a long copy of raw expression for boxplot
-  strat_GOI_exp_sep <- strat_GOI_exp_raw
+  strat_GOI_exp_sep <- strat_GOI_exp_raw_OG
   strat_GOI_exp_sep$patientID <- rownames(strat_GOI_exp_sep)
   strat_GOI_exp_sep$patientID <- factor(strat_GOI_exp_sep$patientID)
   rownames(strat_GOI_exp_sep) <- NULL
   strat_GOI_exp_sep_long <- gather(strat_GOI_exp_sep, "geneID", "expression", all_of(GsOI_split), factor_key=TRUE)
   strat_GOI_exp_sep_long$expression <- log2(strat_GOI_exp_sep_long$expression)
   ### get sum rank positions
-  strat_GOI_exp_scaled <- data.frame(row.names = rownames(strat_GOI_exp_raw))
+  strat_GOI_exp_scaled <- data.frame(row.names = rownames(strat_GOI_exp_raw_OG))
   for (gene in GsOI_split){
     col_id <- paste(gene,"rank", sep="_")
-    strat_GOI_exp_scaled[col_id] <- ntile(strat_GOI_exp_raw[gene], nrow(strat_GOI_exp_raw))
+    # strat_GOI_exp_scaled[col_id] <- ntile(strat_GOI_exp_raw_OG[gene], nrow(strat_GOI_exp_raw_OG))
+    strat_GOI_exp_scaled[col_id] <- min_rank(strat_GOI_exp_raw_OG[gene])
   }
+  ### average all ranks for ordering
   strat_GOI_exp_scaled <- strat_GOI_exp_scaled %>%
     transmute(average=rowMeans(across(where(is.numeric))))
   colnames(strat_GOI_exp_scaled) <- "ranking_score"
   ### now sum all raw expression values for plotting
-  strat_GOI_exp_raw_sum <- strat_GOI_exp_raw %>%
+  strat_GOI_exp_raw_sum <- strat_GOI_exp_raw_OG %>%
     transmute(sum=rowSums(across(where(is.numeric))))
   colnames(strat_GOI_exp_raw_sum) <- GOI
   ### now cbind on index
-  strat_GOI_exp_raw <- cbind(strat_GOI_exp_raw_sum, strat_GOI_exp_scaled)
-  strat_GOI_exp <- cbind(strat_GOI_exp_raw_OG, strat_GOI_exp_raw_sum, strat_GOI_exp_scaled)
+  strat_GOI_exp_boxplot <- cbind(strat_GOI_exp_raw_sum, strat_GOI_exp_scaled)
+  strat_GOI_exp_hist <- cbind(strat_GOI_exp_raw_OG, strat_GOI_exp_raw_sum, strat_GOI_exp_scaled)
 }
 if (strat_do_ratio_GOI_analysis){
-  strat_GOI_exp_raw = strat_GOI_exp_raw + 1
+  strat_GOI_exp_boxplot = strat_GOI_exp_boxplot + 1
   ### calc log2 FC
-  strat_GOI_exp_raw$ranking_score = (log2(strat_GOI_exp_raw[,GsOI_split[1]])) - (log2(strat_GOI_exp_raw[,GsOI_split[2]]))
+  strat_GOI_exp_boxplot$ranking_score = (log2(strat_GOI_exp_boxplot[,GsOI_split[1]])) - (log2(strat_GOI_exp_boxplot[,GsOI_split[2]]))
   ### now divide raw expression values for plotting
-  strat_GOI_exp_raw$div <- strat_GOI_exp_raw[,GsOI_split[1]] / strat_GOI_exp_raw[,GsOI_split[2]]
-  strat_GOI_exp_raw <- rename(strat_GOI_exp_raw, !!GOI := div)
-  strat_GOI_exp <- strat_GOI_exp_raw
+  strat_GOI_exp_boxplot$div <- strat_GOI_exp_boxplot[,GsOI_split[1]] / strat_GOI_exp_boxplot[,GsOI_split[2]]
+  strat_GOI_exp_boxplot <- rename(strat_GOI_exp_boxplot, !!GOI := div)
+  strat_GOI_exp_hist <- strat_GOI_exp_boxplot
 }
 
 if (rna_species == "miRNA"){
-  strat_GOI_exp_raw <- subset(strat_GOI_exp_raw, rownames(strat_GOI_exp_raw) %in% mRNA_ids)
-  strat_GOI_exp <- strat_GOI_exp_raw
+  strat_GOI_exp_boxplot <- subset(strat_GOI_exp_boxplot, rownames(strat_GOI_exp_boxplot) %in% mRNA_ids)
+  strat_GOI_exp_hist <- strat_GOI_exp_boxplot
 }
 
 ### check and strip normals out if requested
 if (normals == "") {
-  message(paste("Excluding normal samples"))
-  strat_GOI_exp$cancertype <- substr(rownames(strat_GOI_exp), 14, 15)
-  strat_GOI_exp <- strat_GOI_exp[strat_GOI_exp$cancertype != 11, ]
-  strat_GOI_exp <- subset(strat_GOI_exp, select=-cancertype)
+  message(paste("Excluding non-diseased  samples"))
+  strat_GOI_exp_hist$cancertype <- substr(rownames(strat_GOI_exp_hist), 14, 15)
+  strat_GOI_exp_hist <- strat_GOI_exp_hist[strat_GOI_exp_hist$cancertype != 11, ]
+  strat_GOI_exp_hist <- subset(strat_GOI_exp_hist, select=-cancertype)
 }
 
 if (strat_do_multi_GOI_analysis | strat_do_ratio_GOI_analysis){
-  strat_GOI_exp <- strat_GOI_exp %>% arrange(ranking_score)
-  strat_GOI_exp_wstrat <- mutate(strat_GOI_exp, quantile_rank = ntile(strat_GOI_exp["ranking_score"],4))
-  strat_GOI_exp_wstrat <- mutate(strat_GOI_exp_wstrat, percentile_rank = ntile(strat_GOI_exp["ranking_score"],100))
+  strat_GOI_exp_hist <- strat_GOI_exp_hist %>% arrange(ranking_score)
+  strat_GOI_exp_wstrat <- mutate(strat_GOI_exp_hist, quantile_rank = ntile(strat_GOI_exp_hist["ranking_score"],4))
+  strat_GOI_exp_wstrat <- mutate(strat_GOI_exp_wstrat, percentile_rank = round(cume_dist(strat_GOI_exp_hist["ranking_score"])*100,2))
 } else {
-  strat_GOI_exp <- strat_GOI_exp %>% arrange(!!as.symbol(GOI))
-  strat_GOI_exp_wstrat <- mutate(strat_GOI_exp, quantile_rank = ntile(strat_GOI_exp[GOI],4))
-  if (nrow(strat_GOI_exp) < 100){
-    strat_GOI_exp_wstrat <- mutate(strat_GOI_exp_wstrat, percentile_rank = ntile(strat_GOI_exp[GOI],10))
+  strat_GOI_exp_hist <- strat_GOI_exp_hist %>% arrange(!!as.symbol(GOI))
+  strat_GOI_exp_wstrat <- mutate(strat_GOI_exp_hist, quantile_rank = ntile(strat_GOI_exp_hist[GOI],4))
+  if (nrow(strat_GOI_exp_hist) < 100){
+    strat_GOI_exp_wstrat <- mutate(strat_GOI_exp_wstrat, percentile_rank = ntile(strat_GOI_exp_hist[GOI],10))
     strat_GOI_exp_wstrat$percentile_rank <- strat_GOI_exp_wstrat$percentile_rank * 10
   } else {
-    strat_GOI_exp_wstrat <- mutate(strat_GOI_exp_wstrat, percentile_rank = ntile(strat_GOI_exp[GOI],100))
+    strat_GOI_exp_wstrat <- mutate(strat_GOI_exp_wstrat, percentile_rank = round(cume_dist(strat_GOI_exp_hist[GOI])*100,2))
   }
 }
 
 ### write results to file
-rownames(strat_GOI_exp_wstrat) <- rownames(strat_GOI_exp)
+rownames(strat_GOI_exp_wstrat) <- rownames(strat_GOI_exp_hist)
 write.table(strat_GOI_exp_wstrat, "GOI_with_strat.tsv", sep='\t', col.names=NA)
 
 ### now create design matrix
@@ -265,11 +267,11 @@ if (strat_do_single_GOI_analysis){
   ### Do Histogram
   svg(paste(GOI_label, "TPM_histogram.svg", sep="_"))
   par(mar=c(5,5.5,4,2))
-  hist(log2(strat_GOI_exp[, GOI]), breaks=100, main=GOI, 
+  hist(log2(strat_GOI_exp_hist[, GOI]), breaks=100, main=GOI, 
        xlab=paste("Log2(", strat_exp_type, ")", sep=""), ylab="Frequency",
        cex.main=3, cex.lab=2.5, cex.axis=2.0)
-  abline(v=mean(log2(strat_GOI_exp[, GOI])), col="purple")
-  abline(v=median(log2(strat_GOI_exp[, GOI])), col="green")
+  abline(v=mean(log2(strat_GOI_exp_hist[, GOI])), col="purple")
+  abline(v=median(log2(strat_GOI_exp_hist[, GOI])), col="green")
   abline(v=max(log2(strat_GOI_exp_wstrat[strat_GOI_exp_wstrat$percentile_rank <= percentile, GOI])), col="blue")
   abline(v=min(log2(strat_GOI_exp_wstrat[strat_GOI_exp_wstrat$percentile_rank >= (100-percentile), GOI])), col="red")
   # abline(v=max(log2(strat_GOI_exp_wstrat[strat_GOI_exp_wstrat$quantile_rank == 1, GOI])), col="blue")
@@ -278,11 +280,11 @@ if (strat_do_single_GOI_analysis){
 }
 
 ### Do tumor - normal expression boxplot
-strat_GOI_exp_raw$Normal <- grepl(pattern = "(-11A|-11B)$", rownames(strat_GOI_exp_raw))
-strat_GOI_exp_raw$Normal <- as.factor(strat_GOI_exp_raw$Normal)
-strat_GOI_exp_raw[, GOI] <- log2(strat_GOI_exp_raw[, GOI])
+strat_GOI_exp_boxplot$Normal <- grepl(pattern = "(-11A|-11B)$", rownames(strat_GOI_exp_boxplot))
+strat_GOI_exp_boxplot$Normal <- as.factor(strat_GOI_exp_boxplot$Normal)
+strat_GOI_exp_boxplot[, GOI] <- log2(strat_GOI_exp_boxplot[, GOI])
 svg(paste(GOI_label, "TPM_N-T_boxplot.svg", sep="_"))
-p <- ggplot(strat_GOI_exp_raw, aes(x=Normal, y=get(GOI), color=Normal)) + 
+p <- ggplot(strat_GOI_exp_boxplot, aes(x=Normal, y=get(GOI), color=Normal)) + 
   geom_boxplot(notch=TRUE) + theme_classic() + 
   theme(text=element_text(size=30))
 p + geom_jitter(shape=16, position=position_jitter(0.2)) + 
@@ -431,7 +433,7 @@ write.csv(cbind(y$genes[rownames(log_norm_cpm),1],log_norm_cpm), "gene_normalise
 #### Do DE test (exact) ####
 ###*****************************************************************************
 ### first check if switch comparison requested 
-if (switch == "true") {
+if (switchDE == "true") {
   comp <- c(hi, lo)
 } else {
   comp <- c(lo, hi)

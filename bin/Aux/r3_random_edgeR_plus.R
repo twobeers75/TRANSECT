@@ -1,8 +1,8 @@
 #!/usr/bin/env Rscript
 
 ###*****************************************************************************
-### DO DE analysis on GTEx stratified data
-### JToubia - January 2021
+### DO DE analysis on RECODE3 random data
+### JToubia - January 2023
 ###*****************************************************************************
 
 ###*****************************************************************************
@@ -13,7 +13,7 @@ p_load(edgeR, Glimma, dplyr, tidyr, data.table, tibble,
        ggplot2, ggforce, calibrate, gplots, RColorBrewer,
        rlogging)
 
-SetLogFile(base.file=NULL)
+SetLogFile()
 
 ###*****************************************************************************
 #### Hard coded system variables ####
@@ -23,58 +23,39 @@ SetLogFile(base.file=NULL)
 ###*****************************************************************************
 #### Read in Args ####
 ###*****************************************************************************
-args = commandArgs(trailingOnly=TRUE)
-if (length(args)==0) {
-	stop("At least one argument must be supplied (GOI).n", call.=FALSE)
-} else if (length(args)==1) {
-	# default to
-  args[2] = "mRNA"
-  args[3] = 5
-  args[4] = "false"
-  args[5] = "SCA/REF_FILES"
-  args[6] = "SCA/bin/GSEA_Linux_4.2.3/gsea-cli.sh GSEAPreranked" 
-  args[7] = list.files("SCA/data/", "GTEx/GTEx-v8/Breast", "GTEx-Breast-*_tpm-mRNA.tsv", full.names=TRUE)
-  args[8] = list.files("SCA/data/", "GTEx/GTEx-v8/Breast", "GTEx-Breast-*_count-mRNA.tsv", full.names=TRUE)
-  args[9] = ""
-  arg2[10] = ""
-}
+args <- commandArgs(trailingOnly = TRUE)
 
-GOI <- args[1]
-rna_species <- args[2]
-percentile <- as.integer(args[3])
-switchDE <- args[4]
-ref_files_folder <- args[5]
-gsea_exe <- args[6]
-gene_fpkm_filename <- args[7]
-gene_counts_filename <- args[8]
-isomir_rpm_filename <- args[9]
+n_genes <- args[1]
+message(paste("Random trials using ", n_genes, " per trial", sep = ""))
+
+GOI <- "RANDOM"
+rna_species <- "mRNA"
+percentile <- as.integer(5)
+switch <- "false"
+ref_files_folder <- "/data_b/tools/SCA/REF_FILES"
+# gsea_exe <- paste("/data_b/tools/SCA/bin/GSEA_Linux_4.2.3/gsea-cli.sh", "GSEAPreranked", sep =" ")
+gsea_exe <- "false"
+gene_fpkm_filename <- "/data_b/tools/SCA/data/RECOUNT3/BRCA/R3-BRCA-2024-03-07_tpm-mRNA.tsv"
+gene_counts_filename <- "/data_b/tools/SCA/data/RECOUNT3/BRCA/R3-BRCA-2024-03-07_count-mRNA.tsv"
+isomir_rpm_filename <- ""
 normals <- ""
 
 ###*****************************************************************************
 ### Setup for analyses ####
 ###*****************************************************************************
-main_dir <- getwd()
+main_dir <- getwd() 
 dir.create(file.path(main_dir, "DE_Analysis"))
 setwd(file.path(main_dir, "DE_Analysis"))
 
-multi_GOI_analysis <- FALSE
-ratio_GOI_analysis <- FALSE
-single_GOI_analysis <- FALSE
-
 ###*****************************************************************************
-### Setup for stratification ####
+### Setup for random selection ####
 ###*****************************************************************************
-message(paste("Beginning stratification of", GOI))
+message("Beginning random section of individuals from cohort")
 
 ### Check what species of RNA we are analysing and set/read appropriate variables
 if (rna_species == "mRNA"){
-  # exp_data <- read.delim(gene_fpkm_filename, sep='\t', check.names=FALSE, stringsAsFactors=FALSE, row.names = "Description")
   exp_data <- fread(file=gene_fpkm_filename, sep='\t', header=TRUE, check.names=FALSE, stringsAsFactors=FALSE, data.table=FALSE)
-  # exp_data = exp_data[order(exp_data[,'Description']),]
-  # exp_data = exp_data[!duplicated(exp_data$Description),]
-  # rownames(exp_data) <- exp_data$Description
-  # exp_data <- subset(exp_data, select=-c(Description))
-  exp_data <- exp_data %>% column_to_rownames('Description')
+  exp_data <- exp_data %>% column_to_rownames('gene_name')
   exp_type <- "TPM"
 } else if (rna_species == "miRNA"){
   mRNA_ids <- t(fread(file=gene_fpkm_filename, header = FALSE, nrows = 1))
@@ -87,124 +68,21 @@ if (rna_species == "mRNA"){
 }
 message(paste("Normalised expression data loaded for", GOI, ":", ncol(exp_data), "patients and", nrow(exp_data), "genes"))
 
-### check GOI, split if necessary and set flags
-if (grepl( "+", GOI, fixed = TRUE)){
-  GOI_label <- gsub("[+]", "-", GOI)
-  ### check that there is no more than 5 GsOI
-  GsOI_split <- unlist(strsplit(GOI, "+", fixed=TRUE))
-  if (length(GsOI_split) > 5) {
-    stop("Can only have upto 5 genes in this type of analysis", call=FALSE)
-  }
-  message(paste("Stratification based on the addition of multiple genes of interest:", 
-                paste(GOI, collapse="+")))
-  ### set flag for multiple GOIs
-  multi_GOI_analysis <- TRUE
-} else if (grepl( "%", GOI, fixed = TRUE)){
-  GOI_label <- gsub("%", "-", GOI)
-  ### check that there is exactly 2 GsOI
-  GsOI_split <- unlist(strsplit(GOI, "%", fixed=TRUE))
-  if (length(GsOI_split) != 2) {
-    stop("Must have 2 and 2 only genes in this type of analysis", call=FALSE)
-  }
-  message(paste("Stratification based on a ratio from 2 genes of interest:",  
-                paste(GOI, collapse="%")))
-  ### set flag for ratio GOIs
-  ratio_GOI_analysis <- TRUE
-} else {
-  ### must be a single gene strat analysis
-  message(paste("Stratification based on a single gene of interest:", GOI))
-  GOI_label <- GOI
-  GsOI_split <- GOI
-  single_GOI_analysis <- TRUE
-}
-
-### subset data for G/sOI only. We require a few copies for histogram and boxplots (including the original (OG))
-GOI_exp_raw_OG <- as.data.frame(t(exp_data[GsOI_split, ]))
-GOI_exp_raw_OG <- na.omit(GOI_exp_raw_OG)
-GOI_exp_hist <- GOI_exp_raw_OG
-GOI_exp_boxplot <- GOI_exp_raw_OG
-### save the table here
-write.table(round(GOI_exp_raw_OG,2), "GOI_exp_raw_OG.tsv", sep='\t', col.names=NA)
-
-### check to see if multi/ratio flags set
-if (multi_GOI_analysis){
-  ### create a long copy of raw expression for boxplot
-  GOI_exp_sep <- GOI_exp_raw_OG
-  GOI_exp_sep$patientID <- rownames(GOI_exp_sep)
-  GOI_exp_sep$patientID <- factor(GOI_exp_sep$patientID)
-  rownames(GOI_exp_sep) <- NULL
-  GOI_exp_sep_long <- gather(GOI_exp_sep, "geneID", "expression", all_of(GsOI_split), factor_key=TRUE)
-  GOI_exp_sep_long$expression <- log2(GOI_exp_sep_long$expression)
-  GOI_exp_scaled <- data.frame(row.names = rownames(GOI_exp_raw_OG))
-  for (gene in GsOI_split){
-    col_id <- paste(gene,"rank", sep="_")
-    # GOI_exp_scaled[col_id] <- ntile(GOI_exp_raw_OG[gene], nrow(GOI_exp_raw_OG))
-    GOI_exp_scaled[col_id] <- min_rank(GOI_exp_raw_OG[gene])
-  }
-  ### average all ranks for ordering
-  GOI_exp_scaled <- GOI_exp_scaled %>%
-    transmute(average=rowMeans(across(where(is.numeric))))
-  colnames(GOI_exp_scaled) <- "ranking_score"
-  ### now sum all raw expression values for plotting
-  GOI_exp_raw_sum <- GOI_exp_raw_OG %>%
-    transmute(sum=rowSums(across(where(is.numeric))))
-  colnames(GOI_exp_raw_sum) <- GOI
-  ### now cbind on index
-  GOI_exp_boxplot <- cbind(GOI_exp_raw_sum, GOI_exp_scaled)
-  GOI_exp_hist <- cbind(GOI_exp_raw_OG, GOI_exp_raw_sum, GOI_exp_scaled)
-}
-if (ratio_GOI_analysis){
-  GOI_exp_boxplot = GOI_exp_boxplot + 1
-  ### calc log2 FC
-  GOI_exp_boxplot$ranking_score = (log2(GOI_exp_boxplot[,GsOI_split[1]])) - (log2(GOI_exp_boxplot[,GsOI_split[2]]))
-  ### now divide raw expression values for plotting
-  GOI_exp_boxplot$div <- GOI_exp_boxplot[,GsOI_split[1]] / GOI_exp_boxplot[,GsOI_split[2]]
-  ### reset GOI variable
-  # GOI <- paste(GOI, collapse="%")
-  GOI_exp_boxplot <- rename(GOI_exp_boxplot, !!GOI := div)
-  GOI_exp_hist <- GOI_exp_boxplot
-}
-
-if (rna_species == "miRNA"){
-  GOI_exp_boxplot <- subset(GOI_exp_boxplot, rownames(GOI_exp_boxplot) %in% mRNA_ids)
-  GOI_exp_hist <- GOI_exp_boxplot
-}
-
-if (multi_GOI_analysis | ratio_GOI_analysis){
-  GOI_exp_hist <- GOI_exp_hist %>% arrange(ranking_score)
-  GOI_exp_wstrat = mutate(GOI_exp_hist, quantile_rank = ntile(GOI_exp_hist["ranking_score"],4))
-  GOI_exp_wstrat = mutate(GOI_exp_wstrat, percentile_rank = round(cume_dist(GOI_exp_hist["ranking_score"])*100,2))
-} else {
-  GOI_exp_hist <- GOI_exp_hist %>% arrange(!!as.symbol(GOI))
-  GOI_exp_wstrat = mutate(GOI_exp_hist, quantile_rank = ntile(GOI_exp_hist[GOI],4))
-  if (nrow(GOI_exp_hist) < 100){
-    GOI_exp_wstrat <- mutate(GOI_exp_wstrat, percentile_rank = ntile(GOI_exp_hist[GOI],10))
-    GOI_exp_wstrat$percentile_rank <- GOI_exp_wstrat$percentile_rank * 10
-  } else {
-    GOI_exp_wstrat <- mutate(GOI_exp_wstrat, percentile_rank = round(cume_dist(GOI_exp_hist[GOI])*100,2))
-  }
-}
-
-### write results to file
-rownames(GOI_exp_wstrat) <- rownames(GOI_exp_hist)
-write.table(GOI_exp_wstrat, "GOI_with_strat.tsv", sep='\t', col.names=NA)
+TCGA_IDs <- colnames(exp_data)
+random_low <- sample(TCGA_IDs, n_genes)
+TCGA_IDs <- TCGA_IDs[!TCGA_IDs %in% random_low] 
+random_high <- sample(TCGA_IDs, n_genes)
 
 ### now create design matrix
-# first_quart_df <- data.frame(matrix(ncol=3, nrow=dim(GOI_exp_wstrat[GOI_exp_wstrat$quantile_rank == 1, ])[1]))
-# first_quart_df$Sample <- rownames(GOI_exp_wstrat[GOI_exp_wstrat$quantile_rank == 1, ])
-low_percentile_df <- data.frame(matrix(ncol=3, nrow=dim(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank <= percentile, ])[1]))
-matrix_colnames <- c("Sample", "lo", "hi")
+low_percentile_df <- as.data.frame(random_low)
+matrix_colnames <- c("Sample")
 colnames(low_percentile_df) <- matrix_colnames
-low_percentile_df$Sample <- rownames(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank <= percentile, ])
 low_percentile_df$lo <- 1
 low_percentile_df$hi <- 0
 message(paste(nrow(low_percentile_df), "patients stratified into low group for", GOI))
 
-# third_quart_df <- data.frame(matrix(ncol=3, nrow=dim(GOI_exp_wstrat[GOI_exp_wstrat$quantile_rank == 4, ])[1]))
-# third_quart_df$Sample <- rownames(GOI_exp_wstrat[GOI_exp_wstrat$quantile_rank == 4, ])
-high_percentile_df <- data.frame(matrix(ncol=3, nrow=dim(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank >= (100-percentile), ])[1]))
+high_percentile_df <- as.data.frame(random_high)
 colnames(high_percentile_df) <- matrix_colnames
-high_percentile_df$Sample <- rownames(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank >= (100-percentile), ])
 high_percentile_df$lo <- 0
 high_percentile_df$hi <- 1
 message(paste(nrow(high_percentile_df), "patients stratified into high group for", GOI))
@@ -212,111 +90,23 @@ message(paste(nrow(high_percentile_df), "patients stratified into high group for
 design <- rbind(low_percentile_df, high_percentile_df)
 rownames(design) <- design$Sample
 design <- design[c("lo", "hi")]
+
+### check and strip normals out if requested
+if (normals == "") {
+  message(paste("Excluding non-diseased samples"))
+  design$cancertype <- substr(rownames(design), 14, 15)
+  design <- design[design$cancertype != 11, ]
+  design <- subset(design, select=-cancertype)
+}
+
 write.table(design, "design.tsv", col.names=NA)
 
-### need to check that all GOIs are expressed at decent levels for DE analysis
-## require that the median expression value > 3 AND
-## require that the max value > 5
-GsOI_medians <- GOI_exp_raw_OG %>% summarise_at(GsOI_split, median)
-GsOI_maxs <- GOI_exp_raw_OG %>% summarise_at(GsOI_split, max)
-if (min(GsOI_medians) < 2 || min(GsOI_maxs) < 5) {
-  # set DE flag to false but continue on to produce descriptive plots 
-  run_DE <- FALSE
-} else {
-  run_DE <- TRUE
-}
-
-###*****************************************************************************
-### Do descriptive plots ####
-###*****************************************************************************
-
-### Do frequency histogram OR scatterplots
-if (ratio_GOI_analysis){
-  ### Do Scatter
-  GOI_exp_scatter <- log2(GOI_exp_wstrat[,1:2])
-  GOI_exp_scatter$rank <- 1:nrow(GOI_exp_scatter)
-  GOI_exp_scatter$percentile_rank <- GOI_exp_wstrat$percentile_rank
-  svg(paste(GOI_label, "TPM_Scatter.svg", sep="_"))
-  par(mar=c(5,6,4,2))
-  plot(GOI_exp_scatter[,3], GOI_exp_scatter[,1], main="Ordered expression ratio", 
-       xlab="Expression Ratio", ylab="log2(TPM)", col=alpha("#F8766D", 0.5), pch=15, cex=0.8,
-       cex.main=3, cex.lab=2.5, cex.axis=2.0, xaxt="none", ylim=c(0,15))
-  points(GOI_exp_scatter[,2], col=alpha("#00BFC4", 0.5), pch=17, cex=0.8)
-  abline(v=max(GOI_exp_scatter[GOI_exp_scatter$percentile_rank <= percentile, "rank"]), col="blue", lty=5, lwd=2)
-  abline(v=min(GOI_exp_scatter[GOI_exp_scatter$percentile_rank >= (100-percentile), "rank"]), col="red", lty=5, lwd=2)
-  legend("top", legend=c(colnames(GOI_exp_scatter[1]), colnames(GOI_exp_scatter[2])), 
-         col=c("#F8766D", "#00BFC4"), pch=c(15,17), cex=1.5, bg="transparent", bty = "n")
-  invisible(dev.off())
-} 
-if (multi_GOI_analysis){
-  ### Do Boxplots with sina
-  GOI_exp_sep_long$cols_column <- ifelse(GOI_exp_sep_long$patientID %in% rownames(design[design$lo == 1,]), "#00BFC4", 
-     ifelse(GOI_exp_sep_long$patientID %in% rownames(design[design$hi == 1,]), "#F8766D", "grey"))
-  GOI_exp_sep_long$size_column <- ifelse(GOI_exp_sep_long$patientID %in% rownames(design[design$lo == 1,]), 2, 
-     ifelse(GOI_exp_sep_long$patientID %in% rownames(design[design$hi == 1,]), 2, 0.75))
-  GOI_exp_sep_long$in_column <- GOI_exp_sep_long$patientID %in% rownames(design)
-  GOI_exp_sep_long <- GOI_exp_sep_long[order(GOI_exp_sep_long$geneID, GOI_exp_sep_long$in_column), ]
-  GOI_exp_sep_long <- GOI_exp_sep_long[!is.infinite(GOI_exp_sep_long$expression),]
-  p <- ggplot(GOI_exp_sep_long, aes(geneID, expression))
-  p + geom_sina(colour = GOI_exp_sep_long$cols_column, size = GOI_exp_sep_long$size_column, alpha = 0.7) + 
-    theme_classic() + theme(text=element_text(size=30)) + ylab(paste("Log2(", exp_type, ")", sep=""))
-  invisible(ggsave(paste(GOI_label, "TPM_Boxplot_Sina.svg", sep="_"), last_plot(), width = 10, height = 8))
-}
-if (single_GOI_analysis){
-  ### Do Histogram
-  svg(paste(GOI_label, "TPM_histogram.svg", sep="_"))
-  par(mar=c(5,5.5,4,2))
-  hist(log2(GOI_exp_hist[, GOI]), breaks=100, main=GOI, 
-       xlab=paste("Log2(", exp_type, ")", sep=""), ylab="Frequency",
-       cex.main=3, cex.lab=2.5, cex.axis=2.0)
-  abline(v=mean(log2(GOI_exp_hist[, GOI])), col="purple")
-  abline(v=median(log2(GOI_exp_hist[, GOI])), col="green")
-  abline(v=max(log2(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank <= percentile, GOI])), col="blue")
-  abline(v=min(log2(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank >= (100-percentile), GOI])), col="red")
-  # abline(v=max(log2(GOI_exp_wstrat[GOI_exp_wstrat$quantile_rank == 1, GOI])), col="blue")
-  # abline(v=min(log2(GOI_exp_wstrat[GOI_exp_wstrat$quantile_rank == 4, GOI])), col="red")
-  invisible(dev.off())
-}
-
-### Do tumor - normal expression boxplot
-GOI_exp_boxplot$Normal <- "TRUE"
-GOI_exp_boxplot$Normal <- as.factor(GOI_exp_boxplot$Normal)
-GOI_exp_boxplot[, GOI] <- log2(GOI_exp_boxplot[, GOI])
-svg(paste(GOI_label, "TPM_N-T_boxplot.svg", sep="_"))
-p <- ggplot(GOI_exp_boxplot, aes(x=Normal, y=get(GOI), color=Normal)) + 
-  geom_boxplot(notch=TRUE) + theme_classic() + 
-  theme(text=element_text(size=30))
-p + geom_jitter(shape=16, position=position_jitter(0.2)) + 
-  ylab(paste("Log2(", GOI, " ", exp_type, ")", sep=""))
-invisible(dev.off())
-
-### Do stratified expression boxplot
-GOI_exp_low <- GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank <= percentile, ]
-GOI_exp_low$stratification <- "Low"
-GOI_exp_high <- GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank >= (100-percentile), ]
-GOI_exp_high$stratification <- "High"
-GOI_selected_strat <- rbind(GOI_exp_low, GOI_exp_high)
-GOI_selected_strat[, GOI] <- log2(GOI_selected_strat[, GOI])
-svg(paste(GOI_label, "TPM_strat_boxplot.svg", sep="_"))
-p <- ggplot(GOI_selected_strat, aes(x=stratification, y=get(GOI), color=stratification)) + 
-  geom_boxplot(notch=FALSE, na.rm=TRUE) + 
-  ylab(paste("Log2(", GOI, " ", exp_type, ")", sep="")) + 
-  theme_classic() + theme(text=element_text(size=30))
-p + geom_jitter(na.rm=TRUE, shape=16, position=position_jitter(0.2)) + 
-  scale_x_discrete(limits=c("Low", "High")) 
-# p + geom_dotplot(binaxis='y', stackdir='center', dotsize=1, binwidth=0.1) + 
-invisible(dev.off())
-
 ### all done here, sign off stratification
-message(paste("Finished stratification of", GOI))
+message("Finished random section of individuals from cohort")
 
 ###*****************************************************************************
 ### Setup for DE ####
 ###*****************************************************************************
-if (!run_DE) {
-  warning(paste("Unfortunately, there is not enough observations in this dataset for", GOI))
-  stop("Ending this process") 
-}
 
 message(paste("Beginning DE Analysis for", GOI))
 
@@ -327,6 +117,8 @@ lo <- 'lo'
 raw_data <- fread(file=gene_counts_filename, sep='\t', header=TRUE, check.names=FALSE, stringsAsFactors=FALSE, data.table=FALSE)
 colnames(raw_data)[1] <- 'gene_name'
 message(paste("Raw count expression data loaded for", GOI, ":", ncol(raw_data)-1, "patients and", nrow(raw_data), "genes"))
+
+GOI_label <- GOI
 
 ### Subset data
 # dim(raw_data)
@@ -388,9 +180,9 @@ y <- estimateDisp(y, design)
 glMDSPlot(y,labels=colnames(y$counts), groups=group, 
           main=paste(GOI_label,"MDS-Plot",sep="-",collapse=""), 
           html=paste(GOI_label,"MDS-Plot",sep="-",collapse=""), launch=FALSE)
-png("multi_dimensional_scaling_plot.png")
-plotMDS(y)
-invisible(dev.off())
+# png("multi_dimensional_scaling_plot.png")
+# plotMDS(y)
+# invisible(dev.off())
 
 png("mean_var.png");
 plotMeanVar(y, show.tagwise.vars = TRUE, NBline = TRUE)
@@ -429,7 +221,7 @@ write.csv(cbind(y$genes[rownames(log_norm_cpm),1],log_norm_cpm), "gene_normalise
 #### Do DE test (exact) ####
 ###*****************************************************************************
 ### first check if switch comparison requested 
-if (switchDE == "true") {
+if (switch == "true") {
   comp <- c(hi, lo)
 } else {
   comp <- c(lo, hi)
@@ -556,8 +348,10 @@ message(paste("Finished DE Analaysis for", GOI))
 ###*****************************************************************************
 ### Do GSEA / WebGestalt ####
 ###*****************************************************************************
+### check that enrichment analyses requested
 if (gsea_exe != "false"){
   gsea_exe <- paste(gsea_exe, "GSEAPreranked", sep =" ")
+  
   message(paste("Starting GSEA Analysis for", GOI))
   
   main_dir <- getwd()
@@ -590,25 +384,6 @@ if (gsea_exe != "false"){
     system(gsea_command, ignore.stdout=TRUE, ignore.stderr=TRUE, wait=TRUE)
   }
   
-  if (rna_species == "miRNA"){
-    message(paste("Passing DE results to GSEA using Custom TargetScan collection:", GOI))
-    gmx_file <- paste(ref_files_folder, "CSCS_Hs_8mer_CSfiltered.gmx", sep="/")
-    ### In-house Targetscan collection
-    gsea_gmx <- paste("-gmx", gmx_file, sep=" ")
-    gsea_rnk <- "-rnk top_tags_ranked.rnk" 
-    gsea_chip <- "-chip ftp.broadinstitute.org://pub/gsea/annotations_versioned/Human_HGNC_ID_MSigDB.v7.4.chip"
-    gsea_label <- paste("-rpt_label ", GOI_label, "_Strat_Vs_Inhouse-TargetScan", sep="")
-    gsea_params1 <- "-collapse No_Collapse -mode Max_probe -norm meandiv -nperm 1000 -scoring_scheme weighted" 
-    gsea_params2 <- "-create_svgs true -include_only_symbols true -make_sets true -plot_top_x 20"
-    gsea_params3 <- "-rnd_seed timestamp -set_max 2000 -set_min 15 -zip_report false"
-    gsea_out <- paste("-out ", outdir, sep="")
-    gsea_command <- paste(gsea_exe, gsea_gmx, gsea_rnk, gsea_chip, gsea_label, gsea_params1, gsea_params2, gsea_params3, gsea_out, sep=" ") 
-    
-    system(gsea_command, ignore.stdout=TRUE, ignore.stderr=TRUE, wait=TRUE)
-  }
-  
-  # C3 not in use: ftp.broadinstitute.org://pub/gsea/gene_sets/c3.all.v7.4.symbols.gmt
-  
   ### Create summary plots
   Sys.sleep(10)
   ### get dir and file names and process iteratively
@@ -625,15 +400,21 @@ if (gsea_exe != "false"){
       combined_gsea_sig_results <- rbind(combined_gsea_sig_results, temp_gsea_sig_results)
       combined_gsea_sig_results <- combined_gsea_sig_results[order(combined_gsea_sig_results$NES),]
       if (GSEA_output_report_file == GSEA_output_report_files[length(GSEA_output_report_files)]){
-        ### all reports merged so create the plot
-        combined_gsea_sig_results$NES <- as.numeric(combined_gsea_sig_results$NES)
-        combined_gsea_sig_results$bar_color <- ifelse(combined_gsea_sig_results$NES > 0, "red", "blue")
-        pdf(file=paste(outdir, "/",sample_name, ".pdf", sep=""),width=15,height=10)
-        par(las=2) ; par(mar=c(10,50,10,5))
-        barplot(combined_gsea_sig_results$NES, main=sample_name, horiz=TRUE, names.arg=row.names(combined_gsea_sig_results), xlab="Normalise Enrichment Score", cex.main=2, cex.lab=1.5, cex.axis=1.0, col=combined_gsea_sig_results$bar_color)
-        invisible(dev.off())
-        write.csv(combined_gsea_sig_results[,1:(length(combined_gsea_sig_results)-2)], 
-                  paste(outdir, "/",sample_name, ".csv", sep=""), row.names=FALSE)
+        ###### Changed to detect zero length results
+        if (nrow(combined_gsea_sig_results) > 0){
+          ### all reports merged so create the plot
+          combined_gsea_sig_results$NES <- as.numeric(combined_gsea_sig_results$NES)
+          combined_gsea_sig_results$bar_color <- ifelse(combined_gsea_sig_results$NES > 0, "red", "blue")
+          pdf(file=paste(outdir, "/",sample_name, ".pdf", sep=""),width=15,height=10)
+          par(las=2) ; par(mar=c(10,50,10,5))
+          barplot(combined_gsea_sig_results$NES, main=sample_name, horiz=TRUE, names.arg=row.names(combined_gsea_sig_results), xlab="Normalise Enrichment Score", cex.main=2, cex.lab=1.5, cex.axis=1.0, col=combined_gsea_sig_results$bar_color)
+          invisible(dev.off())
+          write.csv(combined_gsea_sig_results[,1:(length(combined_gsea_sig_results)-2)], 
+                    paste(outdir, "/",sample_name, ".csv", sep=""), row.names=FALSE)
+        } else {
+          message("GSEA returned no significant hits. No summary plots produced")
+        }  
+        #########
       }
     }
   }
@@ -668,37 +449,48 @@ if (gsea_exe != "false"){
   enrichDBs <- list(enrichDatabaseGO = enrichDatabaseGO, enrichDatabasePW = enrichDatabasePW, enrichDatabaseDS = enrichDatabaseDS)
   
   ### Run each analysis
-  message("Passing DE UP regulated geneset to WebGestalt ORA")
-  sink(nullfile()) # don't want console messages
-  for (i in 1:length(enrichDBs)) { 
-    enrichResult <- WebGestaltR(enrichMethod="ORA", 
-                                organism="hsapiens", 
-                                enrichDatabase=enrichDBs[[i]], 
-                                interestGene=FDR_sig_df_ord_up, 
-                                interestGeneType="genesymbol", 
-                                #referenceGene=reference_geneset, 
-                                referenceSet="genome_protein-coding", 
-                                referenceGeneType="genesymbol", 
-                                minNum=5, maxNum=2000, sigMethod="top", reportNumr=40,  
-                                isOutput=TRUE, 
-                                outputDirectory=WG_outdir, 
-                                projectName=paste(names(enrichDBs[i]), "UP-Reg", sep = "_"))
+  if (length(FDR_sig_df_ord_up) > 50) {
+    message("Passing DE UP regulated geneset to WebGestalt ORA")
+    for (i in 1:length(enrichDBs)) { 
+      sink(nullfile()) # don't want console messages
+      enrichResult <- WebGestaltR(enrichMethod="ORA", 
+                                  organism="hsapiens", 
+                                  enrichDatabase=enrichDBs[[i]], 
+                                  interestGene=FDR_sig_df_ord_up, 
+                                  interestGeneType="genesymbol", 
+                                  #referenceGene=reference_geneset, 
+                                  referenceSet="genome_protein-coding", 
+                                  referenceGeneType="genesymbol", 
+                                  minNum=5, maxNum=2000, sigMethod="top", reportNumr=40,  
+                                  isOutput=TRUE, 
+                                  outputDirectory=WG_outdir, 
+                                  projectName=paste(names(enrichDBs[i]), "UP-Reg", sep = "_"))
+      sink()
+    }
+  } else {
+    message("Not enough genes up regulated to do ORA analysis. Requires > 50")
   }
-  message("Passing DE Down regulated geneset to WebGestalt ORA")
-  for (i in 1:length(enrichDBs)) { 
-    enrichResult <- WebGestaltR(enrichMethod="ORA", 
-                                organism="hsapiens", 
-                                enrichDatabase=enrichDBs[[i]], 
-                                interestGene=FDR_sig_df_ord_down, 
-                                interestGeneType="genesymbol", 
-                                #referenceGene=reference_geneset, 
-                                referenceSet="genome_protein-coding", 
-                                referenceGeneType="genesymbol", 
-                                isOutput=TRUE, 
-                                outputDirectory=WG_outdir, 
-                                projectName=paste(names(enrichDBs[i]), "DOWN-Reg", sep = "_"))
+  
+  if (length(FDR_sig_df_ord_down) > 50) {
+    message("Passing DE Down regulated geneset to WebGestalt ORA")
+    for (i in 1:length(enrichDBs)) { 
+      sink(nullfile())
+      enrichResult <- WebGestaltR(enrichMethod="ORA", 
+                                  organism="hsapiens", 
+                                  enrichDatabase=enrichDBs[[i]], 
+                                  interestGene=FDR_sig_df_ord_down, 
+                                  interestGeneType="genesymbol", 
+                                  #referenceGene=reference_geneset, 
+                                  referenceSet="genome_protein-coding", 
+                                  referenceGeneType="genesymbol", 
+                                  isOutput=TRUE, 
+                                  outputDirectory=WG_outdir, 
+                                  projectName=paste(names(enrichDBs[i]), "DOWN-Reg", sep = "_"))
+      sink(nullfile())
+    }
+  } else {
+    message("Not enough genes down regulated to do ORA analysis. Requires > 50")
   }
-  sink()
   ### All done for WebGestalt. Sign off now
   message(paste("Finished WebGestalt Analysis for", GOI))
 }
