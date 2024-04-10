@@ -34,6 +34,7 @@ git clone https://github.com/twobeers75/SCA.git
 ```
 
 Or, download the package and extract it
+
 Browse to https://github.com/twobeers75/SCA, click on the green "Code" button followed by "Download ZIP" (note the download location). 
 Find the downloaded ZIP file and move it if required before extracting the contents and renaming the folder
 ```sh
