@@ -67,22 +67,25 @@ sudo apt update
 sudo apt install r-base
 
 ### Start R from the terminal and install pacman and devtools (follow the prompts and choose (if asked) to install into a personal library)
+# Once you enter the R shell you should see printed out in the terminal a number of lines about the R version and licences followed by a ">" symbol
+# I have used this symbol below to indicate that you need to be in the R shell to run these commands but, you can't copy the ">" symbol too. It won't work.
 R
-# Note: run the following command and then go get a coffee (it takes a long time to finish!) 
 > install.packages(c("pacman","devtools"))
+# Note: maybe wise here to go get a coffee (the previous command takes quite some time to finish!) 
 
 ### Load devtools and install rlogging
 > library("devtools")
 > install_github("https://github.com/mjkallen/rlogging.git")
 
-### Also install required Bioconductor packages (these take quite some time to install!)
+### Also install required Bioconductor packages (these can take quite some time to install!)
 > if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 > BiocManager::install(version = "3.18")
-# Note: run this final R command and go get another coffee (Sorry!)
 > BiocManager::install(c("edgeR","Glimma","DEFormats"))
+# Note: probably time for another coffee (Sorry!)
 
 # Once successfully completed you can quit R
+# No more coffee for you today ;-)
 >  q()
 ```
 
