@@ -195,5 +195,5 @@ cd ESR1_Breast_test
 
 ## Licence
 
-...
+SCA is made available under the terms of the MIT license, a copy of which is included in the distribution in the LICENSE file. See that file for exact terms and conditions.
 
