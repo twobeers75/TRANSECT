@@ -12,7 +12,7 @@ SCRIPT_FOLDER=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd
 BASE_FOLDER=`dirname ${SCRIPT_FOLDER}`
 DATA_FOLDER="${BASE_FOLDER}/data/GDC"
 REF_FILES_FOLDER="${BASE_FOLDER}/REF_FILES"
-GSEA_EXE="${SCRIPT_FOLDER}/GSEA_Linux_4.2.3/gsea-cli.sh"
+GSEA_EXE="${SCRIPT_FOLDER}/GSEA/gsea-cli.sh"
 
 ### and record where we start from
 working_folder=`pwd`

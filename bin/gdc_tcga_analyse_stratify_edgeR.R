@@ -32,7 +32,7 @@ if (length(args)==0) {
   args[3] = 5
   args[4] = "false"
   args[5] = "SCA/REF_FILES"
-  args[6] = "SCA/bin/GSEA_Linux_4.2.3/gsea-cli.sh GSEAPreranked" 
+  args[6] = "SCA/bin/GSEA/gsea-cli.sh GSEAPreranked" 
   args[7] = list.files("SCA/data/GDC/", "BRCA/mRNA_expression_fpkm", "GDC_TCGA-BRCA.*FPKM-mRNA_toTPM_all.tsv", full.names=TRUE)
   args[8] = list.files("SCA/data/GDC/", "BRCA/mRNA_expression_counts", "GDC_TCGA-BRCA.*Count-mRNA_all.tsv", full.names=TRUE)
   args[9] = list.files("SCA/data/GDC/", "BRCA/isomiR_expression_rpm", "GDC_TCGA-BRCA.*RPM-miRNAisoform_all.tsv", full.names=TRUE)
@@ -392,9 +392,9 @@ y <- estimateDisp(y, design)
 glMDSPlot(y,labels=colnames(y$counts), groups=group, 
           main=paste(GOI_label,"MDS-Plot",sep="-",collapse=""), 
           html=paste(GOI_label,"MDS-Plot",sep="-",collapse=""), launch=FALSE)
-png("multi_dimensional_scaling_plot.png")
-plotMDS(y)
-invisible(dev.off())
+# png("multi_dimensional_scaling_plot.png")
+# plotMDS(y)
+# invisible(dev.off())
 
 png("mean_var.png");
 plotMeanVar(y, show.tagwise.vars = TRUE, NBline = TRUE)
