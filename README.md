@@ -1,5 +1,5 @@
 # SCA - Stratified Cohort Analysis
-| [Requirements](#reqs)| [Installation](#installation) | [Usage](#usage) | [Output](#output) | [Manual](#manual) | 
+| [Requirements](#requirements)| [Installation](#installation) | [Usage](#usage) | [Output](#output) | [Manual](#manual) | 
 
 
 
@@ -17,7 +17,7 @@ Currently, there are many global efforts to collect and collate tissue-specific 
 
 ## Hardware requirements
 
-<span id="#reqs"></span>
+<span id="#requirements"></span>
 
 64 bit Linux (tested solely on Ubuntu 22.04)
 
