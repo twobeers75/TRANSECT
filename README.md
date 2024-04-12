@@ -190,7 +190,6 @@ cd ESR1_Breast_test
 
 ## Contributors
 
-<span id="#hardware"></span>
 ...
 
 ## Licence
