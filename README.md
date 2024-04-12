@@ -1,5 +1,5 @@
 # SCA - Stratified Cohort Analysis
-| [Requirements](#requirements)| [Installation](#installation) | [Usage](#usage) | [Output](#output) | [Manual](#manual) | [Installation](#hardware) 
+| [Installation](#installation) | [Usage](#usage) | [Output](#output) | [Manual](#manual) |
 
 
 
