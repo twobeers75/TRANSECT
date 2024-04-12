@@ -2,6 +2,7 @@
 | [Installation](#installation) | [Usage](#usage) | [Output](#output) | [Manual](#manual) |
 
 
+## Introduction
 
 SCA is an application designed solely to run in a Linux Terminal. In brief, SCA stratifies large cohort data into user defined subsets which are subsequently compared one to the other. This version of SCA is tuned specifically for the interrogation of gene/s from publicly available tissue-specific gene expression data.
 
