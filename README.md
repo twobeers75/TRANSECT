@@ -1,5 +1,5 @@
 # SCA - Stratified Cohort Analysis
-| [Requirements](#requirements)| [Installation](#installation) | [Usage](#usage) | [Output](#output) | [Manual](#manual) | [Installation](#requires) 
+| [Requirements](#requirements)| [Installation](#installation) | [Usage](#usage) | [Output](#output) | [Manual](#manual) | [Installation](#hardware) 
 
 
 
@@ -190,7 +190,7 @@ cd ESR1_Breast_test
 
 ## Contributors
 
-<span id="#requires"></span>
+<span id="#hardware"></span>
 ...
 
 ## Licence
