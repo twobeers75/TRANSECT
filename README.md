@@ -1,4 +1,8 @@
 # SCA - Stratified Cohort Analysis
+| [Requirements](#reqs)| [Installation](#installation) | [Usage](#usage) | [Output](#output) | [Manual](#manual) | 
+
+
+
 SCA is an application designed solely to run in a Linux Terminal. In brief, SCA stratifies large cohort data into user defined subsets which are subsequently compared one to the other. This version of SCA is tuned specifically for the interrogation of gene/s from publicly available tissue-specific gene expression data.
 
 Currently, there are many global efforts to collect and collate tissue-specific gene expression (RNA-sequencing) data from large cohorts of diseased and non-diseased subjects for public use (GTEx, TCGA, …, to name only a few). These data sets are used to bolster and aid in the investigation of gene specific expression and regulation as well as several other biological queries. One such application that is currently underutilised and (to our knowledge) not currently offered as an accessible public resource, is the stratification and subsequent differential expression of single or composite genes in order to assess "transcriptome state". This type of analysis has only in recent times become feasible thanks to the large number of participants in cohort studies and, will only intensify in power and usefulness as these collections continue to grow in number and diversity. The results from this type of analysis can be used to rapidly investigate transcriptome state within natural physiological expression levels without economic burden. This can be applied before mass-parallel laboratory investigations and/or between the transition from *in vitro* to *in vivo* studies in order to assess the feasibility of further, possibly expensive, experimentation.
@@ -13,18 +17,25 @@ Currently, there are many global efforts to collect and collate tissue-specific 
 
 ## Hardware requirements
 
+<span id="#reqs"></span>
+
 64 bit Linux (tested solely on Ubuntu 22.04)
 
 10GB RAM (12+ recommended)
 
-## Software dependencies
+## Software requirements
 
 - Python 3
   - see pip_requirements.txt for a complete list of required python packages
 - R
   - see r_requirements.txt for a complete list of required R packages
+- Java
+  - preinstalled with Ubuntu 22.04
+
 
 ## Installation
+<span id="#installation"></span>
+
 NOTE: SCA requires and depends on numerous packages and applications. These take some time to install if not already present. A fresh install on a vanilla Ubuntu 22.04 can take 30-45mins depending on the PC and network speeds. 
 
 Clone the repo
@@ -95,7 +106,9 @@ NOTE: SCA requires many additional R packages however these are all installed on
 
 ## Usage
 
- SCA has two main operations; **Prepare** and **Analyse**. 
+<span id="#usage"></span> 
+
+SCA has two main operations; **Prepare** and **Analyse**. 
 
 **Prepare** is a process that retrieves the raw data from online repositories and prepares it (if required) for analysis. SCA comes bundled with three different prepare scripts, one each for GDC-TCGA, GTEx and RECOUNT3 data. 
 
@@ -166,9 +179,13 @@ cd ESR1_Breast_test
 
 ## Output
 
+<span id="#output"></span>
+
 ...
 
 ## Manual
+
+<span id="#manual"></span>
 
 ...
 
