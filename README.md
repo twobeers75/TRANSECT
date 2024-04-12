@@ -17,7 +17,6 @@ Currently, there are many global efforts to collect and collate tissue-specific 
 
 ## Hardware requirements
 
-<span id="#requirements"></span>
 
 64 bit Linux (tested solely on Ubuntu 22.04)
 
@@ -191,6 +190,7 @@ cd ESR1_Breast_test
 
 ## Contributors
 
+<span id="#requirements"></span>
 ...
 
 ## Licence
