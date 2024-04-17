@@ -119,7 +119,7 @@ else
 fi
 
 ### check if user input a valid gene name
-if [[ "${GOI}" == *"+"* ]] || [[ "${GOI}" == *"%"* ]]
+if [[ "${GOI}" == *"+"* ]] || [[ "${GOI}" == *"%"* ]] || [[ ${strat_by} == "miRNA" ]]
 then
 	echo "Complex analysis selected, not checking gene names, deactivating Corr Analyses"
 	do_all=false

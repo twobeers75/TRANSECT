@@ -446,7 +446,7 @@ if (switchDE == "true") {
 }
 
 de <- exactTest(y, pair=comp)
-dt <- decideTests(de,lfc=1)
+dt <- decideTests(de,adjust.method="fdr",p.value=1e-5,lfc=1)
 message(paste("Differential expression using exact test performed", ":", 
               summary(dt)[[1]], "genes down regulated and", 
               summary(dt)[[3]], "genes up regulated"))
@@ -465,7 +465,7 @@ write.table(tt_rank, "top_tags_ranked.rnk", sep='\t', row.names=FALSE, quote=FAL
 ### make a deg_sigFC_table containing all the genes that are significantly up or downregulated
 sorted_table <- tt$table[order(tt$table[,2]),]
 rn <- rownames(tt$table)
-deg_sigFC <- rn[(tt$table$FDR <= .05) & ((tt$table[,2] <= -1) | (tt$table[,2] >= 1))]
+deg_sigFC <- rn[(tt$table$FDR <= 1e-5) & ((tt$table[,2] <= -1) | (tt$table[,2] >= 1))]
 deg_sigFC_table <- sorted_table[deg_sigFC, ]
 
 ### Do the volcano plots - html versions with Glimma
@@ -504,18 +504,18 @@ svg(paste("High_Vs_Low", GOI_label,"volcano.svg",sep="_",collapse=""))
 par(mar=c(5,6,4,2))
 with(results_df, plot(logFC, -log10(PValue), pch=20, cex=0.25, col="grey", main="Volcano plot", cex.main=2.5, cex.lab=2.5, cex.axis=2.0))
 
-### Add colored points: red if FDR<0.05, orange of log2FC>1, green if both)
-with(subset(results_df, FDR < 0.05), points(logFC, -log10(PValue), pch=20, cex=0.25, col="green"))
+### Add colored points
+with(subset(results_df, FDR < 1e-5), points(logFC, -log10(PValue), pch=20, cex=0.25, col="green"))
 with(subset(results_df, abs(logFC) >1 ), points(logFC, -log10(PValue), pch=20, cex=0.25, col="orange"))
-with(subset(results_df, FDR < 0.05 & abs(logFC)>1), points(logFC, -log10(PValue), pch=20, cex=0.5, col="green"))
-with(subset(results_df, FDR < 0.05 & logFC > 1), points(logFC, -log10(PValue), pch=20, cex=0.5, col="red"))
-with(subset(results_df, FDR < 0.05 & logFC < -1), points(logFC, -log10(PValue), pch=20, cex=0.5, col="blue"))
+with(subset(results_df, FDR < 1e-5 & abs(logFC)>1), points(logFC, -log10(PValue), pch=20, cex=0.5, col="green"))
+with(subset(results_df, FDR < 1e-5 & logFC > 1), points(logFC, -log10(PValue), pch=20, cex=0.5, col="red"))
+with(subset(results_df, FDR < 1e-5 & logFC < -1), points(logFC, -log10(PValue), pch=20, cex=0.5, col="blue"))
 
 ### Label points with the textxy function from the calibrate plot
 with(subset(results_df, -log10(results_df$PValue)>200 & abs(logFC)>2), textxy(logFC, -log10(PValue), labs=gene_name, cex=.7,offset=0.5))
 
 ### Adding cut-off lines
-FDR_sig_df <- subset(results_df, FDR < 0.05 & abs(logFC)>1)
+FDR_sig_df <- subset(results_df, FDR < 1e-5 & abs(logFC)>1)
 write.csv(FDR_sig_df, file=paste("High_Vs_Low", GOI_label,"de_sigFC.csv",sep="_",collapse=""), row.names=FALSE)
 yaxis_cuttoff <- -log10(FDR_sig_df[which.max(FDR_sig_df[,"FDR"]),"PValue"])
 segments(-10, yaxis_cuttoff, -1, yaxis_cuttoff, col="grey", lty=3)

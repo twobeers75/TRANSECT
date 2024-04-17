@@ -41,7 +41,7 @@ get_files( ) {
 	cd ${folder_name}
 	${SCRIPT_FOLDER}/GDC_API/Download_SampleSheet.py ${project_id} ${folder_name}
 	${SCRIPT_FOLDER}/GDC_API/Download_Files.py ${project_id} ${folder_name}
-	tar -xf gdc_download_*.tar.gz
+	tar -xif gdc_download_*.tar.gz
 }
 
 process_files( ) {

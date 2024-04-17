@@ -206,11 +206,11 @@ elif rna_type == 'isomiRNA': # this one is complicated!
 			print('Unknown samplecode (' + sample_code + ') in TCGA bacode: ' + TCGA_barcode)
 	
 	### clean up all dfs of unwanted rows
-	if "precursor" in tumor_df.columns:
+	if "precursor" in tumor_df.index:
 		tumor_df = tumor_df.drop(["precursor","unannotated","stemloop"])
-	if "precursor" in normal_df.columns:
+	if "precursor" in normal_df.index:
 		normal_df = normal_df.drop(["precursor","unannotated","stemloop"])
-	if "precursor" in all_df.columns:
+	if "precursor" in all_df.index:
 		all_df = all_df.drop(["precursor","unannotated","stemloop"])
 	
 else:
