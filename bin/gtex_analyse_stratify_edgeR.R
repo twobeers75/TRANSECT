@@ -12,7 +12,8 @@
 ###*****************************************************************************
 suppressMessages(if (!require("pacman")) install.packages("pacman"))
 p_load(edgeR, Glimma, dplyr, tidyr, data.table, tibble, 
-       ggplot2, ggforce, calibrate, gplots, RColorBrewer)
+       ggplot2, ggforce, calibrate, gplots, RColorBrewer,
+       plotly, htmlwidgets)
 
 ###*****************************************************************************
 #### Hard coded system variables ####

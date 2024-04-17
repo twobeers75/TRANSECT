@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-#.libPaths( c( "/data/RLibs" , .libPaths() ) )
+.libPaths( c( "/data/RLibs" , .libPaths() ) )
 
 ###*****************************************************************************
 ### Create correlation table and plots from TCGA data
@@ -11,7 +11,7 @@
 ### Import libraries ####
 ###*****************************************************************************
 suppressMessages(if (!require("pacman")) install.packages("pacman"))
-p_load(data.table)
+p_load(data.table, plotly, htmlwidgets)
 #suppressMessages(library(data.table))
 
 ###*****************************************************************************
@@ -101,17 +101,24 @@ for (row in 1:nrow(df_target_pairs)) {
         # adding exprs to new df, to be outputted in the outputs
         high_expr_df[gene2] <- df_tcga_data[gene2]
 
-        png(paste("plots/", gene1, "_", gene2, ".png", sep=""))
-        cor_1 <- log_cor_stats
-        lm1 <- lm(log2(gene1_exp_value)~log2(gene2_exp_value))
-        par(mar=c(6,5.5,4,2))
-        plot(log2(gene2_exp_value), log2(gene1_exp_value), pch=20, xlab=paste("log2(", gene2, ")", sep=""),
-             ylab=paste("log2(", gene1, ")", sep=""), main="Expression Scatterplot", 
-             cex.main=3, cex.lab=2.5, cex.axis=2.0)
-        abline(lm1, col="red")
-        legend("bottomleft", legend=c(paste("R =", signif(as.numeric(cor_1$estimate), 3)), 
-                                      paste("p =", signif(cor_1$p.value, 3))))
-        invisible(dev.off())
+        p <- ggplot(aes(x = log2(gene2_exp_value), y = log2(gene1_exp_value))) +
+          geom_point(shape=20) + 
+          labs(x = paste("log2(", gene2, ")", sep=""), y = paste("log2(", gene1, ")", sep=""), title = "Expression Scatterplot") + 
+          theme_classic() +
+          theme(text=element_text(size=30), 
+                legend.position = "bottomleft", 
+                legend.text=c(paste("R =", signif(as.numeric(cor_1$estimate), 3)), 
+                              paste("p =", signif(cor_1$p.value, 3)))) +
+          geom_smooth(formula=log2(gene1_exp_value)~log2(gene2_exp_value), method=lm, se=FALSE, color = "red")
+
+        p_ly = ggplotly(p) %>% style(text = paste("<b>Patient ID:</b>", high_expr_df$Names, 
+                                          "<br><b>log2(", gene1, "):</b>", log2(gene1_exp_value),
+                                          "<br><b>log2(", gene2, "):</b>", log2(gene2_exp_value),
+                                          ))
+
+        saveWidget(ggplotly(p_ly), file = paste("plots/", gene1, "_", gene2, ".html", sep=""))
+
+        # lm() function creates a linear regression model in R, which takes the formula Y ~ X where Y is the outcome variable and X is the predictor variable
       }
     }
   } else {
@@ -142,20 +149,24 @@ write.table(df_target_pairs, paste(GOI, "corr.tsv", sep="_"), sep='\t', row.name
 df_target_pairs$logExp_FDR[df_target_pairs$logExp_FDR == 0] = 1E-320
 df_target_pairs <- transform(df_target_pairs, logExp_Cor = as.numeric(logExp_Cor))
 
-png(paste(GOI, "corr_volcano.png", sep="_"))
-par(mar=c(5,6,4,2))
-with(df_target_pairs, plot(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.25, col="grey", main="Pearson's Correlations", 
-              xlab="R", ylab="-log10(FDR)", xlim=c(-1,1), ylim=c(0,310), cex.main=2.5, cex.lab=2.5, cex.axis=2.0))
+p <- ggplot(df_target_pairs, aes(x = logExp_Cor, y = -log10(logExp_FDR))) +
+  geom_point(shape = 20, size = 0.25, color = "grey") + # adding additoinal points layer with the subset of data we want
+  geom_point(data = subset(df_target_pairs, logExp_FDR < 1E-50), shape=20, size=0.25, color="green") +
+  geom_point(data = subset(df_target_pairs, logExp_FDR < 1E-150 & logExp_Cor > 0.7), shape=20, size=0.75, color="red") +
+  geom_point(data = subset(df_target_pairs, logExp_FDR < 1E-150 & logExp_Cor < -0.7), shape=20, size=0.75, color="blue") +
+  labs(title = "Pearson's Correlations", x = "R", y = "-log10(FDR)") +
+  theme_classic() +
+  theme(text=element_text(size=30)) +
+  xlim(-1, 1) +
+  ylim(0, 310)
 
-### Add colored points:
-# with(subset(df_target_pairs, logExp_Cor > 0.5 ), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.25, col="orange"))
-# with(subset(df_target_pairs, logExp_Cor < -0.5 ), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.25, col="orange"))
-with(subset(df_target_pairs, logExp_FDR < 1E-50), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.25, col="green"))
-with(subset(df_target_pairs, logExp_FDR < 1E-150 & logExp_Cor > 0.7), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.75, col="red"))
-with(subset(df_target_pairs, logExp_FDR < 1E-150 & logExp_Cor < -0.7), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.75, col="blue"))
-invisible(dev.off())
-
-setwd(outdir)
+p_ly = ggplotly(p) %>% style(text = paste("<b>Gene 2:</b>", df_target_pairs$gene2_id, 
+                                          "<br><b>logExp_Cor:</b>", df_target_pairs$logExp_Cor,
+                                          "<br><b>logExp_Pvalue:</b>", df_target_pairs$logExp_Pvalue,
+                                          "<br><b>logExp_Bonferroni:</b>", df_target_pairs$logExp_Bonferroni,
+                                          "<br><b>logExp_FDR:</b>", df_target_pairs$logExp_FDR,
+                                          ))
+saveWidget(ggplotly(p_ly), file = paste(GOI, "corr_volcano.html", sep="_"))
 
 ### all done, sign off
 message(paste("Finished Corr Analysis for", GOI))
