@@ -11,7 +11,7 @@
 suppressMessages(if (!require("pacman")) install.packages("pacman"))
 p_load(edgeR, Glimma, dplyr, tidyr, data.table, tibble, 
        ggplot2, ggforce, calibrate, gplots, RColorBrewer,
-       rlogging)
+       rlogging, plotly, htmlwidgets)
 
 SetLogFile(base.file=NULL)
 
@@ -259,9 +259,10 @@ if (strat_do_multi_GOI_analysis){
   strat_GOI_exp_sep_long <- strat_GOI_exp_sep_long[order(strat_GOI_exp_sep_long$geneID, strat_GOI_exp_sep_long$in_column), ]
   strat_GOI_exp_sep_long <- strat_GOI_exp_sep_long[!is.infinite(strat_GOI_exp_sep_long$expression),]
   p <- ggplot(strat_GOI_exp_sep_long, aes(geneID, expression))
-  p + geom_sina(colour = strat_GOI_exp_sep_long$cols_column, size = strat_GOI_exp_sep_long$size_column, alpha = 0.7) + 
+  p <- p + geom_sina(colour = strat_GOI_exp_sep_long$cols_column, size = strat_GOI_exp_sep_long$size_column, alpha = 0.7) + 
     theme_classic() + theme(text=element_text(size=30)) + ylab(paste("Log2(", strat_exp_type, ")", sep=""))
-  invisible(ggsave(paste(GOI_label, "TPM_Boxplot_Sina.svg", sep="_"), last_plot(), width = 10, height = 8))
+  p_ly = ggplotly(p) %>% style(text = paste("<b>Patient ID:</b>", strat_GOI_exp_sep_long$patientID, "<br><b>Expression:</b>", strat_GOI_exp_sep_long$expression))
+  saveWidget(ggplotly(p_ly), file = paste(GOI_label, "TPM_Boxplot_Sina.svg", sep="_"))
 }
 if (strat_do_single_GOI_analysis){
   ### Do Histogram
@@ -283,13 +284,16 @@ if (strat_do_single_GOI_analysis){
 strat_GOI_exp_boxplot$Normal <- grepl(pattern = "(-11A|-11B)$", rownames(strat_GOI_exp_boxplot))
 strat_GOI_exp_boxplot$Normal <- as.factor(strat_GOI_exp_boxplot$Normal)
 strat_GOI_exp_boxplot[, GOI] <- log2(strat_GOI_exp_boxplot[, GOI])
-svg(paste(GOI_label, "TPM_N-T_boxplot.svg", sep="_"))
 p <- ggplot(strat_GOI_exp_boxplot, aes(x=Normal, y=get(GOI), color=Normal)) + 
   geom_boxplot(notch=TRUE) + theme_classic() + 
   theme(text=element_text(size=30))
-p + geom_jitter(shape=16, position=position_jitter(0.2)) + 
+p <- p + geom_jitter(shape=16, position=position_jitter(0.2)) + 
   ylab(paste("Log2(", GOI, " ", strat_exp_type, ")", sep=""))
-invisible(dev.off())
+p_ly = ggplotly(p) %>% style(text = paste("<b>Patient ID:</b>", strat_GOI_exp_boxplot[, 1], 
+                                          "<br><b>Log2(", GOI, " ", strat_exp_type, "):</b>", strat_GOI_exp_boxplot$GOI, 
+                                          "<br><b>Ranking Score:</b>", strat_GOI_exp_boxplot$ranking_score
+                                          ))
+saveWidget(ggplotly(p_ly), file = paste(GOI_label, "TPM_N-T_boxplot.html", sep="_"))
 
 ### Do stratified expression boxplot
 strat_GOI_exp_low <- strat_GOI_exp_wstrat[strat_GOI_exp_wstrat$percentile_rank <= percentile, ]
@@ -298,15 +302,19 @@ strat_GOI_exp_high <- strat_GOI_exp_wstrat[strat_GOI_exp_wstrat$percentile_rank 
 strat_GOI_exp_high$stratification <- "High"
 strat_GOI_selected_strat <- rbind(strat_GOI_exp_low, strat_GOI_exp_high)
 strat_GOI_selected_strat[, GOI] <- log2(strat_GOI_selected_strat[, GOI])
-svg(paste(GOI_label, "TPM_strat_boxplot.svg", sep="_"))
 p <- ggplot(strat_GOI_selected_strat, aes(x=stratification, y=get(GOI), color=stratification)) + 
   geom_boxplot(notch=FALSE, na.rm=TRUE) + 
   ylab(paste("Log2(", GOI, " ", strat_exp_type, ")", sep="")) + 
   theme_classic() + theme(text=element_text(size=30))
-p + geom_jitter(na.rm=TRUE, shape=16, position=position_jitter(0.2)) + 
-  scale_x_discrete(limits=c("Low", "High")) 
-# p + geom_dotplot(binaxis='y', stackdir='center', dotsize=1, binwidth=0.1) + 
-invisible(dev.off())
+p <- p + geom_jitter(na.rm=TRUE, shape=16, position=position_jitter(0.2)) + 
+  scale_x_discrete(limits=c("Low", "High"))
+p_ly = ggplotly(p) %>% style(text = paste("<b>Patient ID:</b>", strat_GOI_selected_strat[, 1], 
+                                          "<br><b>Log2(", GOI, " ", strat_exp_type, "):</b>", strat_GOI_selected_strat$GOI, 
+                                          "<br><b>Ranking Score:</b>", strat_GOI_selected_strat$ranking_score,
+                                          "<br><b>Quantile Rank:</b>", strat_GOI_selected_strat$quantile_rank
+                                          "<br><b>Percentile Rank:</b>", strat_GOI_selected_strat$percentile_rank
+                                          ))
+saveWidget(ggplotly(p_ly), file = paste(GOI_label, "TPM_strat_boxplot.html", sep="_"))
 
 ### clean up and ready for DE TODO
 rm(list=ls(pattern="strat_*"))
