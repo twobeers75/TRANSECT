@@ -11,7 +11,7 @@
 suppressMessages(if (!require("pacman")) install.packages("pacman"))
 p_load(edgeR, Glimma, dplyr, tidyr, data.table, tibble, 
        ggplot2, ggforce, calibrate, gplots, RColorBrewer,
-       rlogging)
+       rlogging, plotly, htmlwidgets)
 
 SetLogFile(base.file=NULL)
 
