@@ -11,7 +11,7 @@
 suppressMessages(if (!require("pacman")) install.packages("pacman"))
 p_load(edgeR, Glimma, dplyr, tidyr, data.table, tibble, 
        ggplot2, ggforce, calibrate, gplots, RColorBrewer,
-       rlogging)
+       rlogging, plotly, htmlwidgets)
 
 SetLogFile(base.file=NULL)
 
@@ -242,17 +242,37 @@ if (ratio_GOI_analysis){
   GOI_exp_scatter <- log2(GOI_exp_wstrat[,1:2])
   GOI_exp_scatter$rank <- 1:nrow(GOI_exp_scatter)
   GOI_exp_scatter$percentile_rank <- GOI_exp_wstrat$percentile_rank
-  svg(paste(GOI_label, "TPM_Scatter.svg", sep="_"))
-  par(mar=c(5,6,4,2))
-  plot(GOI_exp_scatter[,3], GOI_exp_scatter[,1], main="Ordered expression ratio", 
-       xlab="Expression Ratio", ylab="log2(TPM)", col=alpha("#F8766D", 0.5), pch=15, cex=0.8,
-       cex.main=3, cex.lab=2.5, cex.axis=2.0, xaxt="none", ylim=c(0,15))
-  points(GOI_exp_scatter[,2], col=alpha("#00BFC4", 0.5), pch=17, cex=0.8)
-  abline(v=max(GOI_exp_scatter[GOI_exp_scatter$percentile_rank <= percentile, "rank"]), col="blue", lty=5, lwd=2)
-  abline(v=min(GOI_exp_scatter[GOI_exp_scatter$percentile_rank >= (100-percentile), "rank"]), col="red", lty=5, lwd=2)
-  legend("top", legend=c(colnames(GOI_exp_scatter[1]), colnames(GOI_exp_scatter[2])), 
-         col=c("#F8766D", "#00BFC4"), pch=c(15,17), cex=1.5, bg="transparent", bty = "n")
-  invisible(dev.off())
+  min_bound <- max(GOI_exp_scatter[GOI_exp_scatter$percentile_rank <= percentile, "rank"])
+  max_bound <- min(GOI_exp_scatter[GOI_exp_scatter$percentile_rank >= (100-percentile), "rank"])
+  
+  GOI_exp_scatter <- log2(GOI_exp_wstrat[,1:2])
+  GOI_exp_scatter$XA <- 1:nrow(GOI_exp_scatter)
+  GOI_exp_scatter <- GOI_exp_scatter %>% pivot_longer(!XA, names_to = "gene", values_to = "expression")
+  pscatter <- ggplot(GOI_exp_scatter, aes(x=XA, y=expression, color=gene, shape=gene)) + 
+    geom_point(alpha=0.5, size=2) +
+    labs(title="Ordered expression ratio",x="Expression Ratio", y ="log2(TPM)") +
+    theme_classic() + ylim(0,15) +
+    theme(plot.title = element_text(hjust = 0.5), text=element_text(size=30), 
+          axis.ticks.x=element_blank(), axis.text.x=element_blank(), 
+          legend.title=element_blank(), legend.position = c(0.5,0.95))
+  pscatter + geom_vline(aes(xintercept=min_bound), color="blue", linewidth=0.5, linetype="dashed") + 
+    geom_vline(aes(xintercept=max_bound), color="red", linewidth=0.5, linetype="dashed") 
+  invisible(ggsave(paste(GOI_label, "TPM_Scatter.svg", sep="_"), width = 7, height = 7))
+  
+  # GOI_exp_scatter <- log2(GOI_exp_wstrat[,1:2])
+  # GOI_exp_scatter$rank <- 1:nrow(GOI_exp_scatter)
+  # GOI_exp_scatter$percentile_rank <- GOI_exp_wstrat$percentile_rank
+  # svg(paste(GOI_label, "TPM_Scatter.svg", sep="_"))
+  # par(mar=c(5,6,4,2))
+  # plot(GOI_exp_scatter[,3], GOI_exp_scatter[,1], main="Ordered expression ratio",
+  #      xlab="Expression Ratio", ylab="log2(TPM)", col=alpha("#F8766D", 0.5), pch=15, cex=0.8,
+  #      cex.main=3, cex.lab=2.5, cex.axis=2.0, xaxt="none", ylim=c(0,15))
+  # points(GOI_exp_scatter[,2], col=alpha("#00BFC4", 0.5), pch=17, cex=0.8)
+  # abline(v=max(GOI_exp_scatter[GOI_exp_scatter$percentile_rank <= percentile, "rank"]), col="blue", lty=5, lwd=2)
+  # abline(v=min(GOI_exp_scatter[GOI_exp_scatter$percentile_rank >= (100-percentile), "rank"]), col="red", lty=5, lwd=2)
+  # legend("top", legend=c(colnames(GOI_exp_scatter[1]), colnames(GOI_exp_scatter[2])),
+  #        col=c("#F8766D", "#00BFC4"), pch=c(15,17), cex=1.5, bg="transparent", bty = "n")
+  # invisible(dev.off())
 } 
 if (multi_GOI_analysis){
   ### Do Boxplots with sina
@@ -270,18 +290,26 @@ if (multi_GOI_analysis){
 }
 if (single_GOI_analysis){
   ### Do Histogram
-  svg(paste(GOI_label, "TPM_histogram.svg", sep="_"))
-  par(mar=c(5,5.5,4,2))
-  hist(log2(GOI_exp_hist[, GOI]), breaks=100, main=GOI, 
-       xlab=paste("Log2(", exp_type, ")", sep=""), ylab="Frequency",
-       cex.main=3, cex.lab=2.5, cex.axis=2.0)
-  abline(v=mean(log2(GOI_exp_hist[, GOI])), col="purple")
-  abline(v=median(log2(GOI_exp_hist[, GOI])), col="green")
-  abline(v=max(log2(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank <= percentile, GOI])), col="blue")
-  abline(v=min(log2(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank >= (100-percentile), GOI])), col="red")
-  # abline(v=max(log2(GOI_exp_wstrat[GOI_exp_wstrat$quantile_rank == 1, GOI])), col="blue")
-  # abline(v=min(log2(GOI_exp_wstrat[GOI_exp_wstrat$quantile_rank == 4, GOI])), col="red")
-  invisible(dev.off())
+  phist <- ggplot(log2(GOI_exp_hist), aes(x=get(GOI))) + 
+    geom_histogram(color="black", fill="lightgrey", bins=100) + 
+    labs(title=GOI,x=paste("Log2(", exp_type, ")", sep=""), y = "Frequency") +
+    theme_classic() + theme(plot.title = element_text(hjust = 0.5), text=element_text(size=30))
+  phist + geom_vline(aes(xintercept=mean(log2(GOI_exp_hist[, GOI]))), color="purple", linewidth=0.5) + 
+    geom_vline(aes(xintercept=median(log2(GOI_exp_hist[, GOI]))), color="green", linewidth=0.5) +
+    geom_vline(aes(xintercept=max(log2(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank <= percentile, GOI]))), color="blue", linewidth=0.5) +
+    geom_vline(aes(xintercept=min(log2(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank >= (100-percentile), GOI]))), color="red", linewidth=0.5)
+  invisible(ggsave(paste(GOI_label, "TPM_histogram.svg", sep="_"), width = 7, height = 7))
+
+  # svg(paste(GOI_label, "TPM_histogram.svg", sep="_"))
+  # par(mar=c(5,5.5,4,2))
+  # hist(log2(GOI_exp_hist[, GOI]), breaks=100, main=GOI, 
+  #      xlab=paste("Log2(", exp_type, ")", sep=""), ylab="Frequency",
+  #      cex.main=3, cex.lab=2.5, cex.axis=2.0)
+  # abline(v=mean(log2(GOI_exp_hist[, GOI])), col="purple")
+  # abline(v=median(log2(GOI_exp_hist[, GOI])), col="green")
+  # abline(v=max(log2(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank <= percentile, GOI])), col="blue")
+  # abline(v=min(log2(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank >= (100-percentile), GOI])), col="red")
+  # invisible(dev.off())
 }
 
 ### Do tumor - normal expression boxplot
