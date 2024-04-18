@@ -231,17 +231,26 @@ if (strat_do_ratio_GOI_analysis){
   strat_GOI_exp_scatter <- log2(strat_GOI_exp_wstrat[,1:2])
   strat_GOI_exp_scatter$rank <- 1:nrow(strat_GOI_exp_scatter)
   strat_GOI_exp_scatter$percentile_rank <- strat_GOI_exp_wstrat$percentile_rank
-  svg(paste(GOI_label, "TPM_Scatter.svg", sep="_"))
-  par(mar=c(5,6,4,2))
-  plot(strat_GOI_exp_scatter[,3], strat_GOI_exp_scatter[,1], main="Ordered expression ratio", 
-       xlab="Expression Ratio", ylab="log2(TPM)", col=alpha("#F8766D", 0.5), pch=15, cex=0.8,
-       cex.main=3, cex.lab=2.5, cex.axis=2.0, xaxt="none", ylim=c(0,15))
-  points(strat_GOI_exp_scatter[,2], col=alpha("#00BFC4", 0.5), pch=17, cex=0.8)
-  abline(v=max(strat_GOI_exp_scatter[strat_GOI_exp_scatter$percentile_rank <= percentile, "rank"]), col="blue", lty=5, lwd=2)
-  abline(v=min(strat_GOI_exp_scatter[strat_GOI_exp_scatter$percentile_rank >= (100-percentile), "rank"]), col="red", lty=5, lwd=2)
-  legend("top", legend=c(colnames(strat_GOI_exp_scatter[1]), colnames(strat_GOI_exp_scatter[2])), 
-         col=c("#F8766D", "#00BFC4"), pch=c(15,17), cex=1.5, bg="transparent", bty = "n")
-  invisible(dev.off())
+  min_bound <- max(strat_GOI_exp_scatter[strat_GOI_exp_scatter$percentile_rank <= percentile, "rank"])
+  max_bound <- min(strat_GOI_exp_scatter[strat_GOI_exp_scatter$percentile_rank >= (100-percentile), "rank"])
+
+  strat_GOI_exp_scatter <- log2(strat_GOI_exp_wstrat[,1:2])
+  strat_GOI_exp_scatter$XA <- 1:nrow(strat_GOI_exp_scatter)
+  strat_GOI_exp_scatter <- strat_GOI_exp_scatter %>% pivot_longer(!XA, names_to = "gene", values_to = "expression")
+  write.table(strat_GOI_exp_scatter, "strat_GOI_exp_scatter.tsv")
+  pscatter <- ggplot(strat_GOI_exp_scatter, aes(x=XA, y=expression, color=gene, shape=gene)) + 
+    geom_point(alpha=0.5, size=2) +
+    labs(title="Ordered expression ratio",x="Expression Ratio", y ="log2(TPM)") +
+    theme_classic() + ylim(0,15) +
+    theme(plot.title = element_text(hjust = 0.5), text=element_text(size=30), 
+          axis.ticks.x=element_blank(), axis.text.x=element_blank(), 
+          legend.title=element_blank(), legend.position = c(0.5,0.95))
+  pscatter <- pscatter + geom_vline(aes(xintercept=min_bound), color="blue", linewidth=0.5, linetype="dashed") + 
+    geom_vline(aes(xintercept=max_bound), color="red", linewidth=0.5, linetype="dashed")
+  p_ly = ggplotly(pscatter) %>% style(text = paste("<b>Gene:</b>", strat_GOI_exp_scatter$gene,
+                                                   "<br><b>Expression:</b>", strat_GOI_exp_scatter$expression
+                                      ))
+  saveWidget(ggplotly(p_ly), file = paste(GOI_label, "TPM_Scatter.html", sep="_"))
 }
 if (strat_do_multi_GOI_analysis){
 ### Do Boxplots with sina
@@ -252,7 +261,8 @@ if (strat_do_multi_GOI_analysis){
   strat_GOI_exp_sep_long$in_column <- strat_GOI_exp_sep_long$patientID %in% rownames(design)
   strat_GOI_exp_sep_long <- strat_GOI_exp_sep_long[order(strat_GOI_exp_sep_long$geneID, strat_GOI_exp_sep_long$in_column), ]
   strat_GOI_exp_sep_long <- strat_GOI_exp_sep_long[!is.infinite(strat_GOI_exp_sep_long$expression),]
-
+  
+  write.table(strat_GOI_exp_sep_long, "strat_GOI_exp_sep_long.tsv")
   p <- ggplot(strat_GOI_exp_sep_long, aes(geneID, expression))
   p <- p + geom_sina(colour = strat_GOI_exp_sep_long$cols_column, size = strat_GOI_exp_sep_long$size_column, alpha = 0.7) + 
     theme_classic() + theme(text=element_text(size=30)) + ylab(paste("Log2(", strat_exp_type, ")", sep=""))
@@ -261,32 +271,33 @@ if (strat_do_multi_GOI_analysis){
 }
 if (strat_do_single_GOI_analysis){
   ### Do Histogram
-  svg(paste(GOI_label, "TPM_histogram.svg", sep="_"))
-  par(mar=c(5,5.5,4,2))
-  hist(log2(strat_GOI_exp[, GOI]), breaks=100, main=GOI, 
-       xlab=paste("Log2(", strat_exp_type, ")", sep=""), ylab="Frequency",
-       cex.main=3, cex.lab=2.5, cex.axis=2.0)
-  abline(v=mean(log2(strat_GOI_exp[, GOI])), col="purple")
-  abline(v=median(log2(strat_GOI_exp[, GOI])), col="green")
-  abline(v=max(log2(strat_GOI_exp_wstrat[strat_GOI_exp_wstrat$percentile_rank <= percentile, GOI])), col="blue")
-  abline(v=min(log2(strat_GOI_exp_wstrat[strat_GOI_exp_wstrat$percentile_rank >= (100-percentile), GOI])), col="red")
-  # abline(v=max(log2(strat_GOI_exp_wstrat[strat_GOI_exp_wstrat$quantile_rank == 1, GOI])), col="blue")
-  # abline(v=min(log2(strat_GOI_exp_wstrat[strat_GOI_exp_wstrat$quantile_rank == 4, GOI])), col="red")
-  invisible(dev.off())
+  phist <- ggplot(log2(strat_GOI_exp), aes(x=get(GOI))) + 
+    geom_histogram(color="black", fill="lightgrey", bins=100) + 
+    labs(title=GOI,x=paste("Log2(", strat_exp_type, ")", sep=""), y = "Frequency") +
+    theme_classic() + theme(plot.title = element_text(hjust = 0.5), text=element_text(size=30))
+  
+  phist <- phist + geom_vline(aes(xintercept=mean(log2(strat_GOI_exp[, GOI]))), color="purple", linewidth=0.5) + 
+    geom_vline(aes(xintercept=median(log2(strat_GOI_exp[, GOI]))), color="green", linewidth=0.5) +
+    geom_vline(aes(xintercept=max(log2(strat_GOI_exp_wstrat[strat_GOI_exp_wstrat$percentile_rank <= percentile, GOI]))), color="blue", linewidth=0.5) +
+    geom_vline(aes(xintercept=min(log2(strat_GOI_exp_wstrat[strat_GOI_exp_wstrat$percentile_rank >= (100-percentile), GOI]))), color="red", linewidth=0.5)
+  
+  saveWidget(ggplotly(phist), file = paste(GOI_label, "TPM_histogram.html", sep="_"))
 }
 
 ### Do tumor - normal expression boxplot
 strat_GOI_exp_raw$Normal <- grepl(pattern = "(-11A|-11B)$", rownames(strat_GOI_exp_raw))
 strat_GOI_exp_raw$Normal <- as.factor(strat_GOI_exp_raw$Normal)
 strat_GOI_exp_raw[, GOI] <- log2(strat_GOI_exp_raw[, GOI])
+write.table(strat_GOI_exp_raw, "strat_GOI_exp_raw.tsv")
+print(rownames(strat_GOI_exp_raw))
 
 p <- ggplot(strat_GOI_exp_raw, aes(x=Normal, y=get(GOI), color=Normal)) + 
   geom_boxplot(notch=TRUE) + theme_classic() + 
   theme(text=element_text(size=30))
 p <- p + geom_jitter(shape=16, position=position_jitter(0.2)) + 
   ylab(paste("Log2(", GOI, " ", strat_exp_type, ")", sep=""))
-p_ly = ggplotly(p) %>% style(text = paste("<b>Patient ID:</b>", strat_GOI_exp_raw[, 1], 
-                                          "<br><b>Log2(", GOI, " ", strat_exp_type, "):</b>", strat_GOI_exp_raw$GOI, 
+p_ly = ggplotly(p) %>% style(text = paste("<b>Patient ID:</b>", rownames(strat_GOI_exp_raw), 
+                                          "<br><b>Log2(", GOI, " ", strat_exp_type, "):</b>", strat_GOI_exp_raw[[GOI]], # a singe [] returns the items as a dataframe
                                           "<br><b>Ranking Score:</b>", strat_GOI_exp_raw$ranking_score
                                           ))
 saveWidget(ggplotly(p_ly), file = paste(GOI_label, "TPM_N-T_boxplot.html", sep="_"))
@@ -298,6 +309,7 @@ strat_GOI_exp_high <- strat_GOI_exp_wstrat[strat_GOI_exp_wstrat$percentile_rank 
 strat_GOI_exp_high$stratification <- "High"
 strat_GOI_selected_strat <- rbind(strat_GOI_exp_low, strat_GOI_exp_high)
 strat_GOI_selected_strat[, GOI] <- log2(strat_GOI_selected_strat[, GOI])
+write.table(strat_GOI_selected_strat, "strat_GOI_selected_strat.tsv")
 
 p <- ggplot(strat_GOI_selected_strat, aes(x=stratification, y=get(GOI), color=stratification)) + 
   geom_boxplot(notch=FALSE, na.rm=TRUE) + 
@@ -305,10 +317,10 @@ p <- ggplot(strat_GOI_selected_strat, aes(x=stratification, y=get(GOI), color=st
   theme_classic() + theme(text=element_text(size=30))
 p <- p + geom_jitter(na.rm=TRUE, shape=16, position=position_jitter(0.2)) + 
   scale_x_discrete(limits=c("Low", "High"))
-p_ly = ggplotly(p) %>% style(text = paste("<b>Patient ID:</b>", strat_GOI_selected_strat[, 1], 
-                                          "<br><b>Log2(", GOI, " ", strat_exp_type, "):</b>", strat_GOI_selected_strat$GOI, 
+p_ly = ggplotly(p) %>% style(text = paste("<b>Patient ID:</b>", rownames(strat_GOI_selected_strat), 
+                                          "<br><b>Log2(", GOI, " ", strat_exp_type, "):</b>", strat_GOI_selected_strat[[GOI]], 
                                           "<br><b>Ranking Score:</b>", strat_GOI_selected_strat$ranking_score,
-                                          "<br><b>Quantile Rank:</b>", strat_GOI_selected_strat$quantile_rank
+                                          "<br><b>Quantile Rank:</b>", strat_GOI_selected_strat$quantile_rank,
                                           "<br><b>Percentile Rank:</b>", strat_GOI_selected_strat$percentile_rank
                                           ))
 saveWidget(ggplotly(p_ly), file = paste(GOI_label, "TPM_strat_boxplot.html", sep="_"))
