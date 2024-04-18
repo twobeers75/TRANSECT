@@ -289,7 +289,6 @@ strat_GOI_exp_raw$Normal <- grepl(pattern = "(-11A|-11B)$", rownames(strat_GOI_e
 strat_GOI_exp_raw$Normal <- as.factor(strat_GOI_exp_raw$Normal)
 strat_GOI_exp_raw[, GOI] <- log2(strat_GOI_exp_raw[, GOI])
 write.table(strat_GOI_exp_raw, "strat_GOI_exp_raw.tsv")
-print(rownames(strat_GOI_exp_raw))
 
 p <- ggplot(strat_GOI_exp_raw, aes(x=Normal, y=get(GOI), color=Normal)) + 
   geom_boxplot(notch=TRUE) + theme_classic() + 
