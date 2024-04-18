@@ -252,10 +252,12 @@ if (multi_GOI_analysis){
   GOI_exp_sep_long$in_column <- GOI_exp_sep_long$patientID %in% rownames(design)
   GOI_exp_sep_long <- GOI_exp_sep_long[order(GOI_exp_sep_long$geneID, GOI_exp_sep_long$in_column), ]
   GOI_exp_sep_long <- GOI_exp_sep_long[!is.infinite(GOI_exp_sep_long$expression),]
+
   p <- ggplot(GOI_exp_sep_long, aes(geneID, expression))
-  p + geom_sina(colour = GOI_exp_sep_long$cols_column, size = GOI_exp_sep_long$size_column, alpha = 0.7) + 
+  p <- p + geom_sina(colour = GOI_exp_sep_long$cols_column, size = GOI_exp_sep_long$size_column, alpha = 0.7) + 
     theme_classic() + theme(text=element_text(size=30)) + ylab(paste("Log2(", exp_type, ")", sep=""))
-  invisible(ggsave(paste(GOI_label, "TPM_Boxplot_Sina.svg", sep="_"), last_plot(), width = 10, height = 8))
+  p_ly = ggplotly(p) %>% style(text = paste("<b>Patient ID:</b>", GOI_exp_sep_long$patientID, "<br><b>Expression:</b>", GOI_exp_sep_long$expression))
+  saveWidget(ggplotly(p_ly), file = paste(GOI_label, "TPM_Boxplot_Sina.html", sep="_"))
 }
 if (single_GOI_analysis){
   ### Do Histogram
@@ -277,13 +279,17 @@ if (single_GOI_analysis){
 GOI_exp_raw$Normal <- "TRUE"
 GOI_exp_raw$Normal <- as.factor(GOI_exp_raw$Normal)
 GOI_exp_raw[, GOI] <- log2(GOI_exp_raw[, GOI])
-svg(paste(GOI_label, "TPM_N-T_boxplot.svg", sep="_"))
+
 p <- ggplot(GOI_exp_raw, aes(x=Normal, y=get(GOI), color=Normal)) + 
   geom_boxplot(notch=TRUE) + theme_classic() + 
   theme(text=element_text(size=30))
-p + geom_jitter(shape=16, position=position_jitter(0.2)) + 
+p <- p + geom_jitter(shape=16, position=position_jitter(0.2)) + 
   ylab(paste("Log2(", GOI, " ", exp_type, ")", sep=""))
-invisible(dev.off())
+p_ly = ggplotly(p) %>% style(text = paste("<b>Patient ID:</b>", GOI_exp_raw[, 1], 
+                                          "<br><b>Log2(", GOI, " ", exp_type, "):</b>", GOI_exp_raw$GOI, 
+                                          "<br><b>Ranking Score:</b>", GOI_exp_raw$ranking_score
+                                          ))
+saveWidget(ggplotly(p_ly), file = paste(GOI_label, "TPM_N-T_boxplot.html", sep="_"))
 
 ### Do stratified expression boxplot
 GOI_exp_low <- GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank <= percentile, ]
@@ -292,15 +298,20 @@ GOI_exp_high <- GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank >= (100-percentile
 GOI_exp_high$stratification <- "High"
 GOI_selected_strat <- rbind(GOI_exp_low, GOI_exp_high)
 GOI_selected_strat[, GOI] <- log2(GOI_selected_strat[, GOI])
-svg(paste(GOI_label, "TPM_strat_boxplot.svg", sep="_"))
+
 p <- ggplot(GOI_selected_strat, aes(x=stratification, y=get(GOI), color=stratification)) + 
   geom_boxplot(notch=FALSE, na.rm=TRUE) + 
   ylab(paste("Log2(", GOI, " ", exp_type, ")", sep="")) + 
   theme_classic() + theme(text=element_text(size=30))
-p + geom_jitter(na.rm=TRUE, shape=16, position=position_jitter(0.2)) + 
-  scale_x_discrete(limits=c("Low", "High")) 
-# p + geom_dotplot(binaxis='y', stackdir='center', dotsize=1, binwidth=0.1) + 
-invisible(dev.off())
+p <- p + geom_jitter(na.rm=TRUE, shape=16, position=position_jitter(0.2)) + 
+  scale_x_discrete(limits=c("Low", "High"))
+p_ly = ggplotly(p) %>% style(text = paste("<b>Patient ID:</b>", GOI_selected_strat[, 1], 
+                                          "<br><b>Log2(", GOI, " ", strat_exp_type, "):</b>", GOI_selected_strat$GOI, 
+                                          "<br><b>Ranking Score:</b>", GOI_selected_strat$ranking_score,
+                                          "<br><b>Quantile Rank:</b>", GOI_selected_strat$quantile_rank
+                                          "<br><b>Percentile Rank:</b>", GOI_selected_strat$percentile_rank
+                                          ))
+saveWidget(ggplotly(p_ly), file = paste(GOI_label, "TPM_strat_boxplot.html", sep="_"))
 
 ### all done here, sign off stratification
 message(paste("Finished stratification of", GOI))
