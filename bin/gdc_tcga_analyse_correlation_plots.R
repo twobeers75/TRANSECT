@@ -80,6 +80,12 @@ high_expr_df = data.frame(Names=df_tcga_data[,1])
 ###*****************************************************************************
 ### Corr Analysis ####
 ###*****************************************************************************
+
+# the reason why I set the working directory here is because ggplot generates
+# a temporary file for when creating the plot, but it only removes it if rstudio is
+# in the same location as the plots
+setwd(file.path(outdir, "Corr_Analysis", "plots"))
+
 for (row in 1:nrow(df_target_pairs)) {
 # for (row in 1:10) { 
   gene2 <- df_target_pairs[row, "gene2_id"]
@@ -100,23 +106,32 @@ for (row in 1:nrow(df_target_pairs)) {
       if (abs(signif(as.numeric(log_cor_stats$estimate))) > 0.7) {
         # adding exprs to new df, to be outputted in the outputs
         high_expr_df[gene2] <- df_tcga_data[gene2]
-
-        p <- ggplot(aes(x = log2(gene2_exp_value), y = log2(gene1_exp_value))) +
-          geom_point(shape=20) + 
-          labs(x = paste("log2(", gene2, ")", sep=""), y = paste("log2(", gene1, ")", sep=""), title = "Expression Scatterplot") + 
-          theme_classic() +
-          theme(text=element_text(size=30), 
-                legend.position = "bottomleft", 
-                legend.text=c(paste("R =", signif(as.numeric(cor_1$estimate), 3)), 
-                              paste("p =", signif(cor_1$p.value, 3)))) +
-          geom_smooth(formula=log2(gene1_exp_value)~log2(gene2_exp_value), method=lm, se=FALSE, color = "red")
-
-        p_ly = ggplotly(p) %>% style(text = paste("<b>Patient ID:</b>", high_expr_df$Names, 
-                                          "<br><b>log2(", gene1, "):</b>", log2(gene1_exp_value),
-                                          "<br><b>log2(", gene2, "):</b>", log2(gene2_exp_value),
-                                          ))
-
-        saveWidget(ggplotly(p_ly), file = paste("plots/", gene1, "_", gene2, ".html", sep=""))
+        #cor_1 <- log_cor_stats
+#
+        ## Calculating linear regression
+        #lm_model <- lm(log2(gene1_exp_value) ~ log2(gene2_exp_value))
+#
+        #slope <- coef(lm_model)[2]
+        #intercept <- coef(lm_model)[1]
+#
+        #p <- ggplot(mapping = aes(x = log2(gene2_exp_value), y = log2(gene1_exp_value))) +
+        #  geom_point(shape=20) + 
+        #  labs(x = paste("log2(", gene2, ")", sep=""), y = paste("log2(", gene1, ")", sep=""), title = "Expression Scatterplot") + 
+        #  theme_classic() +
+        #  theme(text=element_text(size=30), 
+        #        legend.position = "bottomleft",
+        #        legend.text=element_text(c(paste("R =", as.character(signif(as.numeric(cor_1$estimate), 3))), 
+        #                      paste("p =", as.character(signif(cor_1$p.value, 3)))))) +
+        #  geom_abline(intercept = intercept, slope = slope, color = "red")
+        #  #geom_smooth(formula=log2(gene1_exp_value)~log2(gene2_exp_value), method=lm, se=FALSE, color = "red")
+        #  #geom_smooth(method=lm, se=FALSE, color = "red")
+#
+        #p_ly = ggplotly(p) %>% style(text = paste("<b>Patient ID:</b>", high_expr_df$Names, 
+        #                                  "<br><b>log2(", gene1, "):</b>", log2(gene1_exp_value),
+        #                                  "<br><b>log2(", gene2, "):</b>", log2(gene2_exp_value)
+        #                                  ))
+#
+        #saveWidget(ggplotly(p_ly), file = paste(gene1, "_", gene2, ".html", sep=""))
 
         # lm() function creates a linear regression model in R, which takes the formula Y ~ X where Y is the outcome variable and X is the predictor variable
       }
@@ -125,7 +140,7 @@ for (row in 1:nrow(df_target_pairs)) {
     df_target_pairs[row, 3:6] <- "no data"
   }
 }
-
+setwd(file.path(outdir, "Corr_Analysis"))
 write.table(high_expr_df, paste(GOI, "most_correlated_gene_exprs.tsv", sep="_"), sep='\t', row.names=FALSE)
 
 ###*****************************************************************************
@@ -143,6 +158,7 @@ df_target_pairs$logExp_FDR <- signif(p.adjust(df_target_pairs$logExp_Pvalue, "BH
 ### sort
 df_target_pairs <- df_target_pairs[order(df_target_pairs$logExp_FDR, na.last = NA),]
 ### write out
+
 write.table(df_target_pairs, paste(GOI, "corr.tsv", sep="_"), sep='\t', row.names=FALSE)
 
 ### Plot Correlation Volcano
@@ -164,7 +180,7 @@ p_ly = ggplotly(p) %>% style(text = paste("<b>Gene 2:</b>", df_target_pairs$gene
                                           "<br><b>logExp_Cor:</b>", df_target_pairs$logExp_Cor,
                                           "<br><b>logExp_Pvalue:</b>", df_target_pairs$logExp_Pvalue,
                                           "<br><b>logExp_Bonferroni:</b>", df_target_pairs$logExp_Bonferroni,
-                                          "<br><b>logExp_FDR:</b>", df_target_pairs$logExp_FDR,
+                                          "<br><b>logExp_FDR:</b>", df_target_pairs$logExp_FDR
                                           ))
 saveWidget(ggplotly(p_ly), file = paste(GOI, "corr_volcano.html", sep="_"))
 
