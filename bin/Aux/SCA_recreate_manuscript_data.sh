@@ -25,7 +25,7 @@ ${SCA_bindir}/GTEx_prepare_directories.sh -a; done
 ##########################################################################################################
 #### Single test
 #########
-test_prostate="${SCA_outdir}/TestManData_OG2/Prostate"
+test_prostate="${SCA_outdir}/Manuscript_Case_Studies/Prostate"
 mkdir -p ${test_prostate}
 cd ${test_prostate}
 mkdir -p R3_PRAD_ZEB1 R3_PROSTATE_ZEB1 TCGA_PRAD_ZEB1 GTEx_Prostrate_ZEB1
@@ -49,7 +49,7 @@ echo ""; echo ""
 ##########################################################################################################
 #### Additive test
 #########
-test_breast="${SCA_outdir}/TestManData_OG2/Breast"
+test_breast="${SCA_outdir}/Manuscript_Case_Studies/Breast"
 mkdir -p ${test_breast}
 cd ${test_breast}
 mkdir -p R3_BRCA_ESR1+PGR+ERBB2 R3_BREAST_ESR1+PGR+ERBB2 TCGA_BRCA_ESR1+PGR+ERBB2 GTEx_Breast_ESR1+PGR+ERBB2
@@ -76,11 +76,17 @@ mkdir -p R3_BRCA_ESR1-PGR
 cd R3_BRCA_ESR1-PGR
 ${SCA_bindir}/R3_analyse_GOI.sh -p BRCA -g ESR1%PGR -s mRNA -t 2 -d -e
 echo ""; echo ""
+# and the miR multi-omics analysis
+cd ${test_breast}
+mkdir -p TCGA_BRCA_miR200
+cd TCGA_BRCA_miR200
+${SCA_bindir}/GDC_TCGA_analyse_GOI.sh -p TCGA-BRCA -g hsa-miR-200c-3p -s miRNA -t 2 -d -e
+echo ""; echo ""
 
 ##########################################################################################################
 #### Ratio test
 #########
-test_blood="${SCA_outdir}/TestManData_OG2/Blood"
+test_blood="${SCA_outdir}/Manuscript_Case_Studies/Blood"
 mkdir -p ${test_blood}
 cd ${test_blood}
 mkdir -p R3_LAML_IL3RA-CSF2RB R3_BLOOD_IL3RA-CSF2RB TCGA_LAML_IL3RA-CSF2RB GTEx_Blood_IL3RA-CSF2RB

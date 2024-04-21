@@ -239,20 +239,28 @@ if (ratio_GOI_analysis){
   min_bound <- max(GOI_exp_scatter[GOI_exp_scatter$percentile_rank <= percentile, "rank"])
   max_bound <- min(GOI_exp_scatter[GOI_exp_scatter$percentile_rank >= (100-percentile), "rank"])
   
-  GOI_exp_scatter <- log2(GOI_exp_wstrat[,1:2])
-  GOI_exp_scatter$XA <- 1:nrow(GOI_exp_scatter)
-  GOI_exp_scatter <- GOI_exp_scatter %>% pivot_longer(!XA, names_to = "gene", values_to = "expression")
-  pscatter <- ggplot(GOI_exp_scatter, aes(x=XA, y=expression, color=gene, shape=gene)) + 
+  GOI_exp_scatter <- log2(GOI_exp_wstrat[GsOI_split])
+  GOI_exp_scatter <- rownames_to_column(GOI_exp_scatter, var = "ID")
+  GOI_exp_scatter$rank <- 1:nrow(GOI_exp_scatter)
+  GOI_exp_scatter <- GOI_exp_scatter %>% pivot_longer(!c(rank,ID), names_to = "gene", values_to = "expression")
+  
+  pscatter <- ggplot(GOI_exp_scatter, aes(x=rank, y=expression, color=gene, shape=gene, labels=ID)) + 
     geom_point(alpha=0.5, size=2) +
     labs(title="Ordered expression ratio",x="Expression Ratio", y ="log2(TPM)") +
     theme_classic() + ylim(0,15) +
     theme(plot.title = element_text(hjust = 0.5), text=element_text(size=30), 
           axis.ticks.x=element_blank(), axis.text.x=element_blank(), 
-          legend.title=element_blank(), legend.position = c(0.5,0.95))
-  pscatter + geom_vline(aes(xintercept=min_bound), color="blue", linewidth=0.5, linetype="dashed") + 
+          legend.title=element_blank(), legend.position.inside = c(0.5,0.95))
+  pscatter <- pscatter + geom_vline(aes(xintercept=min_bound), color="blue", linewidth=0.5, linetype="dashed") + 
     geom_vline(aes(xintercept=max_bound), color="red", linewidth=0.5, linetype="dashed") 
-  invisible(ggsave(paste(GOI_label, "TPM_Scatter.svg", sep="_"), width = 7, height = 7))
-  # 
+  # invisible(ggsave(paste(GOI_label, "TPM_Scatter.svg", sep="_"), width = 7, height = 7))
+
+  p_ly = ggplotly(pscatter)
+  p_ly$x$data[[1]]$text <- sub(paste("gene: ",GsOI_split[1],"<br />", sep=""), "", p_ly$x$data[[1]]$text, fixed = TRUE)
+  p_ly$x$data[[2]]$text <- sub(paste("gene: ",GsOI_split[2],"<br />", sep=""), "", p_ly$x$data[[2]]$text, fixed = TRUE)
+  
+  saveWidget(ggplotly(p_ly), file = paste(GOI_label, "TPM_Scatter.html", sep="_"))
+  
   # GOI_exp_scatter <- log2(GOI_exp_wstrat[,1:2])
   # GOI_exp_scatter$rank <- 1:nrow(GOI_exp_scatter)
   # GOI_exp_scatter$percentile_rank <- GOI_exp_wstrat$percentile_rank
@@ -277,10 +285,15 @@ if (multi_GOI_analysis){
   GOI_exp_sep_long$in_column <- GOI_exp_sep_long$patientID %in% rownames(design)
   GOI_exp_sep_long <- GOI_exp_sep_long[order(GOI_exp_sep_long$geneID, GOI_exp_sep_long$in_column), ]
   GOI_exp_sep_long <- GOI_exp_sep_long[!is.infinite(GOI_exp_sep_long$expression),]
-  p <- ggplot(GOI_exp_sep_long, aes(geneID, expression))
-  p + geom_sina(colour = GOI_exp_sep_long$cols_column, size = GOI_exp_sep_long$size_column, alpha = 0.7) + 
+  psina <- ggplot(GOI_exp_sep_long, aes(geneID, expression))
+  psina <- psina + geom_sina(colour = GOI_exp_sep_long$cols_column, size = GOI_exp_sep_long$size_column, alpha = 0.7) + 
     theme_classic() + theme(text=element_text(size=30)) + ylab(paste("Log2(", exp_type, ")", sep=""))
-  invisible(ggsave(paste(GOI_label, "TPM_Boxplot_Sina.svg", sep="_"), last_plot(), width = 10, height = 8))
+  # invisible(ggsave(paste(GOI_label, "TPM_Boxplot_Sina.svg", sep="_"), last_plot(), width = 10, height = 8))
+  
+  p_ly = ggplotly(psina) %>% 
+    style(text = paste("<b>Patient ID:</b>", GOI_exp_sep_long$patientID, "<br><b>Expression:</b>", GOI_exp_sep_long$expression))
+  
+  saveWidget(ggplotly(p_ly), file = paste(GOI_label, "TPM_Boxplot_Sina.html", sep="_"))
 }
 if (single_GOI_analysis){
   ### Do Histogram
@@ -288,11 +301,16 @@ if (single_GOI_analysis){
     geom_histogram(color="black", fill="lightgrey", bins=100) + 
     labs(title=GOI,x=paste("Log2(", exp_type, ")", sep=""), y = "Frequency") +
     theme_classic() + theme(plot.title = element_text(hjust = 0.5), text=element_text(size=30))
-  phist + geom_vline(aes(xintercept=mean(log2(GOI_exp_hist[, GOI]))), color="purple", linewidth=0.5) + 
+  phist <- phist + geom_vline(aes(xintercept=mean(log2(GOI_exp_hist[, GOI]))), color="purple", linewidth=0.5) + 
     geom_vline(aes(xintercept=median(log2(GOI_exp_hist[, GOI]))), color="green", linewidth=0.5) +
     geom_vline(aes(xintercept=max(log2(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank <= percentile, GOI]))), color="blue", linewidth=0.5) +
     geom_vline(aes(xintercept=min(log2(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank >= (100-percentile), GOI]))), color="red", linewidth=0.5)
-  invisible(ggsave(paste(GOI_label, "TPM_histogram.svg", sep="_"), width = 7, height = 7))
+  # invisible(ggsave(paste(GOI_label, "TPM_histogram.svg", sep="_"), width = 7, height = 7))
+  
+  p_ly <- ggplotly(phist)
+  p_ly$x$data[[1]]$text <- gsub("get(GOI)", GOI, p_ly$x$data[[1]]$text, fixed = TRUE)
+  
+  saveWidget(ggplotly(p_ly), file = paste(GOI_label, "TPM_histogram.html", sep="_"))
   
   # svg(paste(GOI_label, "TPM_histogram.svg", sep="_"))
   # par(mar=c(5,5.5,4,2))
@@ -312,13 +330,28 @@ if (single_GOI_analysis){
 GOI_exp_boxplot$Normal <- "TRUE"
 GOI_exp_boxplot$Normal <- as.factor(GOI_exp_boxplot$Normal)
 GOI_exp_boxplot[, GOI] <- log2(GOI_exp_boxplot[, GOI])
-svg(paste(GOI_label, "TPM_N-T_boxplot.svg", sep="_"))
-p <- ggplot(GOI_exp_boxplot, aes(x=Normal, y=get(GOI), color=Normal)) + 
-  geom_boxplot(notch=TRUE) + theme_classic() + 
-  theme(text=element_text(size=30))
-p + geom_jitter(shape=16, position=position_jitter(0.2)) + 
+GOI_exp_boxplot <- rownames_to_column(GOI_exp_boxplot, var = "ID")
+
+suppressWarnings(p <- ggplot(GOI_exp_boxplot, aes(x=Normal, y=get(GOI), color=Normal, label=ID)) + 
+  geom_boxplot(notch=TRUE, outliers=FALSE) + theme_classic() + 
+  theme(text=element_text(size=30)))
+p <- p + geom_jitter(shape=16, position=position_jitter(0.2)) + 
   ylab(paste("Log2(", GOI, " ", exp_type, ")", sep=""))
-invisible(dev.off())
+# invisible(ggsave(paste(GOI_label, "TPM_N-T_boxplot.svg", sep="_"), width = 7, height = 7))
+
+p_ly = suppressWarnings(ggplotly(p))
+p_ly$x$data[[2]]$text <- gsub("get(GOI)", GOI, p_ly$x$data[[2]]$text, fixed = TRUE)
+p_ly$x$data[[2]]$text <- sub("Normal: TRUE<br />", "", p_ly$x$data[[2]]$text, fixed = TRUE)
+
+saveWidget(ggplotly(p_ly), file = paste(GOI_label, "TPM_N-T_boxplot.html", sep="_"))
+
+# svg(paste(GOI_label, "TPM_N-T_boxplot.svg", sep="_"))
+# p <- ggplot(GOI_exp_boxplot, aes(x=Normal, y=get(GOI), color=Normal)) + 
+#   geom_boxplot(notch=TRUE) + theme_classic() + 
+#   theme(text=element_text(size=30))
+# p + geom_jitter(shape=16, position=position_jitter(0.2)) + 
+#   ylab(paste("Log2(", GOI, " ", exp_type, ")", sep=""))
+# invisible(dev.off())
 
 ### Do stratified expression boxplot
 GOI_exp_low <- GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank <= percentile, ]
@@ -327,15 +360,32 @@ GOI_exp_high <- GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank >= (100-percentile
 GOI_exp_high$stratification <- "High"
 GOI_selected_strat <- rbind(GOI_exp_low, GOI_exp_high)
 GOI_selected_strat[, GOI] <- log2(GOI_selected_strat[, GOI])
-svg(paste(GOI_label, "TPM_strat_boxplot.svg", sep="_"))
-p <- ggplot(GOI_selected_strat, aes(x=stratification, y=get(GOI), color=stratification)) + 
+GOI_selected_strat <- rownames_to_column(GOI_selected_strat, var = "ID")
+
+p <- ggplot(GOI_selected_strat, aes(x=stratification, y=get(GOI), color=stratification, labels=ID)) + 
   geom_boxplot(notch=FALSE, na.rm=TRUE) + 
   ylab(paste("Log2(", GOI, " ", exp_type, ")", sep="")) + 
   theme_classic() + theme(text=element_text(size=30))
-p + geom_jitter(na.rm=TRUE, shape=16, position=position_jitter(0.2)) + 
-  scale_x_discrete(limits=c("Low", "High")) 
-# p + geom_dotplot(binaxis='y', stackdir='center', dotsize=1, binwidth=0.1) + 
-invisible(dev.off())
+p <- p + geom_jitter(na.rm=TRUE, shape=16, position=position_jitter(0.2)) + 
+  scale_x_discrete(limits=c("Low", "High"))
+
+p_ly = ggplotly(p)
+p_ly$x$data[[3]]$text <- gsub("get(GOI)", GOI, p_ly$x$data[[3]]$text, fixed = TRUE)
+p_ly$x$data[[4]]$text <- gsub("get(GOI)", GOI, p_ly$x$data[[4]]$text, fixed = TRUE)
+p_ly$x$data[[3]]$text <- sub("stratification: High<br />", "", p_ly$x$data[[3]]$text, fixed = TRUE)
+p_ly$x$data[[4]]$text <- sub("stratification: Low<br />", "", p_ly$x$data[[4]]$text, fixed = TRUE)
+
+saveWidget(ggplotly(p_ly), file = paste(GOI_label, "TPM_strat_boxplot.html", sep="_"))
+
+# svg(paste(GOI_label, "TPM_strat_boxplot.svg", sep="_"))
+# p <- ggplot(GOI_selected_strat, aes(x=stratification, y=get(GOI), color=stratification)) + 
+#   geom_boxplot(notch=FALSE, na.rm=TRUE) + 
+#   ylab(paste("Log2(", GOI, " ", exp_type, ")", sep="")) + 
+#   theme_classic() + theme(text=element_text(size=30))
+# p + geom_jitter(na.rm=TRUE, shape=16, position=position_jitter(0.2)) + 
+#   scale_x_discrete(limits=c("Low", "High")) 
+# # p + geom_dotplot(binaxis='y', stackdir='center', dotsize=1, binwidth=0.1) + 
+# invisible(dev.off())
 
 ### all done here, sign off stratification
 message(paste("Finished stratification of", GOI))
@@ -653,15 +703,27 @@ if (gsea_exe != "false"){
       temp_gsea_sig_results <- gsea_report[gsea_report$FDR.q.val < 0.05, ] # & abs(gsea_report$NES) > 2
       temp_gsea_sig_results <- head(temp_gsea_sig_results, n=10)
       combined_gsea_sig_results <- rbind(combined_gsea_sig_results, temp_gsea_sig_results)
+      combined_gsea_sig_results$NES <- as.numeric(combined_gsea_sig_results$NES)
       combined_gsea_sig_results <- combined_gsea_sig_results[order(combined_gsea_sig_results$NES),]
       if (GSEA_output_report_file == GSEA_output_report_files[length(GSEA_output_report_files)]){
         ### all reports merged so create the plot
-        combined_gsea_sig_results$NES <- as.numeric(combined_gsea_sig_results$NES)
-        combined_gsea_sig_results$bar_color <- ifelse(combined_gsea_sig_results$NES > 0, "red", "blue")
-        pdf(file=paste(outdir, "/",sample_name, ".pdf", sep=""),width=15,height=10)
-        par(las=2) ; par(mar=c(10,50,10,5))
-        barplot(combined_gsea_sig_results$NES, main=sample_name, horiz=TRUE, names.arg=row.names(combined_gsea_sig_results), xlab="Normalise Enrichment Score", cex.main=2, cex.lab=1.5, cex.axis=1.0, col=combined_gsea_sig_results$bar_color)
-        invisible(dev.off())
+        # combined_gsea_sig_results$bar_color <- ifelse(combined_gsea_sig_results$NES > 0, "red", "blue")
+        # pdf(file=paste(outdir, "/",sample_name, ".pdf", sep=""),width=15,height=10)
+        # par(las=2) ; par(mar=c(10,50,10,5))
+        # barplot(combined_gsea_sig_results$NES, main=sample_name, horiz=TRUE, names.arg=row.names(combined_gsea_sig_results), xlab="Normalise Enrichment Score", cex.main=2, cex.lab=1.5, cex.axis=1.0, col=combined_gsea_sig_results$bar_color)
+        # invisible(dev.off())
+        combined_gsea_sig_results$cols_column <- ifelse(combined_gsea_sig_results$NES > 0, "#00BFC4", "#F8766D")
+        
+        gseaplot <- ggplot(data=combined_gsea_sig_results, aes(x=NES, y=GS.br..follow.link.to.MSigDB, fill=cols_column)) + 
+          geom_bar(stat="identity") + scale_y_discrete(limits=combined_gsea_sig_results$GS.br..follow.link.to.MSigDB) + 
+          theme_minimal() + xlab("Normalised Enrichment Score") +
+          theme(legend.position="none", axis.title.y=element_blank(), 
+                axis.title.x=element_text(size=20), axis.text.x=element_text(size=18))
+        
+        setwd(outdir) # to bypass html files directory creation when saving into a folder
+        saveWidget(ggplotly(gseaplot), file = paste(sample_name, ".html", sep=""), selfcontained=TRUE)
+        setwd(main_dir)
+        
         write.csv(combined_gsea_sig_results[,1:(length(combined_gsea_sig_results)-2)], 
                   paste(outdir, "/",sample_name, ".csv", sep=""), row.names=FALSE)
       }
