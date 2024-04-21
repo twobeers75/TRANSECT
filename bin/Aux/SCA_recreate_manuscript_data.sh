@@ -20,7 +20,7 @@ for r3_code in BRCA BREAST PRAD PROSTATE LAML BLOOD; do ${SCA_bindir}/R3_prepare
 # GDC-TCGA
 for tcga_code in TCGA-BRCA TCGA-PRAD TCGA-LAML; do ${SCA_bindir}/GDC_TCGA_prepare_directories.sh -p $tcga_code -a; done
 # GTEx
-${SCA_bindir}/GTEx_prepare_directories.sh -a; done
+${SCA_bindir}/GTEx_prepare_directories.sh -a
 
 ##########################################################################################################
 #### Single test
