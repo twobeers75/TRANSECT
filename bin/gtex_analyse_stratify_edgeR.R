@@ -644,7 +644,7 @@ if (gsea_exe != "false"){
   message(paste("Starting GSEA Analysis for", GOI))
   
   dir.create(file.path(outdir, "GSEA"))
-  outdir <- paste(outdir, "GSEA", sep="/")
+  gsea_outdir <- paste(outdir, "GSEA", sep="/")
   
   if (rna_species == "mRNA"){
     ### Hallmark
@@ -658,7 +658,7 @@ if (gsea_exe != "false"){
     gsea_params1 <- "-collapse No_Collapse -mode Max_probe -norm meandiv -nperm 1000 -scoring_scheme weighted" 
     gsea_params2 <- "-create_svgs true -include_only_symbols true -make_sets true -plot_top_x 20"
     gsea_params3 <- "-rnd_seed timestamp -set_max 2000 -set_min 15 -zip_report false"
-    gsea_out <- paste("-out ", outdir, sep="")
+    gsea_out <- paste("-out ", gsea_outdir, sep="")
     gsea_command <- paste(gsea_exe, gsea_gmx, gsea_rnk, gsea_chip, gsea_label, gsea_params1, gsea_params2, gsea_params3, gsea_out, sep=" ") 
     
     system(gsea_command, ignore.stdout=TRUE, ignore.stderr=TRUE, wait=TRUE)
@@ -683,7 +683,7 @@ if (gsea_exe != "false"){
     gsea_params1 <- "-collapse No_Collapse -mode Max_probe -norm meandiv -nperm 1000 -scoring_scheme weighted" 
     gsea_params2 <- "-create_svgs true -include_only_symbols true -make_sets true -plot_top_x 20"
     gsea_params3 <- "-rnd_seed timestamp -set_max 2000 -set_min 15 -zip_report false"
-    gsea_out <- paste("-out ", outdir, sep="")
+    gsea_out <- paste("-out ", gsea_outdir, sep="")
     gsea_command <- paste(gsea_exe, gsea_gmx, gsea_rnk, gsea_chip, gsea_label, gsea_params1, gsea_params2, gsea_params3, gsea_out, sep=" ") 
     
     system(gsea_command, ignore.stdout=TRUE, ignore.stderr=TRUE, wait=TRUE)
@@ -694,7 +694,7 @@ if (gsea_exe != "false"){
   ### Create summary plots
   Sys.sleep(10)
   ### get dir and file names and process iteratively
-  GSEA_output_dirs <- list.dirs(outdir, full.names=TRUE, recursive=FALSE)
+  GSEA_output_dirs <- list.dirs(gsea_outdir, full.names=TRUE, recursive=FALSE)
   for (GSEA_output_dir in GSEA_output_dirs){
     combined_gsea_sig_results <- data.frame()
     GSEA_output_report_files <- list.files(path=GSEA_output_dir, pattern="gsea_report.*tsv", full.names=TRUE)
@@ -722,12 +722,12 @@ if (gsea_exe != "false"){
           theme(legend.position="none", axis.title.y=element_blank(), 
                 axis.title.x=element_text(size=20), axis.text.x=element_text(size=18))
         
-        setwd(outdir) # to bypass html files directory creation when saving into a folder
+        setwd(gsea_outdir) # to bypass html files directory creation when saving into a folder
         saveWidget(ggplotly(gseaplot), file = paste(sample_name, ".html", sep=""), selfcontained=TRUE)
-        setwd(main_dir)
+        #setwd(outdir)
         
         write.csv(combined_gsea_sig_results[,1:(length(combined_gsea_sig_results)-2)], 
-                  paste(outdir, "/",sample_name, ".csv", sep=""), row.names=FALSE)
+                  paste(gsea_outdir, "/",sample_name, ".csv", sep=""), row.names=FALSE)
       }
     }
   }
@@ -739,9 +739,8 @@ if (gsea_exe != "false"){
   message(paste("Starting WebGestalt Analysis for", GOI))
   p_load(WebGestaltR)
   
-  main_dir <- getwd()
-  dir.create(file.path(main_dir, "WebGestalt"))
-  WG_outdir <- paste(main_dir, "WebGestalt", sep="/")
+  dir.create(file.path(outdir, "WebGestalt"))
+  WG_outdir <- paste(outdir, "WebGestalt", sep="/")
   
   ### setup gene lists
   # subset all sig-up and sig-down regulated genes. If more than 500, take only top 500 
