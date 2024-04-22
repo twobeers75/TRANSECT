@@ -532,11 +532,13 @@ write.csv(cbind(y$genes[rownames(log_norm_cpm),1],log_norm_cpm), "gene_normalise
 #### Do DE test (exact) ####
 ###*****************************************************************************
 ### first check if switch comparison requested 
-if (switchDE == "true") {
-  comp <- c(hi, lo)
-} else {
-  comp <- c(lo, hi)
-}
+#if (switchDE == "true") {
+#  comp <- c(hi, lo)
+#} else {
+#  comp <- c(lo, hi)
+#}
+
+comp <- c(lo, hi)
 
 de <- exactTest(y, pair=comp)
 dt <- decideTests(de,adjust.method="fdr",p.value=1e-5,lfc=1)

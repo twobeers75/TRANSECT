@@ -108,20 +108,20 @@ for (row in 1:nrow(df_target_pairs)) {
           # adding exprs to new df, to be outputted in the outputs
           high_expr_df[gene2] <- df_gtex_data[gene2]
 
-          p <- ggplot(aes(x = log2(gene2_exp_value), y = log2(gene1_exp_value))) +
-            geom_point(shape=20) + 
-            labs(x = paste("log2(", gene2, ")", sep=""), y = paste("log2(", gene1, ")", sep=""), title = "Expression Scatterplot") + 
-            theme_classic() +
-            theme(text=element_text(size=30), 
-                  legend.position = "bottomleft", 
-                  legend.text=c(paste("R =", signif(as.numeric(cor_1$estimate), 3)), 
-                                paste("p =", signif(cor_1$p.value, 3)))) +
-            geom_smooth(formula=log2(gene1_exp_value)~log2(gene2_exp_value), method=lm, se=FALSE, color = "red")
-          p_ly = ggplotly(p) %>% style(text = paste("<b>Patient ID:</b>", high_expr_df$Names, 
-                                            "<br><b>log2(", gene1, "):</b>", log2(gene1_exp_value),
-                                            "<br><b>log2(", gene2, "):</b>", log2(gene2_exp_value),
-                                            ))
-          saveWidget(ggplotly(p_ly), file = paste("plots/", gene1, "_", gene2, ".html", sep=""))
+          #p <- ggplot(aes(x = log2(gene2_exp_value), y = log2(gene1_exp_value))) +
+          #  geom_point(shape=20) + 
+          #  labs(x = paste("log2(", gene2, ")", sep=""), y = paste("log2(", gene1, ")", sep=""), title = "Expression Scatterplot") + 
+          #  theme_classic() +
+          #  theme(text=element_text(size=30), 
+          #        legend.position = "bottomleft", 
+          #        legend.text=c(paste("R =", signif(as.numeric(cor_1$estimate), 3)), 
+          #                      paste("p =", signif(cor_1$p.value, 3)))) +
+          #  geom_smooth(formula=log2(gene1_exp_value)~log2(gene2_exp_value), method=lm, se=FALSE, color = "red")
+          #p_ly = ggplotly(p) %>% style(text = paste("<b>Patient ID:</b>", high_expr_df$Names, 
+          #                                  "<br><b>log2(", gene1, "):</b>", log2(gene1_exp_value),
+          #                                  "<br><b>log2(", gene2, "):</b>", log2(gene2_exp_value),
+          #                                  ))
+          #saveWidget(ggplotly(p_ly), file = paste("plots/", gene1, "_", gene2, ".html", sep=""))
         }
       }
     }
