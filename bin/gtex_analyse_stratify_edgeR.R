@@ -1,5 +1,7 @@
 #!/usr/bin/env Rscript
 
+.libPaths( c( "/data/RLibs" , .libPaths() ) )
+
 ###*****************************************************************************
 ### DO DE analysis on GTEx stratified data
 ### JToubia - January 2021
@@ -28,11 +30,11 @@ if (length(args)==0) {
 	stop("At least one argument must be supplied (GOI).n", call.=FALSE)
 } else if (length(args)==1) {
 	# default to
-  args[2] = "mRNA"
-  args[3] = 5
-  args[4] = "false"
+  args[2] = "/home/jtoubia/Desktop/Projects/SRt" # output
+  args[3] = "mRNA"
+  args[4] = 5
   args[5] = "SCA/REF_FILES"
-  args[6] = "SCA/bin/GSEA/gsea-cli.sh GSEAPreranked" 
+  args[6] = "SCA/bin/GSEA_Linux_4.2.3/gsea-cli.sh GSEAPreranked" 
   args[7] = list.files("SCA/data/", "GTEx/GTEx-v8/Breast", "GTEx-Breast-*_tpm-mRNA.tsv", full.names=TRUE)
   args[8] = list.files("SCA/data/", "GTEx/GTEx-v8/Breast", "GTEx-Breast-*_count-mRNA.tsv", full.names=TRUE)
   args[9] = ""
@@ -40,11 +42,11 @@ if (length(args)==0) {
 }
 
 GOI <- args[1]
-rna_species <- args[2]
-percentile <- as.integer(args[3])
-switchDE <- args[4]
+outdir <- args[2] # above seems to be no longer in use
+rna_species <- args[3]
+percentile <- as.integer(args[4])
 ref_files_folder <- args[5]
-gsea_exe <- args[6]
+gsea_exe <- paste(args[6], "GSEAPreranked", sep =" ")
 gene_fpkm_filename <- args[7]
 gene_counts_filename <- args[8]
 isomir_rpm_filename <- args[9]
@@ -53,9 +55,8 @@ normals <- ""
 ###*****************************************************************************
 ### Setup for analyses ####
 ###*****************************************************************************
-main_dir <- getwd()
-dir.create(file.path(main_dir, "DE_Analysis"))
-setwd(file.path(main_dir, "DE_Analysis"))
+dir.create(file.path(outdir, "DE_Analysis"))
+setwd(file.path(outdir, "DE_Analysis"))
 
 multi_GOI_analysis <- FALSE
 ratio_GOI_analysis <- FALSE
@@ -395,7 +396,8 @@ message(paste("Finished stratification of", GOI))
 ###*****************************************************************************
 if (!run_DE) {
   warning(paste("Unfortunately, there is not enough observations in this dataset for", GOI))
-  stop("Ending this process") 
+  message(("Ending this process") )
+  quit("no", 2, FALSE)
 }
 
 message(paste("Beginning DE Analysis for", GOI))
@@ -509,11 +511,12 @@ write.csv(cbind(y$genes[rownames(log_norm_cpm),1],log_norm_cpm), "gene_normalise
 #### Do DE test (exact) ####
 ###*****************************************************************************
 ### first check if switch comparison requested 
-if (switchDE == "true") {
-  comp <- c(hi, lo)
-} else {
-  comp <- c(lo, hi)
-}
+#if (switchDE == "true") {
+#  comp <- c(hi, lo)
+#} else {
+#  comp <- c(lo, hi)
+#}
+comp <- c(lo, hi)
 
 de <- exactTest(y, pair=comp)
 dt <- decideTests(de,adjust.method="fdr",p.value=1e-5,lfc=1)
@@ -640,9 +643,8 @@ if (gsea_exe != "false"){
   gsea_exe <- paste(gsea_exe, "GSEAPreranked", sep =" ")
   message(paste("Starting GSEA Analysis for", GOI))
   
-  main_dir <- getwd()
-  dir.create(file.path(main_dir, "GSEA"))
-  outdir <- paste(main_dir, "GSEA", sep="/")
+  dir.create(file.path(outdir, "GSEA"))
+  outdir <- paste(outdir, "GSEA", sep="/")
   
   if (rna_species == "mRNA"){
     ### Hallmark
