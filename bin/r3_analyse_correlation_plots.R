@@ -168,7 +168,7 @@ p_ly = ggplotly(p) %>% style(text = paste("<b>Gene 2:</b>", df_target_pairs$gene
                                           "<br><b>logExp_Cor:</b>", df_target_pairs$logExp_Cor,
                                           "<br><b>logExp_Pvalue:</b>", df_target_pairs$logExp_Pvalue,
                                           "<br><b>logExp_Bonferroni:</b>", df_target_pairs$logExp_Bonferroni,
-                                          "<br><b>logExp_FDR:</b>", df_target_pairs$logExp_FDR,
+                                          "<br><b>logExp_FDR:</b>", df_target_pairs$logExp_FDR
                                           ))
 saveWidget(ggplotly(p_ly), file = paste(GOI, "corr_volcano.html", sep="_"))
 
