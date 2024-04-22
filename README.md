@@ -1,4 +1,9 @@
-# SCA - Stratified Cohort Analysis
+<img title="SCA" alt="SCA" src="https://github.com/twobeers75/SCA/SCA-t_small.png">
+
+
+
+# Stratified Cohort Analysis
+
 | [Installation](#installation) | [Usage](#usage) | [Output](#output) | [Manual](#manual) |
 
 
