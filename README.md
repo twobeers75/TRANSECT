@@ -2,7 +2,7 @@
 
 
 
-# Stratified Cohort Analysis - transcriptomics
+# Stratified Cohort Analysis - *transcriptomics*
 
 | [Installation](#installation) | [Usage](#usage) | [Output](#output) | [Manual](#manual) |
 
