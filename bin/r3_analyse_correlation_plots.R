@@ -81,7 +81,7 @@ df_target_pairs$gene1_id <- gsub('-', '.', GOI)
 df_target_pairs$gene2_id <- gsub('-', '.', df_target_pairs$gene2_id)
 df_target_pairs[,c("Cor","Pvalue","logExp_Cor","logExp_Pvalue")] <- ""
 
-high_expr_df = data.frame(Names=df_r3_data[,1])
+high_expr_df = data.frame(Names=row.names(df_r3_data))
 
 ###*****************************************************************************
 ### Corr Analysis ####
@@ -106,7 +106,7 @@ for (row in 1:nrow(df_target_pairs)) {
       if(!is.na(log_cor_stats$estimate)){
         if (abs(signif(as.numeric(log_cor_stats$estimate))) > 0.8) {
           # adding exprs to new df, to be outputted in the outputs
-          high_expr_df[gene2] <- df_r3_data[gene2]
+          high_expr_df[gene2] <- df_r3_data[,gene2]
 
           #p <- ggplot(aes(x = log2(gene2_exp_value), y = log2(gene1_exp_value))) +
           #  geom_point(shape=20) + 
