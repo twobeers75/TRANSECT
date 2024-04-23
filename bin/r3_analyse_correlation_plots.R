@@ -122,18 +122,6 @@ for (row in 1:nrow(df_target_pairs)) {
           #                                  "<br><b>log2(", gene2, "):</b>", log2(gene2_exp_value),
           #                                  ))
           #saveWidget(ggplotly(p_ly), file = paste("plots/", gene1, "_", gene2, ".html", sep=""))
-
-          png(paste("plots/", gene1, "_", gene2, ".png", sep=""))
-          cor_1 <- log_cor_stats
-          lm1 <- lm(log2(gene1_exp_value)~log2(gene2_exp_value))
-          par(mar=c(6,5.5,4,2))
-          plot(log2(gene2_exp_value), log2(gene1_exp_value), pch=20, xlab=paste("log2(", gene2, ")", sep=""),
-               ylab=paste("log2(", gene1, ")", sep=""), main="Expression Scatterplot", 
-               cex.main=3, cex.lab=2.5, cex.axis=2.0)
-          abline(lm1, col="red")
-          legend("bottomleft", legend=c(paste("R =", signif(as.numeric(cor_1$estimate), 3)), 
-                                        paste("p =", signif(cor_1$p.value, 3))))
-          invisible(dev.off())
         }
       }
     }
@@ -185,19 +173,6 @@ p_ly = ggplotly(p) %>% style(text = paste("<b>Gene 2:</b>", df_target_pairs$gene
                                           "<br><b>logExp_FDR:</b>", df_target_pairs$logExp_FDR
                                           ))
 saveWidget(ggplotly(p_ly), file = paste(GOI, "corr_volcano.html", sep="_"))
-
-png(paste(GOI, "corr_volcano.png", sep="_"))
-par(mar=c(5,6,4,2))
-with(df_target_pairs, plot(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.25, col="grey", main="Pearson's Correlations", 
-              xlab="R", ylab="-log10(FDR)", xlim=c(-1,1), ylim=c(0,310), cex.main=2.5, cex.lab=2.5, cex.axis=2.0))
-
-### Add colored points:
-# with(subset(df_target_pairs, logExp_Cor > 0.5 ), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.25, col="orange"))
-# with(subset(df_target_pairs, logExp_Cor < -0.5 ), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.25, col="orange"))
-with(subset(df_target_pairs, logExp_FDR < 1E-50), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.25, col="green"))
-with(subset(df_target_pairs, logExp_FDR < 1E-150 & logExp_Cor > 0.7), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.75, col="red"))
-with(subset(df_target_pairs, logExp_FDR < 1E-150 & logExp_Cor < -0.7), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.75, col="blue"))
-invisible(dev.off())
 
 setwd(outdir)
 
