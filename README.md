@@ -146,7 +146,7 @@ bin/GTEx_prepare_directories.sh -a
 
 Be aware that some of these collections are large and require substantial disk space. They will take a considerable amount of time to download and process too. For example, downloading and processing TCGA-BRCA takes just over 30 minutes (using a high speed network connection and an up to date workstation) and requires more than 14GB of disk space (most of which can be deleted afterwards). In comparison, TCGA-LAML takes less than 5 minutes to retrieve and less than 2GB of disc space. Preparation for both GDC-TCGA and the RECOUNT3 data is done individually by tissue type but can also be done in batch mode (see the relevant script help menu for instructions). Preparing GTEx data on the other hand, retrieves in bulk all tissue types in a single table before separating them into individual files based on tissue type (again, see the help menu for more details). All downloaded data is stored in "SCA/data/<GDC|GTEx|RECOUNT3>" in appropriate folders.
 
-**Analyse** is a process that uses the prepared public data from above and produces stratified differential expression and other associated outputs. Like with the prepare operation, SCA comes bundled with three analyse scripts, one each for GDC-TCGA, GTEx and RECOUNT3 data.
+**Analyse** is a process that uses the prepared public data from above conducts the stratified differential expression and produces all the outputs. Like with the prepare operation, SCA comes bundled with three analyse scripts, one each for GDC-TCGA, GTEx and RECOUNT3 data.
 
 Example analyse commands;
 
