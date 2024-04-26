@@ -13,6 +13,9 @@ SCA is an application designed solely to run in a Linux Terminal. In brief, SCA 
 
 Currently, there are many global efforts to collect and collate tissue-specific gene expression (RNA-sequencing) data from large cohorts of diseased and non-diseased subjects for public use (GTEx, TCGA, …, to name only a few). These data sets are used to bolster and aid in the investigation of gene specific expression and regulation as well as several other biological queries. One such application that is currently underutilised and (to our knowledge) not currently offered as an accessible public resource, is the stratification and subsequent differential expression of single or composite genes in order to assess "transcriptome state". This type of analysis has only in recent times become feasible thanks to the large number of participants in cohort studies and, will only intensify in power and usefulness as these collections continue to grow in number and diversity. The results from this type of analysis can be used to rapidly investigate transcriptome state within natural physiological expression levels without economic burden. This can be applied before mass-parallel laboratory investigations and/or between the transition from *in vitro* to *in vivo* studies in order to assess the feasibility of further, possibly expensive, experimentation.
 
+## SCA-t Web-application
+A web-accesible version is freely available for use [here](http://203.101.229.190/analysis/home)
+
 ## Version
 
 24.03
