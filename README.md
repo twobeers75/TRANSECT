@@ -27,7 +27,7 @@ A web-accesible version is freely available for use [here](http://203.101.229.19
 ## Hardware requirements
 
 
-64 bit Linux (tested solely on Ubuntu 22.04)
+64 bit Linux (developed solely on Ubuntu 22.04)
 
 10GB RAM (12+ recommended)
 
