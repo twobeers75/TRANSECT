@@ -61,8 +61,9 @@ unzip SCA-main.zip
 mv SCA-main SCA
 ```
 
-Install python3 pip and all python dependencies (NOTE: Python 3 comes preinstalled with Ubuntu)
+Install python3 pip, java if required, and other SCA dependencies (NOTE: Python3 comes preinstalled with Ubuntu)
 
+(approx. 1min)
 ```sh
 ### change into the top directory of the downloaded folder (SCA)
 cd <path to>/SCA
@@ -78,6 +79,7 @@ Install R, the "pacman" package and Bioconductor specific packages. You can skip
 
 There are many wikis on how to install R on Ubuntu, [here](https://www.digitalocean.com/community/tutorials/how-to-install-r-on-ubuntu-22-04) is just one (specifically for Ubuntu 22.04)
 
+(approx. 1min)
 ```sh
 # follow the instructions outlined in the link above which should look something like this
 wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | sudo gpg --dearmor -o /usr/share/keyrings/r-project.gpg
@@ -88,9 +90,9 @@ sudo apt install r-base
 
 Start R from the terminal and install pacman and devtools. Follow the prompts and choose (if asked) to install these packages into a personal library.
 
-Once you enter the R shell you should see printed out in the terminal a number of lines about the R version and licences followed by a ">" symbol. I have used this symbol below to indicate that you need to be in the R shell to run these commands but, you can't copy the ">" symbol too. It won't work.
+Once you enter the R shell you should see printed out in the terminal a number of lines about the R version and licences followed by a ">" symbol. I have used this symbol below to indicate that you need to be in the R shell to run these commands but, you can't copy the ">" symbol too. It won't work. 
 
-
+(approx. 1min)
 ```
 ### start R
 R
