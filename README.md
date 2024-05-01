@@ -38,7 +38,7 @@ A web-accesible version is freely available for use [here](http://203.101.229.19
 - R
   - see r_requirements.txt for a complete list of required R packages
 - Java
-  - preinstalled with Ubuntu 22.04
+  - preinstalled with Ubuntu 22.04 (usually, we'll make sure during this installation)
 
 
 ## Installation
@@ -46,7 +46,7 @@ A web-accesible version is freely available for use [here](http://203.101.229.19
 
 NOTE: SCA requires and depends on numerous packages and applications. These take some time to install if not already present. A fresh install on a vanilla Ubuntu 22.04 can take 30-45mins depending on the PC and network speeds. 
 
-Clone the repo
+To start, clone the repo
 
 ```sh
 git clone https://github.com/twobeers75/SCA.git
@@ -75,28 +75,31 @@ python3 -m pip install -r pip_requirements.txt
 ```
 
 Install R, the "pacman" package and Bioconductor specific packages.
+There are many wikis on how to install R on Ubuntu, [here](https://www.digitalocean.com/community/tutorials/how-to-install-r-on-ubuntu-22-04) is just one (specifically for Ubuntu 22.04)
 
 ```sh
-### There are many wikis on how to install R on Ubuntu, here is just one
-### https://www.digitalocean.com/community/tutorials/how-to-install-r-on-ubuntu-22-04
 # follow the instructions outlined in the link above which should look something like this
 wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | sudo gpg --dearmor -o /usr/share/keyrings/r-project.gpg
 echo "deb [signed-by=/usr/share/keyrings/r-project.gpg] https://cloud.r-project.org/bin/linux/ubuntu jammy-cran40/" | sudo tee -a /etc/apt/sources.list.d/r-project.list
 sudo apt update
 sudo apt install r-base
+```
 
-### Start R from the terminal and install pacman and devtools (follow the prompts and choose (if asked) to install into a personal library)
-# Once you enter the R shell you should see printed out in the terminal a number of lines about the R version and licences followed by a ">" symbol
-# I have used this symbol below to indicate that you need to be in the R shell to run these commands but, you can't copy the ">" symbol too. It won't work.
+Start R from the terminal and install pacman and devtools (follow the prompts and choose (if asked) to install these packages into a personal library)
+Once you enter the R shell you should see printed out in the terminal a number of lines about the R version and licences followed by a ">" symbol.
+I have used this symbol below to indicate that you need to be in the R shell to run these commands but, you can't copy the ">" symbol too. It won't work.
+
+```
+### start R
 R
 > install.packages(c("pacman","devtools"))
 # Note: maybe wise here to go get a coffee (the previous command takes quite some time to finish!) 
 
-### Load devtools and install rlogging
+### whilst still in the R environment, load devtools and install rlogging
 > library("devtools")
 > install_github("https://github.com/mjkallen/rlogging.git")
 
-### Also install required Bioconductor packages (these can take quite some time to install!)
+### Also install required Bioconductor packages
 > if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 > BiocManager::install(version = "3.18")
