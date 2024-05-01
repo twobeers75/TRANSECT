@@ -133,9 +133,9 @@ Example prepare commands;
 ### NOTE: use the -h parameter with any of the following scripts to see the full help menu. ie.
 # bin/GDC_TCGA_prepare_directories.sh -h
 
-### ALSO NOTE: you don't necessarily need all of these, all at once. If your just tying this application start with RECOUNT3 (advised) and skip the others for now.
+### ALSO NOTE: you don't necessarily need all of these, all at once. If your just tying this application start with RECOUNT3 (recommended) and skip the others for now.
 
-### RECOUNT3 (approx. 30mins on first run)
+### RECOUNT3 (approx. 10mins on first run)
 # change into the top directory of SCA
 cd <path to>/SCA
 # run the RECOUNT3 prepare script for BRCA requiring a complete download. If this is a first time download, the script will autmatically install all requirements so it will take a while but, next time will be quick! 
@@ -166,7 +166,7 @@ Example analyse commands;
 
 ### ALSO NOTE: You need to have the appropriate DB installed (previous step) for the following commands to work. If you only installed the RECOUNT3 BRCA DB, only run the RECOUNT3 BRCA test.
 
-### RECOUNT3 (approx. 30mins on first run)
+### RECOUNT3 (approx. 10mins on first run)
 # change into the top directory of SCA
 # SCA saves output in the run folder so best to create one specifically for each run 
 cd <path to>/SCA/output/RECOUNT3
