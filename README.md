@@ -86,11 +86,9 @@ sudo apt update
 sudo apt install r-base
 ```
 
-Start R from the terminal and install pacman and devtools (follow the prompts and choose (if asked) to install these packages into a personal library)
+Start R from the terminal and install pacman and devtools. Follow the prompts and choose (if asked) to install these packages into a personal library.
 
-Once you enter the R shell you should see printed out in the terminal a number of lines about the R version and licences followed by a ">" symbol.
-
-I have used this symbol below to indicate that you need to be in the R shell to run these commands but, you can't copy the ">" symbol too. It won't work.
+Once you enter the R shell you should see printed out in the terminal a number of lines about the R version and licences followed by a ">" symbol. I have used this symbol below to indicate that you need to be in the R shell to run these commands but, you can't copy the ">" symbol too. It won't work.
 
 
 ```
