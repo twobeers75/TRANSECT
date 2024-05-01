@@ -75,6 +75,7 @@ python3 -m pip install -r pip_requirements.txt
 ```
 
 Install R, the "pacman" package and Bioconductor specific packages.
+
 There are many wikis on how to install R on Ubuntu, [here](https://www.digitalocean.com/community/tutorials/how-to-install-r-on-ubuntu-22-04) is just one (specifically for Ubuntu 22.04)
 
 ```sh
@@ -86,8 +87,11 @@ sudo apt install r-base
 ```
 
 Start R from the terminal and install pacman and devtools (follow the prompts and choose (if asked) to install these packages into a personal library)
+
 Once you enter the R shell you should see printed out in the terminal a number of lines about the R version and licences followed by a ">" symbol.
+
 I have used this symbol below to indicate that you need to be in the R shell to run these commands but, you can't copy the ">" symbol too. It won't work.
+
 
 ```
 ### start R
