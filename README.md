@@ -63,7 +63,7 @@ mv SCA-main SCA
 
 Install python3 pip, java if required, and other SCA dependencies (NOTE: Python3 comes preinstalled with Ubuntu)
 
-(approx. 1min)
+*(approx. 1min)*
 ```sh
 ### change into the top directory of the downloaded folder (SCA)
 cd <path to>/SCA
@@ -79,7 +79,7 @@ Install R, the "pacman" package and Bioconductor specific packages. You can skip
 
 There are many wikis on how to install R on Ubuntu, [here](https://www.digitalocean.com/community/tutorials/how-to-install-r-on-ubuntu-22-04) is just one (specifically for Ubuntu 22.04)
 
-(approx. 1min)
+*(approx. 1min)*
 ```sh
 # follow the instructions outlined in the link above which should look something like this
 wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | sudo gpg --dearmor -o /usr/share/keyrings/r-project.gpg
@@ -92,12 +92,12 @@ Start R from the terminal and install pacman and devtools. Follow the prompts an
 
 Once you enter the R shell you should see printed out in the terminal a number of lines about the R version and licences followed by a ">" symbol. I have used this symbol below to indicate that you need to be in the R shell to run these commands but, you can't copy the ">" symbol too. It won't work. 
 
-(approx. 1min)
+*(approx. 30mins)*
 ```
 ### start R
 R
 > install.packages(c("pacman","devtools"))
-# Note: maybe wise here to go get a coffee (the previous command takes quite some time to finish!) 
+# Note: maybe wise here to go get a coffee as the previous command takes quite some time to finish! (approx. 20mins) 
 
 ### whilst still in the R environment, load devtools and install rlogging
 > library("devtools")
@@ -125,7 +125,7 @@ NOTE: SCA requires many additional R packages however these are all installed on
 
 SCA has two main operations; **Prepare** and **Analyse**. 
 
-**Prepare** is a process that retrieves the raw data from online repositories and prepares it (if required) for analysis. SCA comes bundled with three different prepare scripts, one each for GDC-TCGA, GTEx and RECOUNT3 data. 
+**Prepare** is a process that retrieves the raw data from online repositories and prepares it (if required) for analysis. SCA comes bundled with three different prepare scripts, one each for RECOUNT3, GDC-TCGA and GTEx data. 
 
 Example prepare commands;
 
@@ -133,9 +133,9 @@ Example prepare commands;
 ### NOTE: use the -h parameter with any of the following scripts to see the full help menu. ie.
 # bin/GDC_TCGA_prepare_directories.sh -h
 
-### ALSO NOTE: you don't necessarily need all of these, all at once. If your just tying this application start with the RECOUNT3 download and skip the others for now.
+### ALSO NOTE: you don't necessarily need all of these, all at once. If your just tying this application start with RECOUNT3 (advised) and skip the others for now.
 
-### RECOUNT3
+### RECOUNT3 (approx. 30mins on first run)
 # change into the top directory of SCA
 cd <path to>/SCA
 # run the RECOUNT3 prepare script for BRCA requiring a complete download. If this is a first time download, the script will autmatically install all requirements so it will take a while but, next time will be quick! 
@@ -156,7 +156,7 @@ bin/GTEx_prepare_directories.sh -a
 
 Be aware that some of these collections are large and require substantial disk space. They will take a considerable amount of time to download and process too. For example, downloading and processing TCGA-BRCA takes just over 30 minutes (using a high speed network connection and an up to date workstation) and requires more than 14GB of disk space (most of which can be deleted afterwards). In comparison, TCGA-LAML takes less than 5 minutes to retrieve and less than 2GB of disc space. Preparation for both GDC-TCGA and the RECOUNT3 data is done individually by tissue type but can also be done in batch mode (see the relevant script help menu for instructions). Preparing GTEx data on the other hand, retrieves in bulk all tissue types in a single table before separating them into individual files based on tissue type (again, see the help menu for more details). All downloaded data is stored in "SCA/data/<GDC|GTEx|RECOUNT3>" in appropriate folders.
 
-**Analyse** is a process that uses the prepared public data from above conducts the stratified differential expression and produces all the outputs. Like with the prepare operation, SCA comes bundled with three analyse scripts, one each for GDC-TCGA, GTEx and RECOUNT3 data.
+**Analyse** is a process that uses the prepared public data from above conducts the stratified differential expression and produces all the outputs. Like with the prepare operation, SCA comes bundled with three analyse scripts, one each for RECOUNT3, GDC-TCGA and GTEx data.
 
 Example analyse commands;
 
@@ -166,7 +166,7 @@ Example analyse commands;
 
 ### ALSO NOTE: You need to have the appropriate DB installed (previous step) for the following commands to work. If you only installed the RECOUNT3 BRCA DB, only run the RECOUNT3 BRCA test.
 
-### RECOUNT3
+### RECOUNT3 (approx. 30mins on first run)
 # change into the top directory of SCA
 # SCA saves output in the run folder so best to create one specifically for each run 
 cd <path to>/SCA/output/RECOUNT3
