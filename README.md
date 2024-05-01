@@ -74,7 +74,7 @@ sudo apt install python3-pip default-jre libfontconfig1-dev libcurl4-openssl-dev
 python3 -m pip install -r pip_requirements.txt
 ```
 
-Install R, the "pacman" package and Bioconductor specific packages.
+Install R, the "pacman" package and Bioconductor specific packages. You can skip this step if you already have R.
 
 There are many wikis on how to install R on Ubuntu, [here](https://www.digitalocean.com/community/tutorials/how-to-install-r-on-ubuntu-22-04) is just one (specifically for Ubuntu 22.04)
 
