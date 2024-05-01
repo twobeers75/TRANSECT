@@ -92,25 +92,25 @@ Start R from the terminal and install pacman and devtools. Follow the prompts an
 
 Once you enter the R shell you should see printed out in the terminal a number of lines about the R version and licences followed by a ">" symbol. I have used this symbol below to indicate that you need to be in the R shell to run these commands but, you can't copy the ">" symbol too. It won't work. 
 
-*(approx. 30mins)*
+*(approx. 25mins)*
 ```
 ### start R
 R
 > install.packages(c("pacman","devtools"))
-# Note: maybe wise here to go get a coffee as the previous command takes quite some time to finish! (approx. 20mins) 
+# Note: maybe wise here to go get a coffee as the previous command takes quite some time to finish! (approx. <15mins) 
 
 ### whilst still in the R environment, load devtools and install rlogging
 > library("devtools")
 > install_github("https://github.com/mjkallen/rlogging.git")
 
-### Also install required Bioconductor packages
+### also install required Bioconductor packages
 > if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
-> BiocManager::install(version = "3.18")
+> BiocManager::install(version = "3.19")
 > BiocManager::install(c("edgeR","Glimma","DEFormats"))
-# Note: probably time for another coffee (Sorry!)
+# Note: probably time for another coffee. Sorry! (approx. <10mins)
 
-# Once successfully completed you can quit R
+### once successfully completed you can quit R, no need to save the workspace.
 # No more coffee for you today ;-)
 >  q()
 ```
