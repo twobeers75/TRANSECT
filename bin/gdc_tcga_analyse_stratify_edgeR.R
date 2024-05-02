@@ -491,11 +491,11 @@ glMDSPlot(y,labels=colnames(y$counts), groups=group,
 # invisible(dev.off())
 
 png("mean_var.png");
-plotMeanVar(y, show.tagwise.vars = TRUE, NBline = TRUE)
+suppressWarnings(plotMeanVar(y, show.tagwise.vars = TRUE, NBline = TRUE))
 invisible(dev.off())
 
 png("bcv.png");
-plotBCV(y)
+suppressWarnings(plotBCV(y))
 invisible(dev.off())
 
 ### Normalized counts raw

@@ -11,7 +11,7 @@ message("Downloading data from RECOUNT3 repository")
 ###*****************************************************************************
 message("Loading required packages")
 suppressMessages(if (!require("pacman")) install.packages("pacman"))
-p_load(recount, recount3, DEFormats, data.table)
+p_load(recount3, DEFormats, data.table)
 
 ###*****************************************************************************
 ### Read in Args ####
@@ -29,6 +29,20 @@ date_stamp <- args[2]
 ###*****************************************************************************
 main_dir <- getwd()
 file_out_suffix <- paste("R3-", pID, "-", date_stamp, sep="")
+
+###*****************************************************************************
+### Functions ####
+### adapted from https://divingintogeneticsandgenomics.com/post/how-to-convert-raw-counts-to-tpm-for-tcga-data-and-make-a-heatmap-across-cancer-types/
+###*****************************************************************************
+count2tpm<- function(rse){
+  count_matrix <- rse@assays@data$raw_counts
+  gene_length <- rse@rowRanges$bp_length
+  reads_per_rpk <- count_matrix/gene_length
+  per_mil_scale <- colSums(reads_per_rpk)/1000000
+  tpm_matrix <- t(t(reads_per_rpk)/per_mil_scale)
+  
+  return(tpm_matrix)
+}
 
 ###*****************************************************************************
 ### Start ####
@@ -56,16 +70,16 @@ message(paste("Raw RECOUNT3 data for", pID, "retrieved"))
 ### Scale the raw counts and create TPMs as well
 message("Scale raw counts")
 assay(rse_gene_data, "counts") <- transform_counts(rse_gene_data)
-message("Generate TPMs")
-assay(rse_gene_data, "TPM") <- recount::getTPM(rse_gene_data)
+# message("Generate TPMs")
+# assay(rse_gene_data, "TPM") <- recount::getTPM(rse_gene_data)
 message("Following assays now retrieved")
 message(paste(assayNames(rse_gene_data), collapse = ' & '))
 
 message("Creating formatted copies of data")
 ### pull out count matrix from rse object
 gene_counts_df <- as.data.frame(assay(rse_gene_data, "counts"))
-gene_tpm_df <- as.data.frame(assay(rse_gene_data, "TPM"))
-#gene_counts_df <- assays(rse_gene_data)$counts
+# gene_tpm_df <- as.data.frame(assay(rse_gene_data, "TPM"))
+gene_tpm_df <- as.data.frame(count2tpm(rse_gene_data))
 
 ### create a gene name lookup table
 #rowRanges(rse_gene_data)[,c("gene_id","gene_name")]
@@ -113,6 +127,8 @@ message(paste(dim(gene_counts_df), collapse = ' & '))
 message("Dimensions of processed table")
 message(paste(dim(gene_counts_df_mod_sorted_dedup), collapse = ' & '))
 
+rm(list=c("gene_counts_df_mod","gene_counts_df_mod_sorted"))
+
 ## same again for TPM table
 ## sample names have duplicates too. Looking into this I see same IDs with completely duplicated columns and some with differences?? Will just take the first!
 message("Working on TPM assay")
@@ -129,6 +145,8 @@ message("Dimensions of raw table")
 message(paste(dim(gene_tpm_df), collapse = ' & '))
 message("Dimensions of processed table")
 message(paste(dim(gene_tpm_df_mod_sorted_dedup), collapse = ' & '))
+
+rm(list=c("gene_tpm_df_mod","gene_tpm_df_mod_sorted"))
 
 # ### removing 7SK from tables
 # row_names_to_remove <- c("7SK")
