@@ -2,18 +2,18 @@
 
 
 
-# Stratified Cohort Analysis - *transcriptomics*
+# TRanscriptome ANalysis of StratifiEd CohorTs
 
 | [Installation](#installation) | [Usage](#usage) | [Output](#output) | [Manual](#manual) |
 
 
-## SCA-t Introduction
+## TRANSECT Introduction
 
-SCA is an application designed solely to run in a Linux Terminal. In brief, SCA stratifies large cohort data into user defined subsets which are subsequently compared one to the other. This version of SCA is tuned specifically for the interrogation of gene/s from publicly available tissue-specific gene expression data.
+TRANSECT is an application designed solely to run in a Linux Terminal. In brief, TRANSECT stratifies large cohort data into user defined subsets which are subsequently compared one to the other. This version of TRANSECT is tuned specifically for the interrogation of gene/s from publicly available tissue-specific gene expression data.
 
 Currently, there are many global efforts to collect and collate tissue-specific gene expression (RNA-sequencing) data from large cohorts of diseased and non-diseased subjects for public use (GTEx, TCGA, …, to name only a few). These data sets are used to bolster and aid in the investigation of gene specific expression and regulation as well as several other biological queries. One such application that is currently underutilised and (to our knowledge) not currently offered as an accessible public resource, is the stratification and subsequent differential expression of single or composite genes in order to assess "transcriptome state". This type of analysis has only in recent times become feasible thanks to the large number of participants in cohort studies and, will only intensify in power and usefulness as these collections continue to grow in number and diversity. The results from this type of analysis can be used to rapidly investigate transcriptome state within natural physiological expression levels without economic burden. This can be applied before mass-parallel laboratory investigations and/or between the transition from *in vitro* to *in vivo* studies in order to assess the feasibility of further, possibly expensive, experimentation.
 
-## SCA-t Web-application
+## TRANSECT Web-application
 A web-accesible version is freely available for use [here](http://203.101.229.190/analysis/home)
 
 ## Version
@@ -44,7 +44,7 @@ A web-accesible version is freely available for use [here](http://203.101.229.19
 ## Installation
 <span id="#installation"></span>
 
-NOTE: SCA requires and depends on numerous packages and applications. These take some time to install if not already present. A fresh install on a vanilla Ubuntu 22.04 can take 30-45mins depending on the PC and network speeds. 
+NOTE: TRANSECT requires and depends on numerous packages and applications. These take some time to install if not already present. A fresh install on a vanilla Ubuntu 22.04 can take 30-45mins depending on the PC and network speeds. 
 
 To start, clone the repo
 
@@ -61,11 +61,11 @@ unzip SCA-main.zip
 mv SCA-main SCA
 ```
 
-Install python3 pip, java if required, and other SCA dependencies (NOTE: Python3 comes preinstalled with Ubuntu)
+Install python3 pip, java if required, and other TRANSECT dependencies (NOTE: Python3 comes preinstalled with Ubuntu)
 
 *(approx. 1min)*
 ```sh
-### change into the top directory of the downloaded folder (SCA)
+### change into the top directory of the downloaded folder (TRANSECT)
 cd <path to>/SCA
 
 ### install pip and other deb requirements
@@ -117,15 +117,15 @@ R
 
 
 
-NOTE: SCA requires many additional R packages however these are all installed on demand the first time (and only the first time) you run each one of the different SCA commands. Please keep this in mind on your first run as it will take substantially longer compared to all subsequent runs.
+NOTE: TRANSECT requires many additional R packages however these are all installed on demand the first time (and only the first time) you run each one of the different TRANSECT commands. Please keep this in mind on your first run as it will take substantially longer compared to all subsequent runs.
 
 ## Usage
 
 <span id="#usage"></span> 
 
-SCA has two main operations; **Prepare** and **Analyse**. 
+TRANSECT has two main operations; **Prepare** and **Analyse**. 
 
-**Prepare** is a process that retrieves the raw data from online repositories and prepares it (if required) for analysis. SCA comes bundled with three different prepare scripts, one each for RECOUNT3, GDC-TCGA and GTEx data. 
+**Prepare** is a process that retrieves the raw data from online repositories and prepares it (if required) for analysis. TRANSECT comes bundled with three different prepare scripts, one each for RECOUNT3, GDC-TCGA and GTEx data. 
 
 Example prepare commands;
 
@@ -156,7 +156,7 @@ bin/GTEx_prepare_directories.sh -a
 
 Be aware that some of these collections are large and require substantial disk space. They will take a considerable amount of time to download and process too. For example, downloading and processing TCGA-BRCA takes just over 30 minutes (using a high speed network connection and an up to date workstation) and requires more than 14GB of disk space (most of which can be deleted afterwards). In comparison, TCGA-LAML takes less than 5 minutes to retrieve and less than 2GB of disc space. Preparation for both GDC-TCGA and the RECOUNT3 data is done individually by tissue type but can also be done in batch mode (see the relevant script help menu for instructions). Preparing GTEx data on the other hand, retrieves in bulk all tissue types in a single table before separating them into individual files based on tissue type (again, see the help menu for more details). All downloaded data is stored in "SCA/data/<GDC|GTEx|RECOUNT3>" in appropriate folders.
 
-**Analyse** is a process that uses the prepared public data from above conducts the stratified differential expression and produces all the outputs. Like with the prepare operation, SCA comes bundled with three analyse scripts, one each for RECOUNT3, GDC-TCGA and GTEx data.
+**Analyse** is a process that uses the prepared public data from above conducts the stratified differential expression and produces all the outputs. Like with the prepare operation, TRANSECT comes bundled with three analyse scripts, one each for RECOUNT3, GDC-TCGA and GTEx data.
 
 Example analyse commands;
 
