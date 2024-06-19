@@ -2,7 +2,6 @@
 
 
 
-# TRanscriptome ANalysis of StratifiEd CohorTs
 
 | [Installation](#installation) | [Usage](#usage) | [Output](#output) | [Manual](#manual) |
 
