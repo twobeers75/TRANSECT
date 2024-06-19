@@ -1,5 +1,4 @@
 <img title="TRANSECT" alt="SCA" src="https://github.com/twobeers75/TRANSECT/blob/main/TRANSECT_sm_t.png">
-
 # TRanscriptome ANalysis of StratifiEd CohorTs
 
 | [Installation](#installation) | [Usage](#usage) | [Output](#output) | [Manual](#manual) |
