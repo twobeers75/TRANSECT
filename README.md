@@ -1,4 +1,4 @@
-<img title="TRANSECT" alt="SCA" src="https://github.com/twobeers75/TRANSECT/blob/main/TRANSECT_t.png">
+<img title="TRANSECT" alt="TRANSECT" src="https://github.com/twobeers75/TRANSECT/blob/main/TRANSECT_t.png">
 
 #
 | [Installation](#installation) | [Usage](#usage) | [Output](#output) | [Manual](#manual) |
