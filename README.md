@@ -95,7 +95,7 @@ Once you enter the R shell you should see printed out in the terminal a number o
 ### start R
 R
 > install.packages(c("pacman","devtools"))
-# Note: maybe wise here to go get a coffee as the previous command takes quite some time to finish! (approx. <15mins) 
+# Note: maybe wise here to go get a coffee as the previous command takes quite some time to finish! (approx. 15mins) 
 
 ### whilst still in the R environment, load devtools and install rlogging
 > library("devtools")
@@ -106,7 +106,7 @@ R
     install.packages("BiocManager")
 > BiocManager::install(version = "3.19")
 > BiocManager::install(c("edgeR","Glimma","DEFormats"))
-# Note: probably time for another coffee. Sorry! (approx. <10mins)
+# Note: probably time for another coffee. Sorry! (approx. 10mins)
 
 ### once successfully completed you can quit R, no need to save the workspace.
 # No more coffee for you today ;-)
