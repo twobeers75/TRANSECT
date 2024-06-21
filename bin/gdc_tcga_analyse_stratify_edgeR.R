@@ -221,7 +221,7 @@ write.table(design, "design.tsv", col.names=NA)
 ## require that the max value > 5
 GsOI_medians <- strat_GOI_exp_raw_OG %>% summarise_at(GsOI_split, median)
 GsOI_maxs <- strat_GOI_exp_raw_OG %>% summarise_at(GsOI_split, max)
-if (min(GsOI_medians) < 2 || min(GsOI_maxs) < 5) {
+if (min(GsOI_medians) < 1 || min(GsOI_maxs) < 5) {
   # set DE flag to false but continue on to produce descriptive plots 
   run_DE <- FALSE
 } else {

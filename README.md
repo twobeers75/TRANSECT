@@ -11,7 +11,7 @@ TRANSECT is an application designed solely to run in a Linux Terminal. In brief,
 Currently, there are many global efforts to collect and collate tissue-specific gene expression (RNA-sequencing) data from large cohorts of diseased and non-diseased subjects for public use (GTEx, TCGA, …, to name only a few). These data sets are used to bolster and aid in the investigation of gene specific expression and regulation as well as several other biological queries. One such application that is currently underutilised and (to our knowledge) not currently offered as an accessible public resource, is the stratification and subsequent differential expression of single or composite genes in order to assess "transcriptome state". This type of analysis has only in recent times become feasible thanks to the large number of participants in cohort studies and, will only intensify in power and usefulness as these collections continue to grow in number and diversity. The results from this type of analysis can be used to rapidly investigate transcriptome state within natural physiological expression levels without economic burden. This can be applied before mass-parallel laboratory investigations and/or between the transition from *in vitro* to *in vivo* studies in order to assess the feasibility of further, possibly expensive, experimentation.
 
 ## TRANSECT Web-application
-A web-accesible version is freely available for use [here](http://203.101.229.190/analysis/home)
+A web-accessible version is freely available for use [here](http://203.101.229.190/analysis/home)
 
 ## Version
 
@@ -46,16 +46,17 @@ NOTE: TRANSECT requires and depends on numerous packages and applications. These
 To start, clone the repo
 
 ```sh
-git clone https://github.com/twobeers75/SCA.git
+git clone https://github.com/twobeers75/TRANSECT.git
 ```
 
 Or, download the package and extract it
 
-Browse to https://github.com/twobeers75/SCA, click on the green "Code" button followed by "Download ZIP" (note the download location). 
+Browse to https://github.com/twobeers75/TRANSECT, click on the green "Code" button followed by "Download ZIP" (note the download location). 
 Find the downloaded ZIP file and move it if required before extracting the contents and renaming the folder
+
 ```sh
-unzip SCA-main.zip
-mv SCA-main SCA
+unzip TRANSECT-main.zip
+mv TRANSECT-main TRANSECT
 ```
 
 Install python3 pip, java if required, and other TRANSECT dependencies (NOTE: Python3 comes preinstalled with Ubuntu)
@@ -63,7 +64,7 @@ Install python3 pip, java if required, and other TRANSECT dependencies (NOTE: Py
 *(approx. 1min)*
 ```sh
 ### change into the top directory of the downloaded folder (TRANSECT)
-cd <path to>/SCA
+cd <path to>/TRANSECT
 
 ### install pip and other deb requirements
 sudo apt install python3-pip default-jre libfontconfig1-dev libcurl4-openssl-dev libssl-dev libxml2-dev libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev pandoc
@@ -133,25 +134,25 @@ Example prepare commands;
 ### ALSO NOTE: you don't necessarily need all of these, all at once. If your just tying this application start with RECOUNT3 (recommended) and skip the others for now.
 
 ### RECOUNT3 (approx. 10mins on first run)
-# change into the top directory of SCA
-cd <path to>/SCA
+# change into the top directory of TRANSECT
+cd <path to>/TRANSECT
 # run the RECOUNT3 prepare script for BRCA requiring a complete download. If this is a first time download, the script will autmatically install all requirements so it will take a while but, next time will be quick! 
 bin/R3_prepare_directories.sh -p BRCA
 
 ### GDC-TCGA
-# change into the top directory of SCA
-cd <path to>/SCA
+# change into the top directory of TRANSECT
+cd <path to>/TRANSECT
 # run the GDC-TCGA prepare script for BRCA requiring a complete download
 bin/GDC_TCGA_prepare_directories.sh -p TCGA-BRCA -a
 
 ### GTEx
-# change into the top directory of SCA
-cd <path to>/SCA
+# change into the top directory of TRANSECT
+cd <path to>/TRANSECT
 # run the GTEx prepare script requiring a complete download
 bin/GTEx_prepare_directories.sh -a
 ```
 
-Be aware that some of these collections are large and require substantial disk space. They will take a considerable amount of time to download and process too. For example, downloading and processing TCGA-BRCA takes just over 30 minutes (using a high speed network connection and an up to date workstation) and requires more than 14GB of disk space (most of which can be deleted afterwards). In comparison, TCGA-LAML takes less than 5 minutes to retrieve and less than 2GB of disc space. Preparation for both GDC-TCGA and the RECOUNT3 data is done individually by tissue type but can also be done in batch mode (see the relevant script help menu for instructions). Preparing GTEx data on the other hand, retrieves in bulk all tissue types in a single table before separating them into individual files based on tissue type (again, see the help menu for more details). All downloaded data is stored in "SCA/data/<GDC|GTEx|RECOUNT3>" in appropriate folders.
+Be aware that some of these collections are large and require substantial disk space. They will take a considerable amount of time to download and process too. For example, downloading and processing TCGA-BRCA takes just over 30 minutes (using a high speed network connection and an up to date workstation) and requires more than 14GB of disk space (most of which can be deleted afterwards). In comparison, TCGA-LAML takes less than 5 minutes to retrieve and less than 2GB of disc space. Preparation for both GDC-TCGA and the RECOUNT3 data is done individually by tissue type but can also be done in batch mode (see the relevant script help menu for instructions). Preparing GTEx data on the other hand, retrieves in bulk all tissue types in a single table before separating them into individual files based on tissue type (again, see the help menu for more details). All downloaded data is stored in "TRANSECT/data/<GDC|GTEx|RECOUNT3>" in appropriate folders.
 
 **Analyse** is a process that uses the prepared public data from above conducts the stratified differential expression and produces all the outputs. Like with the prepare operation, TRANSECT comes bundled with three analyse scripts, one each for RECOUNT3, GDC-TCGA and GTEx data.
 
@@ -164,29 +165,29 @@ Example analyse commands;
 ### ALSO NOTE: You need to have the appropriate DB installed (previous step) for the following commands to work. If you only installed the RECOUNT3 BRCA DB, only run the RECOUNT3 BRCA test.
 
 ### RECOUNT3 (approx. 10mins on first run)
-# change into the top directory of SCA
-# SCA saves output in the run folder so best to create one specifically for each run 
-cd <path to>/SCA/output/RECOUNT3
+# change into the top directory of TRANSECT
+# TRANSECT saves output in the run folder so best to create one specifically for each run 
+cd <path to>/TRANSECT/output/RECOUNT3
 mkdir -p ESR1_BRCA_test
 cd ESR1_BRCA_test
 # Now, run the RECOUNT3 prepare script on the BRCA data, investigating the gene ESR1, with all outputs. Again, if this is a first time analysis, the script will autmatically install all requirements so it will take a while but, next time will be quick!
-<path to>/SCA/bin/R3_analyse_GOI.sh -p BRCA -g ESR1 -s mRNA -t 3 -a
+<path to>/TRANSECT/bin/R3_analyse_GOI.sh -p BRCA -g ESR1 -s mRNA -t 3 -a
 
 ### GDC-TCGA
-# SCA saves output in the run folder so best to create one specifically for each run 
-cd <path to>/SCA/output/GDC
+# TRANSECT saves output in the run folder so best to create one specifically for each run 
+cd <path to>/TRANSECT/output/GDC
 mkdir -p ESR1_BRCA_test
 cd ESR1_BRCA_test
 # Now, run the GDC-TCGA prepare script on the BRCA data, investigating the gene ESR1, with all outputs
-<path to>/SCA/bin/GDC_TCGA_analyse_GOI.sh -p TCGA-BRCA -g ESR1 -s mRNA -t 3 -a
+<path to>/TRANSECT/bin/GDC_TCGA_analyse_GOI.sh -p TCGA-BRCA -g ESR1 -s mRNA -t 3 -a
 
 ### GTEx
-# SCA saves output in the run folder so best to create one specifically for each run 
-cd <path to>/SCA/output/GTEx
+# TRANSECT saves output in the run folder so best to create one specifically for each run 
+cd <path to>/TRANSECT/output/GTEx
 mkdir -p ESR1_Breast_test
 cd ESR1_Breast_test
 # Now, run the GTEx prepare script on the Breast data, investigating the gene ESR1, with all outputs
-<path to>/SCA/bin/GTEx_analyse_GOI.sh -p Breast -g ESR1 -s mRNA -t 5 -a
+<path to>/TRANSECT/bin/GTEx_analyse_GOI.sh -p Breast -g ESR1 -s mRNA -t 5 -a
 ```
 
 ## Output
@@ -207,6 +208,6 @@ cd ESR1_Breast_test
 
 ## Licence
 
-SCA is made available under the terms of the MIT license, a copy of which is included in the distribution in the LICENSE file.
+TRANSECT is made available under the terms of the MIT license, a copy of which is included in the distribution in the LICENSE file.
 
 GSEA is made available under the terms of a BSD-style license, a copy of which is included in the GSEA folder in the LICENSE.txt file. See that file for exact terms and conditions.
