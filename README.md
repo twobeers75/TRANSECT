@@ -61,7 +61,7 @@ mv TRANSECT-main TRANSECT
 
 Install python3 pip, java if required, and other TRANSECT dependencies (NOTE: Python3 comes preinstalled with Ubuntu)
 
-*(approx. 1min)*
+*(approx. 1-2min)*
 ```sh
 ### change into the top directory of the downloaded folder (TRANSECT)
 cd <path to>/TRANSECT
