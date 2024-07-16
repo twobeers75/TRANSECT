@@ -743,6 +743,8 @@ if (gsea_exe != "false"){
                 axis.title.x=element_text(size=20), axis.text.x=element_text(size=18))
         
         setwd(gsea_outdir) # to bypass html files directory creation when saving into a folder
+        json_data <- plotly_json(ggplotly(gseaplot))
+        writeLines(json_data, paste(sample_name, ".json", sep=""))
         saveWidget(ggplotly(gseaplot), file = paste(sample_name, ".html", sep=""), selfcontained=TRUE)
         setwd(outdir)
         
