@@ -35,7 +35,7 @@ fi
 ### Create TRANSECT environment
 echo "Creating TRANSECT conda environment"
 echo ""
-conda create --yes -n TRANSECT -c bioconda -c conda-forge \
+conda create --yes -n TRANSECT -c bioconda -c conda-forge -c anaconda \
 		fontconfig \
 		libcurl \
 		openssl \
@@ -78,6 +78,6 @@ conda create --yes -n TRANSECT -c bioconda -c conda-forge \
 		bioconductor-deformats \
 		bioconductor-recount3=1.12.0 \
 		bioconductor-deformats \
-	openjdk
+	anaconda::openjdk
 
 
