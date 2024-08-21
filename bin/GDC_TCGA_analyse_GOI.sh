@@ -146,7 +146,7 @@ then
 fi
 
 ### check if user input a valid integer
-if ((${percentile} < 2 || ${percentile} > 25))
+if ((${percentile%.*} < 2 || ${percentile%.*} > 25))
 then
 	echo "Percentile must be an integer in the range 2 - 25" >&2
 	echo""; echo "${usage}"

@@ -150,8 +150,8 @@ with(df_target_pairs, plot(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.25, col
 # with(subset(df_target_pairs, logExp_Cor > 0.5 ), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.25, col="orange"))
 # with(subset(df_target_pairs, logExp_Cor < -0.5 ), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.25, col="orange"))
 with(subset(df_target_pairs, logExp_FDR < 1E-50), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.25, col="green"))
-with(subset(df_target_pairs, logExp_FDR < 1E-150 & logExp_Cor > 0.7), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.75, col="red"))
-with(subset(df_target_pairs, logExp_FDR < 1E-150 & logExp_Cor < -0.7), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.75, col="blue"))
+with(subset(df_target_pairs, logExp_FDR < 1E-150 & logExp_Cor > 0.8), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.75, col="red"))
+with(subset(df_target_pairs, logExp_FDR < 1E-150 & logExp_Cor < -0.8), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.75, col="blue"))
 invisible(dev.off())
 
 setwd(main_dir)

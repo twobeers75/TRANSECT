@@ -19,6 +19,7 @@ exp_dir_name = sys.argv[1]
 tcga_ID = sys.argv[2]
 rna_type = sys.argv[3]
 ref_file_folder = sys.argv[4]
+non_tcga_data = sys.argv[5]
 
 ### Functions
 def create_template_dfs(main_col_name, lookup_df_filename):
@@ -44,6 +45,12 @@ def get_sample_code(file):
 	sample_code = sample_vial[:2]
 	
 	return TCGA_barcode, sample_code
+
+def get_sample_code_non_TCGA(file):
+	filename = basename(file)
+	GDC_barcode = filename.split('.')[0]
+	
+	return GDC_barcode
 
 def get_simple_stats(df):
 	dfcount = df.count(axis=1)-1
@@ -84,7 +91,7 @@ SAMPLE_TYPE_OTHER = {'20': 'Control Analyte',
 ### Process the data
 ### Note: these blocks are very similar but enough different that I have not created a single function
 if rna_type == 'mRNA':
-### Create template df's that we will need 
+	### Create template df's that we will need 
 	lookup_df_filename = ref_file_folder + '/gencode.vXX.annotation.lookup'
 	tumor_df, normal_df, all_df = create_template_dfs('gene_name', lookup_df_filename)
 	fpkm_tumor_df, fpkm_normal_df, fpkm_all_df = create_template_dfs('gene_name', lookup_df_filename)
@@ -92,25 +99,35 @@ if rna_type == 'mRNA':
 	
 	### Start processing each of the individual files
 	mrna_files = glob.glob(exp_dir_name) 
-	for file in mrna_files:
-		TCGA_barcode, sample_code = get_sample_code(file)
-		
-		if sample_code in SAMPLE_TYPE_CANCER.keys():
+	if non_tcga_data == 'true':
+		for file in mrna_files:
+			GDC_barcode = get_sample_code_non_TCGA(file)
+			
 			temp_df = pd.read_csv(file, sep='\t', index_col=0, header=1)
-			tumor_df[TCGA_barcode] = temp_df['unstranded']
-			all_df[TCGA_barcode] = temp_df['unstranded']
-			fpkm_all_df[TCGA_barcode] = temp_df['fpkm_unstranded']
-			tpm_all_df[TCGA_barcode] = temp_df['tpm_unstranded']
-		elif sample_code in SAMPLE_TYPE_NORMAL.keys():
-			temp_df = pd.read_csv(file, sep='\t', index_col=0, header=1)
-			normal_df[TCGA_barcode] = temp_df['unstranded']
-			all_df[TCGA_barcode] = temp_df['unstranded']
-			fpkm_all_df[TCGA_barcode] = temp_df['fpkm_unstranded']
-			tpm_all_df[TCGA_barcode] = temp_df['tpm_unstranded']
-		elif sample_code in SAMPLE_TYPE_OTHER.keys():
-			print('Skipping Other Sample Type with TCGA bacode: ' + TCGA_barcode)
-		else:
-			print('Unknown samplecode (' + sample_code + ') in TCGA bacode: ' + TCGA_barcode)
+			tumor_df[GDC_barcode] = temp_df['unstranded']
+			all_df[GDC_barcode] = temp_df['unstranded']
+			fpkm_all_df[GDC_barcode] = temp_df['fpkm_unstranded']
+			tpm_all_df[GDC_barcode] = temp_df['tpm_unstranded']
+	else:
+		for file in mrna_files:
+			TCGA_barcode, sample_code = get_sample_code(file)
+			
+			if sample_code in SAMPLE_TYPE_CANCER.keys():
+				temp_df = pd.read_csv(file, sep='\t', index_col=0, header=1)
+				tumor_df[TCGA_barcode] = temp_df['unstranded']
+				all_df[TCGA_barcode] = temp_df['unstranded']
+				fpkm_all_df[TCGA_barcode] = temp_df['fpkm_unstranded']
+				tpm_all_df[TCGA_barcode] = temp_df['tpm_unstranded']
+			elif sample_code in SAMPLE_TYPE_NORMAL.keys():
+				temp_df = pd.read_csv(file, sep='\t', index_col=0, header=1)
+				normal_df[TCGA_barcode] = temp_df['unstranded']
+				all_df[TCGA_barcode] = temp_df['unstranded']
+				fpkm_all_df[TCGA_barcode] = temp_df['fpkm_unstranded']
+				tpm_all_df[TCGA_barcode] = temp_df['tpm_unstranded']
+			elif sample_code in SAMPLE_TYPE_OTHER.keys():
+				print('Skipping Other Sample Type with TCGA bacode: ' + TCGA_barcode)
+			else:
+				print('Unknown samplecode (' + sample_code + ') in TCGA bacode: ' + TCGA_barcode)
 	
 	### a significant number of entries with duplicate gene_names (mostly smallRNAs and ncRNAs) so need to dedup (keeping the highest expressed).
 	all_df['mean'] = all_df.mean(numeric_only=True, axis=1)
@@ -129,8 +146,12 @@ if rna_type == 'mRNA':
 	tpm_all_df = tpm_all_df.drop(['mean'], axis=1)
 	
 	### write the normalised outputs here
-	fpkm_all_df.to_csv('GDC_' + tcga_ID.replace("Count", "FPKM") + '_all.tsv', sep='\t', index=False)
-	tpm_all_df.to_csv('GDC_' + tcga_ID.replace("Count", "TPM") + '_all.tsv', sep='\t', index=False)
+	if non_tcga_data == 'true':
+		fpkm_all_df.to_csv('GDC_' + tcga_ID + '_FPKM-mRNA_all.tsv', sep='\t', index=False)
+		tpm_all_df.to_csv('GDC_' + tcga_ID + '_TPM-mRNA_all.tsv', sep='\t', index=False)
+	else:
+		fpkm_all_df.to_csv('GDC_' + tcga_ID.replace("Count", "FPKM") + '_all.tsv', sep='\t', index=False)
+		tpm_all_df.to_csv('GDC_' + tcga_ID.replace("Count", "TPM") + '_all.tsv', sep='\t', index=False)
 	
 elif rna_type == 'miRNA':
 	### Create template df's that we will need 

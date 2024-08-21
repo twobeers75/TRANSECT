@@ -72,7 +72,7 @@ USAGE: $(basename $0) [-h] -p <RECOUNT3 projectID> -g <GOI> -s <StratifyBy> -t <
 	-p RECOUNT3 tissue id: needs to be valid RECOUNT3 tissue id as at RECOUNT3 (ie. BRCA for TCGA or BREAST for GTEx). Required
 	-g Gene of interest: needs to be a valid HGNC symbol (ie. ZEB1). Required
 	-s Stratify by molecule: Must match -g and can only be mRNA at present. Required
-	-t Percentile: startify data into top and bottom x percentil (valid x between 2 and 25). Required
+	-t Percentile: startify data into top and bottom x percentile (valid x between 2 and 25). Required
 	-e Enrichment analyses: Run GSEA and WebGestalt on DE results (Default: False)
 	-S Switch pairwise comparison: find genes DE in low group compared to high group (Default: high compared to low)
 	-a Do all analyses
@@ -146,7 +146,7 @@ then
 fi
 
 ### check if user input a valid integer
-if ((${percentile} < 2 || ${percentile} > 25))
+if ((${percentile%.*} < 2 || ${percentile%.*} > 25))
 then
 	echo "Percentile must be an integer in the range 2 - 25" >&2
 	echo""; echo "${usage}"

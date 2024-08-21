@@ -70,6 +70,7 @@ message(paste("Beginning stratification of", GOI))
 if (rna_species == "mRNA"){
   exp_data <- fread(file=gene_fpkm_filename, sep='\t', header=TRUE, check.names=FALSE, stringsAsFactors=FALSE, data.table=FALSE)
   exp_data <- exp_data %>% column_to_rownames('gene_name')
+  exp_data <- exp_data + 0.01 # adding 0.1 for log calculations
   exp_type <- "TPM"
 } else if (rna_species == "miRNA"){
   mRNA_ids <- t(fread(file=gene_fpkm_filename, header = FALSE, nrows = 1))
@@ -735,20 +736,24 @@ if (gsea_exe != "false"){
         # par(las=2) ; par(mar=c(10,50,10,5))
         # barplot(combined_gsea_sig_results$NES, main=sample_name, horiz=TRUE, names.arg=row.names(combined_gsea_sig_results), xlab="Normalise Enrichment Score", cex.main=2, cex.lab=1.5, cex.axis=1.0, col=combined_gsea_sig_results$bar_color)
         # invisible(dev.off())
-        combined_gsea_sig_results$cols_column <- ifelse(combined_gsea_sig_results$NES > 0, "#00BFC4", "#F8766D")
-        
-        gseaplot <- ggplot(data=combined_gsea_sig_results, aes(x=NES, y=GS.br..follow.link.to.MSigDB, fill=cols_column)) + 
-          geom_bar(stat="identity") + scale_y_discrete(limits=combined_gsea_sig_results$GS.br..follow.link.to.MSigDB) + 
-          theme_minimal() + xlab("Normalised Enrichment Score") +
-          theme(legend.position="none", axis.title.y=element_blank(), 
-                axis.title.x=element_text(size=20), axis.text.x=element_text(size=18))
-        
-        setwd(outdir) # to bypass html files directory creation when saving into a folder
-        saveWidget(ggplotly(gseaplot), file = paste(sample_name, ".html", sep=""), selfcontained=TRUE)
-        setwd(main_dir)
-        
-        write.csv(combined_gsea_sig_results[,1:(length(combined_gsea_sig_results)-2)], 
-                  paste(outdir, "/",sample_name, ".csv", sep=""), row.names=FALSE)
+        if (nrow(combined_gsea_sig_results) > 0){
+          combined_gsea_sig_results$cols_column <- ifelse(combined_gsea_sig_results$NES > 0, "#00BFC4", "#F8766D")
+          
+          gseaplot <- ggplot(data=combined_gsea_sig_results, aes(x=NES, y=GS.br..follow.link.to.MSigDB, fill=cols_column)) + 
+            geom_bar(stat="identity") + scale_y_discrete(limits=combined_gsea_sig_results$GS.br..follow.link.to.MSigDB) + 
+            theme_minimal() + xlab("Normalised Enrichment Score") +
+            theme(legend.position="none", axis.title.y=element_blank(), 
+                  axis.title.x=element_text(size=20), axis.text.x=element_text(size=18))
+          
+          setwd(outdir) # to bypass html files directory creation when saving into a folder
+          saveWidget(ggplotly(gseaplot), file = paste(sample_name, ".html", sep=""), selfcontained=TRUE)
+          setwd(main_dir)
+          
+          write.csv(combined_gsea_sig_results[,1:(length(combined_gsea_sig_results)-2)], 
+                    paste(outdir, "/",sample_name, ".csv", sep=""), row.names=FALSE)
+        } else {
+          message("No significant GSEA results to plot")
+        }
       }
     }
   }
@@ -770,7 +775,9 @@ if (gsea_exe != "false"){
   FDR_sig_df_down <- FDR_sig_df[FDR_sig_df$logFC < 0,]
   FDR_sig_df_ord_up <- FDR_sig_df_up[order(FDR_sig_df_up$logFC, decreasing = TRUE), ]$gene_name
   FDR_sig_df_ord_down <- FDR_sig_df_down[order(FDR_sig_df_down$logFC), ]$gene_name
+  ifelse(length(FDR_sig_df_ord_up) > 20, FDR_sig_df_ord_up_test <- TRUE, FDR_sig_df_ord_up_test <- FALSE)
   if (length(FDR_sig_df_ord_up) > 500) { FDR_sig_df_ord_up <- FDR_sig_df_ord_up[1:500] }
+  ifelse(length(FDR_sig_df_ord_down) > 20, FDR_sig_df_ord_down_test <- TRUE, FDR_sig_df_ord_down_test <- FALSE)
   if (length(FDR_sig_df_ord_down) > 500) { FDR_sig_df_ord_down <- FDR_sig_df_ord_down[1:500] }
   
   ### setup reference list
@@ -785,33 +792,43 @@ if (gsea_exe != "false"){
   ### Run each analysis
   message("Passing DE UP regulated geneset to WebGestalt ORA")
   sink(nullfile()) # don't want console messages
-  for (i in 1:length(enrichDBs)) { 
-    enrichResult <- WebGestaltR(enrichMethod="ORA", 
-                                organism="hsapiens", 
-                                enrichDatabase=enrichDBs[[i]], 
-                                interestGene=FDR_sig_df_ord_up, 
-                                interestGeneType="genesymbol", 
-                                #referenceGene=reference_geneset, 
-                                referenceSet="genome_protein-coding", 
-                                referenceGeneType="genesymbol", 
-                                minNum=5, maxNum=2000, sigMethod="top", reportNumr=40,  
-                                isOutput=TRUE, 
-                                outputDirectory=WG_outdir, 
-                                projectName=paste(names(enrichDBs[i]), "UP-Reg", sep = "_"))
+  if (FDR_sig_df_ord_up_test){
+    message("Passing DE UP regulated geneset to WebGestalt ORA")
+    for (i in 1:length(enrichDBs)) { 
+      enrichResult <- WebGestaltR(enrichMethod="ORA", 
+                                  organism="hsapiens", 
+                                  enrichDatabase=enrichDBs[[i]], 
+                                  interestGene=FDR_sig_df_ord_up, 
+                                  interestGeneType="genesymbol", 
+                                  #referenceGene=reference_geneset, 
+                                  referenceSet="genome_protein-coding", 
+                                  referenceGeneType="genesymbol", 
+                                  minNum=5, maxNum=2000, sigMethod="top", reportNumr=40,  
+                                  isOutput=TRUE, 
+                                  outputDirectory=WG_outdir, 
+                                  projectName=paste(names(enrichDBs[i]), "UP-Reg", sep = "_"))
+    }
+  } else {
+    message("Not enough DE up regulated genes to execute WebGestalt")
   }
-  message("Passing DE Down regulated geneset to WebGestalt ORA")
-  for (i in 1:length(enrichDBs)) { 
-    enrichResult <- WebGestaltR(enrichMethod="ORA", 
-                                organism="hsapiens", 
-                                enrichDatabase=enrichDBs[[i]], 
-                                interestGene=FDR_sig_df_ord_down, 
-                                interestGeneType="genesymbol", 
-                                #referenceGene=reference_geneset, 
-                                referenceSet="genome_protein-coding", 
-                                referenceGeneType="genesymbol", 
-                                isOutput=TRUE, 
-                                outputDirectory=WG_outdir, 
-                                projectName=paste(names(enrichDBs[i]), "DOWN-Reg", sep = "_"))
+  if (FDR_sig_df_ord_down_test){
+    message("Passing DE Down regulated geneset to WebGestalt ORA")
+    for (i in 1:length(enrichDBs)) { 
+      enrichResult <- WebGestaltR(enrichMethod="ORA", 
+                                  organism="hsapiens", 
+                                  enrichDatabase=enrichDBs[[i]], 
+                                  interestGene=FDR_sig_df_ord_down, 
+                                  interestGeneType="genesymbol", 
+                                  #referenceGene=reference_geneset, 
+                                  referenceSet="genome_protein-coding", 
+                                  referenceGeneType="genesymbol", 
+                                  minNum=5, maxNum=2000, sigMethod="top", reportNumr=40,
+                                  isOutput=TRUE, 
+                                  outputDirectory=WG_outdir, 
+                                  projectName=paste(names(enrichDBs[i]), "DOWN-Reg", sep = "_"))
+    }
+  } else {
+    message("Not enough DE down regulated genes to execute WebGestalt")
   }
   sink()
   ### All done for WebGestalt. Sign off now

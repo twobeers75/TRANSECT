@@ -99,9 +99,9 @@ print("\t" + str(uuid_list_len) + " uuids for " + project_id + " " + folder_name
 data_endpt = "https://api.gdc.cancer.gov/data"
 
 # Splitting post request (since April 2024) to bypass "Content-Disposition" errors when downloading big datasets (>500 uuids)
-for i in range(0, uuid_list_len, 500):
+for i in range(0, uuid_list_len, 100):
 	file_start = i
-	file_end = i + 500
+	file_end = i + 100
 	if (file_end > uuid_list_len):
 		file_end = uuid_list_len
 	

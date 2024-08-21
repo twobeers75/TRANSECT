@@ -79,7 +79,7 @@ create_summary( ) {
 	cd ${working_folder}/${folder_name}
 	${SCRIPT_FOLDER}/gdc_tcga_prepare_quantification_dir_to_summary.py \
 		"${working_folder}/${folder_name}/${gene_exp_folder_name}/*${file_ext_new}" \
-		${tcga_id_mod_plus} ${rna_type} ${REF_FILES_FOLDER}
+		${tcga_id_mod_plus} ${rna_type} ${REF_FILES_FOLDER} ${non_tcga_data}
 }
 
 combine_summary( ) {
@@ -113,11 +113,12 @@ retrieve_counts=false
 retrieve_miR_rpms=false
 retrieve_isomiR_rpms=false
 keep_data=false
+non_tcga_data=false
 
 ### Parse command line options
 usage="Retrieve and prepare TCGA RNA-seq data for in-house custom analyses.
 
-USAGE: $(basename $0) [-h] -p <TCGA Project ID> [-a -c -r -R -k]
+USAGE: $(basename $0) [-h] -p <TCGA Project ID> [-a -c -r -R -k -n]
 	where:
 	-h Show this help text
 	-p TCGA project id: needs to be valid TCGA project id as at the GDC (ie. TCGA-BRCA). Required
@@ -126,6 +127,7 @@ USAGE: $(basename $0) [-h] -p <TCGA Project ID> [-a -c -r -R -k]
 	-r retrieve only miR RPMs
 	-R retrieve only isomiR RPMs
 	-k keep all data (Default: False)
+	-n data is not from TCGA study (Default: False)
 
 To retrieve and prepare more than one TCGA cancer dataset use a bash for loop like this;
 for tcga_code in TCGA-COAD TCGA-SARC TCGA-LAML; do GDC_TCGA_prepare_directories.sh -p \$tcga_code; done
@@ -134,7 +136,7 @@ To retrieve and prepare all TCGA cancer datasets you can loop through all lines 
 while read tcga_code; do GDC_TCGA_prepare_directories.sh -p \$tcga_code; done < <(cut -f1 GDC_API/TCGA_Study_Abbreviations.tsv | tail -n +2)
 "
 ### parse all command line options
-while getopts hp:acrRk opt; do
+while getopts hp:acrRkn opt; do
 	case "$opt" in
 		h) echo "$usage"; exit;;
 		p) pflag=true; project_id=$OPTARG;;
@@ -143,6 +145,7 @@ while getopts hp:acrRk opt; do
 		r) retrieve_miR_rpms=true;;
 		R) retrieve_isomiR_rpms=true;;
 		k) keep_data=true;;
+		n) non_tcga_data=true;;
 		:)echo -e "Option -$OPTARG requires an argument.\n" >&2; echo "$usage" >&2; exit 1;;
 		\?) echo ""; echo "$usage" >&2; exit 1;;
 		*) echo ""; echo "$usage" >&2; exit 1;;
