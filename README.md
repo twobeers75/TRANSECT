@@ -6,7 +6,7 @@
 
 ## TRANSECT Introduction
 
-TRANSECT is a bioinformatics application designed to run in a Linux Terminal. In brief, TRANSECT stratifies large cohort data into user defined subsets based solely on expression, which are subsequently compared one to the other. This version of TRANSECT is tuned specifically for the interrogation of gene/s from publicly available tissue-specific gene expression data.
+TRANSECT stratifies cohort data into user defined strata (groups) based solely on expression, and subsequently compares the strata one to the other. This version of TRANSECT is tuned specifically for the interrogation of gene/s from publicly available tissue-specific gene expression data.
 
 Currently, there are many global efforts to collect and collate tissue-specific gene expression (RNA-sequencing) data from large cohorts of diseased and non-diseased subjects for public use (GTEx, TCGA, …, to name only a few). These data sets are used to bolster and aid in the investigation of gene specific expression and regulation as well as several other biological queries. One such application that is currently underutilised is the stratification and subsequent differential expression of single or composite genes in order to assess "transcriptome state". This type of analysis has only in recent times become feasible thanks to the large number of participants in cohort studies and, will only intensify in power and usefulness as these collections continue to grow in number and diversity. The results from this type of analysis can be used to rapidly investigate transcriptome state within natural physiological expression levels without economic burden. This can be applied before laboratory investigations and/or between the transition from *in vitro* to *in vivo* studies in order to assess the feasibility of further, possibly expensive, experimentation.
 
@@ -40,7 +40,7 @@ John Toubia
 ## Installation
 <span id="#installation"></span>
 
-NOTE: TRANSECT requires and depends on numerous packages and applications. For this reason it is recommended for most cases, to install TRANSECT within a Conda environment. This is not only easier and cleaner but also saves a significant amount of time (*from approx. 60 minutes to less than 10*). For those not wanting to use Conda, please see the instructions for an alternate method in the TRANSECT manual.
+NOTE: TRANSECT requires and depends on numerous packages and applications. For this reason it is recommended for most cases, to install TRANSECT within a Conda environment. This is not only easier and cleaner but also saves a significant amount of time (*from approx. 60 minutes to less than 10*). For those not wanting to use Conda, please see the instructions for an alternate installation method in the TRANSECT manual.
 
 To start, clone the repo
 
@@ -62,14 +62,10 @@ Install Conda (requires Conda version > 24.1.0). You can skip this step if you a
 
 There are many wikis on how to install Conda on Ubuntu, [here](https://docs.anaconda.com/miniconda/) is just one.
 
-<<<<<<< HEAD
-*(approx. 1min)*
-
-=======
 *(approx. 1-2min)*
->>>>>>> dfed5d11b5da7b47d73cccc5e8fe54c0914ed41b
+
 ```sh
-### follow the instructions outlined in the link above which should look something like this
+### follow the instructions outlined in the link above which should look something like this for Linux
 mkdir -p ~/miniconda3
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda3/miniconda.sh
 bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3
@@ -101,40 +97,7 @@ conda deactivate
 conda activate TRANSECT
 ```
 
-<<<<<<< HEAD
 And that's it! You should now have all the necessary applications and dependencies to run TRANSECT. Please note, just like any virtual environment you are required to activate the TRANSECT environment in order to use the application. You can deactivate at will when not in use. 
-=======
-Start R from the terminal and install pacman and devtools. Follow the prompts and choose (if asked) to install these packages into a personal library.
-
-Once you enter the R shell you should see printed out in the terminal a number of lines about the R version and licences followed by a ">" symbol. I have used this symbol below to indicate that you need to be in the R shell to run these commands but, you can't copy the ">" symbol too. It won't work. 
-
-*(approx. 25mins)*
-```
-### start R
-R
-> install.packages(c("pacman","devtools"))
-# Note: maybe wise here to go get a coffee as the previous command takes quite some time to finish! (approx. 15mins) 
-
-### whilst still in the R environment, load devtools and install rlogging
-> library("devtools")
-> install_github("https://github.com/mjkallen/rlogging.git")
-
-### also install required Bioconductor packages
-> if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-> BiocManager::install(version = "3.19")
-> BiocManager::install(c("edgeR","Glimma","DEFormats"))
-# Note: probably time for another coffee. Sorry! (approx. 10mins)
-
-### once successfully completed you can quit R, no need to save the workspace.
-# No more coffee for you today ;-)
->  q()
-```
-
-
-
-NOTE: TRANSECT requires many additional R packages however these are all installed on demand the first time (and only the first time) you run each one of the different TRANSECT commands. Please keep this in mind on your first run as it will take substantially longer compared to all subsequent runs.
->>>>>>> dfed5d11b5da7b47d73cccc5e8fe54c0914ed41b
 
 ## Usage
 
