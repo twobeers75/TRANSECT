@@ -14,6 +14,9 @@ import glob
 import os
 from os import system
 
+#### Splitting post request since April 2024 to bypass "Content-Disposition" errors when downloading big datasets from GDC (>500 uuids)
+post_request_max = 100
+
 ### for RNA-seq data use: field: files.analysis.workflow_type with value: [STAR - Counts]
 ### for miRNA-seq data use: field: files.data_type with value: [miRNA Expression Quantification or Isoform Expression Quantification]
 
@@ -98,10 +101,10 @@ print("\t" + str(uuid_list_len) + " uuids for " + project_id + " " + folder_name
 
 data_endpt = "https://api.gdc.cancer.gov/data"
 
-# Splitting post request (since April 2024) to bypass "Content-Disposition" errors when downloading big datasets (>500 uuids)
-for i in range(0, uuid_list_len, 100):
+# Splitting post request here
+for i in range(0, uuid_list_len, post_request_max):
 	file_start = i
-	file_end = i + 100
+	file_end = i + post_request_max
 	if (file_end > uuid_list_len):
 		file_end = uuid_list_len
 	

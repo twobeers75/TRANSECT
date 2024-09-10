@@ -6,7 +6,7 @@
 ###*****************************************************************************
 
 ###*****************************************************************************
-### Import libraries ####
+# Import libraries ####
 ###*****************************************************************************
 suppressMessages(if (!require("pacman")) install.packages("pacman"))
 p_load(edgeR, Glimma, dplyr, tidyr, data.table, tibble, 
@@ -14,14 +14,15 @@ p_load(edgeR, Glimma, dplyr, tidyr, data.table, tibble,
        rlogging, plotly, htmlwidgets)
 
 SetLogFile(base.file=NULL)
+options(warn=-1)
 
 ###*****************************************************************************
-#### Hard coded system variables ####
+# Hard coded system variables ####
 ###*****************************************************************************
 
 
 ###*****************************************************************************
-#### Read in Args ####
+# Read in Args ####
 ###*****************************************************************************
 args = commandArgs(trailingOnly=TRUE)
 if (length(args)==0) {
@@ -51,18 +52,30 @@ isomir_rpm_filename <- args[9]
 normals <- ""
 
 ###*****************************************************************************
-### Setup for analyses ####
+# Setup ####
 ###*****************************************************************************
 main_dir <- getwd()
 dir.create(file.path(main_dir, "DE_Analysis"))
 setwd(file.path(main_dir, "DE_Analysis"))
+
+###*****************************************************************************
+## Setup custom thresholds ####
+###*****************************************************************************
+# filter lowly expressed genes threshold - require CPM > threshold in half the samples
+low_gene_thrs <- 5
+# decideTests pvalue and lfc
+dt_pvalue <- 1e-5
+dt_lfc <- 1
+# min/max sig genes to use for ORA analysis
+ORA_min <- 20
+ORA_max <- 500
 
 multi_GOI_analysis <- FALSE
 ratio_GOI_analysis <- FALSE
 single_GOI_analysis <- FALSE
 
 ###*****************************************************************************
-### Setup for stratification ####
+# Do stratification ####
 ###*****************************************************************************
 message(paste("Beginning stratification of", GOI))
 
@@ -194,47 +207,51 @@ if (multi_GOI_analysis | ratio_GOI_analysis){
 
 ### write results to file
 rownames(GOI_exp_wstrat) <- rownames(GOI_exp_hist)
-write.table(GOI_exp_wstrat, "GOI_with_strat.tsv", sep='\t', col.names=NA)
-
-### now create design matrix
-# first_quart_df <- data.frame(matrix(ncol=3, nrow=dim(GOI_exp_wstrat[GOI_exp_wstrat$quantile_rank == 1, ])[1]))
-# first_quart_df$Sample <- rownames(GOI_exp_wstrat[GOI_exp_wstrat$quantile_rank == 1, ])
-low_percentile_df <- data.frame(matrix(ncol=3, nrow=dim(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank <= percentile, ])[1]))
-matrix_colnames <- c("Sample", "lo", "hi")
-colnames(low_percentile_df) <- matrix_colnames
-low_percentile_df$Sample <- rownames(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank <= percentile, ])
-low_percentile_df$lo <- 1
-low_percentile_df$hi <- 0
-message(paste(nrow(low_percentile_df), "patients stratified into low group for", GOI))
-
-# third_quart_df <- data.frame(matrix(ncol=3, nrow=dim(GOI_exp_wstrat[GOI_exp_wstrat$quantile_rank == 4, ])[1]))
-# third_quart_df$Sample <- rownames(GOI_exp_wstrat[GOI_exp_wstrat$quantile_rank == 4, ])
-high_percentile_df <- data.frame(matrix(ncol=3, nrow=dim(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank >= (100-percentile), ])[1]))
-colnames(high_percentile_df) <- matrix_colnames
-high_percentile_df$Sample <- rownames(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank >= (100-percentile), ])
-high_percentile_df$lo <- 0
-high_percentile_df$hi <- 1
-message(paste(nrow(high_percentile_df), "patients stratified into high group for", GOI))
-
-design <- rbind(low_percentile_df, high_percentile_df)
-rownames(design) <- design$Sample
-design <- design[c("lo", "hi")]
-write.table(design, "design.tsv", col.names=NA)
+write.table(GOI_exp_wstrat, "GOI_exp_with_strat.tsv", sep='\t', col.names=NA)
 
 ### need to check that all GOIs are expressed at decent levels for DE analysis
-## require that the median expression value > 3 AND
-## require that the max value > 5
+## require that the median expression value > 1 AND
+## require that the max value > 5 AND
+## ie. Expression of GOI >1 in at least half the cohort AND at least one individual with expression >5  
 GsOI_medians <- GOI_exp_raw_OG %>% summarise_at(GsOI_split, median)
 GsOI_maxs <- GOI_exp_raw_OG %>% summarise_at(GsOI_split, max)
 if (min(GsOI_medians) < 1 || min(GsOI_maxs) < 5) {
-  # set DE flag to false but continue on to produce descriptive plots 
+  # set DE flag to false but continue on to produce descriptive plots
+  warning("One or more gene/s of interest found not to possess the required level of expression for down stream analyses")
   run_DE <- FALSE
 } else {
   run_DE <- TRUE
 }
 
+if (run_DE) {
+  ### now create design matrix
+  # first_quart_df <- data.frame(matrix(ncol=3, nrow=dim(GOI_exp_wstrat[GOI_exp_wstrat$quantile_rank == 1, ])[1]))
+  # first_quart_df$Sample <- rownames(GOI_exp_wstrat[GOI_exp_wstrat$quantile_rank == 1, ])
+  low_percentile_df <- data.frame(matrix(ncol=3, nrow=dim(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank <= percentile, ])[1]))
+  matrix_colnames <- c("Sample", "lo", "hi")
+  colnames(low_percentile_df) <- matrix_colnames
+  low_percentile_df$Sample <- rownames(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank <= percentile, ])
+  low_percentile_df$lo <- 1
+  low_percentile_df$hi <- 0
+  message(paste(nrow(low_percentile_df), "patients stratified into low group for", GOI))
+  
+  # third_quart_df <- data.frame(matrix(ncol=3, nrow=dim(GOI_exp_wstrat[GOI_exp_wstrat$quantile_rank == 4, ])[1]))
+  # third_quart_df$Sample <- rownames(GOI_exp_wstrat[GOI_exp_wstrat$quantile_rank == 4, ])
+  high_percentile_df <- data.frame(matrix(ncol=3, nrow=dim(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank >= (100-percentile), ])[1]))
+  colnames(high_percentile_df) <- matrix_colnames
+  high_percentile_df$Sample <- rownames(GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank >= (100-percentile), ])
+  high_percentile_df$lo <- 0
+  high_percentile_df$hi <- 1
+  message(paste(nrow(high_percentile_df), "patients stratified into high group for", GOI))
+  
+  design <- rbind(low_percentile_df, high_percentile_df)
+  rownames(design) <- design$Sample
+  design <- design[c("lo", "hi")]
+  write.table(design, "design.tsv", col.names=NA)
+}
+
 ###*****************************************************************************
-### Do descriptive plots ####
+## Do descriptive plots ####
 ###*****************************************************************************
 
 ### Do frequency histogram OR scatterplots
@@ -375,48 +392,51 @@ saveWidget(ggplotly(p_ly), file = paste(GOI_label, "TPM_N-T_boxplot.html", sep="
 #   ylab(paste("Log2(", GOI, " ", exp_type, ")", sep=""))
 # invisible(dev.off())
 
-### Do stratified expression boxplot
-GOI_exp_low <- GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank <= percentile, ]
-GOI_exp_low$stratification <- "Low"
-GOI_exp_high <- GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank >= (100-percentile), ]
-GOI_exp_high$stratification <- "High"
-GOI_selected_strat <- rbind(GOI_exp_low, GOI_exp_high)
-GOI_selected_strat[, GOI] <- log2(GOI_selected_strat[, GOI])
-GOI_selected_strat <- rownames_to_column(GOI_selected_strat, var = "ID")
-
-p <- ggplot(GOI_selected_strat, aes(x=stratification, y=get(GOI), color=stratification, labels=ID)) + 
-  geom_boxplot(notch=FALSE, na.rm=TRUE) + 
-  ylab(paste("Log2(", GOI, " ", exp_type, ")", sep="")) + 
-  theme_classic() + theme(text=element_text(size=30))
-p <- p + geom_jitter(na.rm=TRUE, shape=16, position=position_jitter(0.2)) + 
-  scale_x_discrete(limits=c("Low", "High"))
-
-p_ly = ggplotly(p)
-p_ly$x$data[[3]]$text <- gsub("get(GOI)", GOI, p_ly$x$data[[3]]$text, fixed = TRUE)
-p_ly$x$data[[4]]$text <- gsub("get(GOI)", GOI, p_ly$x$data[[4]]$text, fixed = TRUE)
-p_ly$x$data[[3]]$text <- sub("stratification: High<br />", "", p_ly$x$data[[3]]$text, fixed = TRUE)
-p_ly$x$data[[4]]$text <- sub("stratification: Low<br />", "", p_ly$x$data[[4]]$text, fixed = TRUE)
-
-saveWidget(ggplotly(p_ly), file = paste(GOI_label, "TPM_strat_boxplot.html", sep="_"))
-
-# svg(paste(GOI_label, "TPM_strat_boxplot.svg", sep="_"))
-# p <- ggplot(GOI_selected_strat, aes(x=stratification, y=get(GOI), color=stratification)) + 
-#   geom_boxplot(notch=FALSE, na.rm=TRUE) + 
-#   ylab(paste("Log2(", GOI, " ", exp_type, ")", sep="")) + 
-#   theme_classic() + theme(text=element_text(size=30))
-# p + geom_jitter(na.rm=TRUE, shape=16, position=position_jitter(0.2)) + 
-#   scale_x_discrete(limits=c("Low", "High")) 
-# # p + geom_dotplot(binaxis='y', stackdir='center', dotsize=1, binwidth=0.1) + 
-# invisible(dev.off())
+if (run_DE) {
+  ### Do stratified expression boxplot
+  GOI_exp_low <- GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank <= percentile, ]
+  GOI_exp_low$stratification <- "Low"
+  GOI_exp_high <- GOI_exp_wstrat[GOI_exp_wstrat$percentile_rank >= (100-percentile), ]
+  GOI_exp_high$stratification <- "High"
+  GOI_selected_strat <- rbind(GOI_exp_low, GOI_exp_high)
+  GOI_selected_strat[, GOI] <- log2(GOI_selected_strat[, GOI])
+  GOI_selected_strat <- rownames_to_column(GOI_selected_strat, var = "ID")
+  
+  p <- ggplot(GOI_selected_strat, aes(x=stratification, y=get(GOI), color=stratification, labels=ID)) + 
+    geom_boxplot(notch=FALSE, na.rm=TRUE) + 
+    ylab(paste("Log2(", GOI, " ", exp_type, ")", sep="")) + 
+    theme_classic() + theme(text=element_text(size=30))
+  p <- p + geom_jitter(na.rm=TRUE, shape=16, position=position_jitter(0.2)) + 
+    scale_x_discrete(limits=c("Low", "High"))
+  
+  p_ly = ggplotly(p)
+  p_ly$x$data[[3]]$text <- gsub("get(GOI)", GOI, p_ly$x$data[[3]]$text, fixed = TRUE)
+  p_ly$x$data[[4]]$text <- gsub("get(GOI)", GOI, p_ly$x$data[[4]]$text, fixed = TRUE)
+  p_ly$x$data[[3]]$text <- sub("stratification: High<br />", "", p_ly$x$data[[3]]$text, fixed = TRUE)
+  p_ly$x$data[[4]]$text <- sub("stratification: Low<br />", "", p_ly$x$data[[4]]$text, fixed = TRUE)
+  
+  saveWidget(ggplotly(p_ly), file = paste(GOI_label, "TPM_strat_boxplot.html", sep="_"))
+  
+  # svg(paste(GOI_label, "TPM_strat_boxplot.svg", sep="_"))
+  # p <- ggplot(GOI_selected_strat, aes(x=stratification, y=get(GOI), color=stratification)) + 
+  #   geom_boxplot(notch=FALSE, na.rm=TRUE) + 
+  #   ylab(paste("Log2(", GOI, " ", exp_type, ")", sep="")) + 
+  #   theme_classic() + theme(text=element_text(size=30))
+  # p + geom_jitter(na.rm=TRUE, shape=16, position=position_jitter(0.2)) + 
+  #   scale_x_discrete(limits=c("Low", "High")) 
+  # # p + geom_dotplot(binaxis='y', stackdir='center', dotsize=1, binwidth=0.1) + 
+  # invisible(dev.off())
+}
 
 ### all done here, sign off stratification
 message(paste("Finished stratification of", GOI))
 
 ###*****************************************************************************
-### Setup for DE ####
+# Setup for DE ####
 ###*****************************************************************************
 if (!run_DE) {
   warning(paste("Unfortunately, there is not enough observations in this dataset for", GOI))
+  warning("Try inspecting the distribution plots to identify the cause")
   stop("Ending this process") 
 }
 
@@ -471,10 +491,10 @@ y <- y[!d,]
 
 ### filter lowly expressed genes
 smallest_replicates_group_size <- min(table(group))
-keep <- rowSums(cpm(y$counts)>5) >= smallest_replicates_group_size
+keep <- rowSums(cpm(y$counts)>low_gene_thrs) >= smallest_replicates_group_size
 y <- y[keep, , keep.lib.sizes=FALSE]
 # dim(y)
-message(paste("Filtering lowly expressed genes using a cpm cutoff of 5 in at least", smallest_replicates_group_size,
+message(paste("Filtering lowly expressed genes using a cpm cutoff of", low_gene_thrs, "in at least", smallest_replicates_group_size,
               "samples :", nrow(y), "kept,", nrow(raw_data)-nrow(y), "lost"))
 
 ### recompute library size
@@ -506,7 +526,7 @@ invisible(dev.off())
 norm_raw <- y$counts
 o <- order(rownames(norm_raw))
 norm_raw <- norm_raw[o,]
-write.csv(cbind(y$genes[rownames(norm_raw),1],norm_raw), "gene_normalised_expression_data_raw.csv", row.names=FALSE)
+# write.csv(cbind(y$genes[rownames(norm_raw),1],norm_raw), "gene_normalised_expression_data.csv", row.names=FALSE)
 ### Additionally also create files for updated GSEA analysis
 temp_geneids <- as.data.frame(y$genes[rownames(norm_raw),1])
 colnames(temp_geneids) <- "NAME"
@@ -518,17 +538,17 @@ writeLines(c(paste(length(design$hi), "2", "1", sep=" "), paste("#", "low", "hig
 ### Normalized CPM
 norm_cpm <- cpm(y, normalized.lib.sizes=TRUE)
 o <- order(rownames(norm_cpm))
-norm_cpm <- norm_cpm[o,]
+norm_cpm <- round(norm_cpm[o,],2) #round(cpm(y$counts),2)
 write.csv(cbind(y$genes[rownames(norm_cpm),1],norm_cpm), "gene_normalised_expression_data_cpm.csv", row.names=FALSE)
 
 ### log2 Normalized CPM
 log_norm_cpm <- cpm(y, normalized.lib.sizes=TRUE, log=TRUE, prior.count=1)
 o <- order(rownames(log_norm_cpm))
-log_norm_cpm <- log_norm_cpm[o,]
+log_norm_cpm <- round(log_norm_cpm[o,],2)
 write.csv(cbind(y$genes[rownames(log_norm_cpm),1],log_norm_cpm), "gene_normalised_expression_data_logcpm.csv", row.names=FALSE)
 
 ###*****************************************************************************
-#### Do DE test (exact) ####
+## Do DE test (exact) ####
 ###*****************************************************************************
 ### first check if switch comparison requested 
 if (switchDE == "true") {
@@ -538,7 +558,7 @@ if (switchDE == "true") {
 }
 
 de <- exactTest(y, pair=comp)
-dt <- decideTests(de,adjust.method="fdr",p.value=1e-5,lfc=1)
+dt <- decideTests(de,adjust.method="fdr",p.value=dt_pvalue,lfc=dt_lfc)
 message(paste("Differential expression using exact test performed", ":", 
               summary(dt)[[1]], "genes down regulated and", 
               summary(dt)[[3]], "genes up regulated"))
@@ -592,7 +612,8 @@ with(results_df, glXYPlot(logFC, -log10(PValue), counts=cpm(y$counts,log=TRUE),
       launch=FALSE))
 
 ### Do the volcano plots - svg versions
-svg(paste("High_Vs_Low", GOI_label,"volcano.svg",sep="_",collapse=""))
+# svg(paste("High_Vs_Low", GOI_label, "volcano.svg", sep="_", collapse=""))
+png(paste("High_Vs_Low", GOI_label, "volcano.png", sep="_", collapse=""))
 par(mar=c(5,6,4,2))
 with(results_df, plot(logFC, -log10(PValue), pch=20, cex=0.25, col="grey", main="Volcano plot", cex.main=2.5, cex.lab=2.5, cex.axis=2.0))
 
@@ -656,9 +677,84 @@ write.csv(DE_logcounts[rev(h$rowInd),], file=paste("High_Vs_Low", GOI_label,"hea
 message(paste("Finished DE Analaysis for", GOI))
 
 ###*****************************************************************************
-### Do GSEA / WebGestalt ####
+## Do WebGestalt ####
 ###*****************************************************************************
-### check that enrichment analyses requested
+### Do WebGestalt
+message(paste("Starting WebGestalt Analysis for", GOI))
+p_load(WebGestaltR)
+
+main_dir <- getwd()
+dir.create(file.path(main_dir, "WebGestalt"))
+WG_outdir <- paste(main_dir, "WebGestalt", sep="/")
+
+### setup gene lists
+# subset all sig-up and sig-down regulated genes. If more than 500, take only top 500 
+FDR_sig_df_up <- FDR_sig_df[FDR_sig_df$logFC > 0,]
+FDR_sig_df_down <- FDR_sig_df[FDR_sig_df$logFC < 0,]
+FDR_sig_df_ord_up <- FDR_sig_df_up[order(FDR_sig_df_up$logFC, decreasing = TRUE), ]$gene_name
+FDR_sig_df_ord_down <- FDR_sig_df_down[order(FDR_sig_df_down$logFC), ]$gene_name
+FDR_sig_df_ord_up_test <- ifelse(length(FDR_sig_df_ord_up) > ORA_min, TRUE, FALSE)
+if (length(FDR_sig_df_ord_up) > ORA_max) { FDR_sig_df_ord_up <- FDR_sig_df_ord_up[1:ORA_max] }
+FDR_sig_df_ord_down_test <- ifelse(length(FDR_sig_df_ord_down) > ORA_min, TRUE, FALSE)
+if (length(FDR_sig_df_ord_down) > ORA_max) { FDR_sig_df_ord_down <- FDR_sig_df_ord_down[1:ORA_max] }
+
+### setup reference list
+reference_geneset <- tt$table$gene_name
+
+### setup databases required
+enrichDatabaseGO <- c("geneontology_Biological_Process_noRedundant","geneontology_Molecular_Function_noRedundant")
+enrichDatabasePW <- c("pathway_KEGG","pathway_Reactome")
+enrichDatabaseDS <- c("disease_Disgenet","disease_GLAD4U","disease_OMIM")
+enrichDBs <- list(enrichDatabaseGO = enrichDatabaseGO, enrichDatabasePW = enrichDatabasePW, enrichDatabaseDS = enrichDatabaseDS)
+
+### Run each analysis
+sink(nullfile()) # don't want console messages
+if (FDR_sig_df_ord_up_test){
+  message("Passing DE UP regulated geneset to WebGestalt ORA")
+  for (i in 1:length(enrichDBs)) { 
+    enrichResult <- WebGestaltR(enrichMethod="ORA", 
+                                organism="hsapiens", 
+                                enrichDatabase=enrichDBs[[i]], 
+                                interestGene=FDR_sig_df_ord_up, 
+                                interestGeneType="genesymbol", 
+                                #referenceGene=reference_geneset, 
+                                referenceSet="genome_protein-coding", 
+                                referenceGeneType="genesymbol", 
+                                minNum=5, maxNum=2000, sigMethod="top", reportNumr=40,  
+                                isOutput=TRUE, 
+                                outputDirectory=WG_outdir, 
+                                projectName=paste(names(enrichDBs[i]), "UP-Reg", sep = "_"))
+  }
+} else {
+  message("Not enough DE up regulated genes to execute WebGestalt")
+}
+if (FDR_sig_df_ord_down_test){
+  message("Passing DE Down regulated geneset to WebGestalt ORA")
+  for (i in 1:length(enrichDBs)) { 
+    enrichResult <- WebGestaltR(enrichMethod="ORA", 
+                                organism="hsapiens", 
+                                enrichDatabase=enrichDBs[[i]], 
+                                interestGene=FDR_sig_df_ord_down, 
+                                interestGeneType="genesymbol", 
+                                #referenceGene=reference_geneset, 
+                                referenceSet="genome_protein-coding", 
+                                referenceGeneType="genesymbol", 
+                                minNum=5, maxNum=2000, sigMethod="top", reportNumr=40,
+                                isOutput=TRUE, 
+                                outputDirectory=WG_outdir, 
+                                projectName=paste(names(enrichDBs[i]), "DOWN-Reg", sep = "_"))
+  }
+} else {
+  message("Not enough DE down regulated genes to execute WebGestalt")
+}
+sink()
+### All done for WebGestalt. Sign off now
+message(paste("Finished WebGestalt Analysis for", GOI))
+
+###*****************************************************************************
+## Do GSEA ####
+###*****************************************************************************
+### Do GSEA - If Requested
 if (gsea_exe != "false"){
   gsea_exe <- paste(gsea_exe, "GSEAPreranked", sep =" ")
   
@@ -760,77 +856,5 @@ if (gsea_exe != "false"){
   
   ### All done for GSEA
   message(paste("Finished GSEA Analysis for", GOI))
-  
-  ### Do WebGestalt
-  message(paste("Starting WebGestalt Analysis for", GOI))
-  p_load(WebGestaltR)
-  
-  main_dir <- getwd()
-  dir.create(file.path(main_dir, "WebGestalt"))
-  WG_outdir <- paste(main_dir, "WebGestalt", sep="/")
-  
-  ### setup gene lists
-  # subset all sig-up and sig-down regulated genes. If more than 500, take only top 500 
-  FDR_sig_df_up <- FDR_sig_df[FDR_sig_df$logFC > 0,]
-  FDR_sig_df_down <- FDR_sig_df[FDR_sig_df$logFC < 0,]
-  FDR_sig_df_ord_up <- FDR_sig_df_up[order(FDR_sig_df_up$logFC, decreasing = TRUE), ]$gene_name
-  FDR_sig_df_ord_down <- FDR_sig_df_down[order(FDR_sig_df_down$logFC), ]$gene_name
-  ifelse(length(FDR_sig_df_ord_up) > 20, FDR_sig_df_ord_up_test <- TRUE, FDR_sig_df_ord_up_test <- FALSE)
-  if (length(FDR_sig_df_ord_up) > 500) { FDR_sig_df_ord_up <- FDR_sig_df_ord_up[1:500] }
-  ifelse(length(FDR_sig_df_ord_down) > 20, FDR_sig_df_ord_down_test <- TRUE, FDR_sig_df_ord_down_test <- FALSE)
-  if (length(FDR_sig_df_ord_down) > 500) { FDR_sig_df_ord_down <- FDR_sig_df_ord_down[1:500] }
-  
-  ### setup reference list
-  reference_geneset <- tt$table$gene_name
-  
-  ### setup databases required
-  enrichDatabaseGO <- c("geneontology_Biological_Process_noRedundant","geneontology_Molecular_Function_noRedundant")
-  enrichDatabasePW <- c("pathway_KEGG","pathway_Reactome")
-  enrichDatabaseDS <- c("disease_Disgenet","disease_GLAD4U","disease_OMIM")
-  enrichDBs <- list(enrichDatabaseGO = enrichDatabaseGO, enrichDatabasePW = enrichDatabasePW, enrichDatabaseDS = enrichDatabaseDS)
-  
-  ### Run each analysis
-  message("Passing DE UP regulated geneset to WebGestalt ORA")
-  sink(nullfile()) # don't want console messages
-  if (FDR_sig_df_ord_up_test){
-    message("Passing DE UP regulated geneset to WebGestalt ORA")
-    for (i in 1:length(enrichDBs)) { 
-      enrichResult <- WebGestaltR(enrichMethod="ORA", 
-                                  organism="hsapiens", 
-                                  enrichDatabase=enrichDBs[[i]], 
-                                  interestGene=FDR_sig_df_ord_up, 
-                                  interestGeneType="genesymbol", 
-                                  #referenceGene=reference_geneset, 
-                                  referenceSet="genome_protein-coding", 
-                                  referenceGeneType="genesymbol", 
-                                  minNum=5, maxNum=2000, sigMethod="top", reportNumr=40,  
-                                  isOutput=TRUE, 
-                                  outputDirectory=WG_outdir, 
-                                  projectName=paste(names(enrichDBs[i]), "UP-Reg", sep = "_"))
-    }
-  } else {
-    message("Not enough DE up regulated genes to execute WebGestalt")
-  }
-  if (FDR_sig_df_ord_down_test){
-    message("Passing DE Down regulated geneset to WebGestalt ORA")
-    for (i in 1:length(enrichDBs)) { 
-      enrichResult <- WebGestaltR(enrichMethod="ORA", 
-                                  organism="hsapiens", 
-                                  enrichDatabase=enrichDBs[[i]], 
-                                  interestGene=FDR_sig_df_ord_down, 
-                                  interestGeneType="genesymbol", 
-                                  #referenceGene=reference_geneset, 
-                                  referenceSet="genome_protein-coding", 
-                                  referenceGeneType="genesymbol", 
-                                  minNum=5, maxNum=2000, sigMethod="top", reportNumr=40,
-                                  isOutput=TRUE, 
-                                  outputDirectory=WG_outdir, 
-                                  projectName=paste(names(enrichDBs[i]), "DOWN-Reg", sep = "_"))
-    }
-  } else {
-    message("Not enough DE down regulated genes to execute WebGestalt")
-  }
-  sink()
-  ### All done for WebGestalt. Sign off now
-  message(paste("Finished WebGestalt Analysis for", GOI))
-}
+}  
+

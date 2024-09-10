@@ -195,6 +195,13 @@ fi
 ### Final clean up and logging
 cd $working_folder
 find . -type d -empty -delete
+if (${do_all} || ${do_de})
+then
+	cd DE_Analysis
+	${SCRIPT_FOLDER}/post_analysis_organisation.sh
+	cd $working_folder
+fi
+
 trace Finished SCA
 
 ### Sign off

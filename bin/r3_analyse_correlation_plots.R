@@ -13,6 +13,7 @@ p_load(data.table, rlogging)
 #suppressMessages(library(data.table))
 
 SetLogFile(base.file=NULL)
+options(warn=-1)
 
 ###*****************************************************************************
 ### Read in Args ####
@@ -35,6 +36,12 @@ ref_files_folder <- args[3]
 ###*****************************************************************************
 main_dir <- getwd()
 gencode_lookup <- "gencode.v26.annotation.lookup"
+
+###*****************************************************************************
+### Setup starting thresholds ####
+###*****************************************************************************
+# Threshold to plot individual correlations and mark them as such on Volcano
+corr_plot_thrs <- 0.8
 
 ###*****************************************************************************
 ### Start ####
@@ -100,7 +107,7 @@ for (row in 1:nrow(df_target_pairs)) {
       df_target_pairs[row, "logExp_Pvalue"] <- signif(log_cor_stats$p.value,3)
       
       if(!is.na(log_cor_stats$estimate)){
-        if (abs(signif(as.numeric(log_cor_stats$estimate))) > 0.8) {
+        if (abs(signif(as.numeric(log_cor_stats$estimate))) > corr_plot_thrs) {
           png(paste("plots/", gene1, "_", gene2, ".png", sep=""))
           cor_1 <- log_cor_stats
           lm1 <- lm(log2(gene1_exp_value)~log2(gene2_exp_value))
@@ -150,8 +157,8 @@ with(df_target_pairs, plot(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.25, col
 # with(subset(df_target_pairs, logExp_Cor > 0.5 ), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.25, col="orange"))
 # with(subset(df_target_pairs, logExp_Cor < -0.5 ), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.25, col="orange"))
 with(subset(df_target_pairs, logExp_FDR < 1E-50), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.25, col="green"))
-with(subset(df_target_pairs, logExp_FDR < 1E-150 & logExp_Cor > 0.8), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.75, col="red"))
-with(subset(df_target_pairs, logExp_FDR < 1E-150 & logExp_Cor < -0.8), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.75, col="blue"))
+with(subset(df_target_pairs, logExp_FDR < 1E-150 & logExp_Cor > corr_plot_thrs), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.75, col="red"))
+with(subset(df_target_pairs, logExp_FDR < 1E-150 & logExp_Cor < -corr_plot_thrs), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.75, col="blue"))
 invisible(dev.off())
 
 setwd(main_dir)
