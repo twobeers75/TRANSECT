@@ -73,6 +73,8 @@ rm -rf ~/miniconda3/miniconda.sh
 
 ### don't forget to initialize the bash shell. Mac users need to check their default shell and change the following command appropriately
 ~/miniconda3/bin/conda init bash
+
+*** Afterwards, you will be asked to restart your terminal whereby you should see (base) at the prompt. Ignore for now.
 ```
 
 Create the TRANSECT Conda environment. In this step, we will create an environment with all the tools and dependencies required to run TRANSECT. 
@@ -83,16 +85,16 @@ Create the TRANSECT Conda environment. In this step, we will create an environme
 ### change into the top directory of the downloaded folder (TRANSECT) and navigate to the INSTALL folder
 cd <path to>/TRANSECT/INSTALL
 
-### First, run the conda install script 
+### First, run the conda install script (you may need to run "chmod 755 TRANSECT_conda_install.sh")
 ./TRANSECT_conda_install.sh
 
 ### Next, upon succesful completion of the previous step, activate the newly created environment
 conda activate TRANSECT
 
-### Finally, once in the TRANSECT environment, run the post installation script to complete the setup
+### Finally whilst still within the TRANSECT/INSTALL directory, in the TRANSECT environment run the post installation script to complete the setup
 ./TRANSECT_post_conda_install.sh
 
-# Note: you should reactivate the TRANSECT environment at this point.
+# Note: you need to reactivate the TRANSECT environment at this point.
 conda deactivate
 conda activate TRANSECT
 ```
@@ -103,9 +105,9 @@ A few extra commands for those not accustomed to Conda environments
 
 ```sh
 ### By default, Conda auto-activates the "base" default environment. 
-### Each time you open a terminal you will automatically be within the base environment.
+### Each time you open a terminal you will automatically be within the (base) environment.
 ### I prefer not to have this happen. To disable, run the following commands
-# first, deactivate any environment, then turn off auto_activate_base
+# first, deactivate any environment until there is no () at the begining of the prompt, then turn off auto_activate_base
 conda deactivate
 conda config --set auto_activate_base false
 
@@ -148,7 +150,7 @@ bin/R3_prepare_directories.sh -p PRAD
 ### NOTE: you can use the -h parameter to see the full help menu. ie.
 bin/R3_prepare_directories.sh -h
 
-### The prepare commands for GDC-TCGA and GTEx are similar but not identical. See the manual for full details.
+### The prepare commands for GDC-TCGA and GTEx are similar but not identical. Use -h and see the manual for full details.
 ```
 
 Be aware that some of these collections are large and require substantial disk space. They will take a considerable amount of time to download and process too. For example, downloading and processing GDC TCGA-BRCA takes just over 30 minutes (using a high speed network connection and an up to date workstation) and requires more than 14GB of disk space (most of which can and by default is, deleted afterwards). In comparison, GDC TCGA-LAML takes less than 5 minutes to retrieve and less than 2GB of disc space. 
@@ -167,19 +169,19 @@ Example analyse command for the gene ZEB1 in the RECOUNT3 TCGA PRAD cohort;
 ### You should still be in the TRANSECT environment but if not, make sure to activate it again
 
 ### RECOUNT3 (approx. 5-10mins)
-# change into the top directory of TRANSECT
-# TRANSECT saves output in your current location so best to create a folder specifically for each run 
+# change into the top directory of TRANSECT if not already there
+# TRANSECT saves output in the current working folder so best to create a folder specifically for each run 
 cd <path to>/TRANSECT/output/RECOUNT3
 mkdir -p ZEB1_PRAD_test
 cd ZEB1_PRAD_test
 # Now, run the RECOUNT3 prepare script using the PRAD data we just retreived, investigating the gene ZEB1, with all outputs.
-# you will need to provide the full path to the script
+# because we are not in the script folder and have not added these to our PATH variable, you will need to provide the full path to the script
 <full path to>/TRANSECT/bin/R3_analyse_GOI.sh -p PRAD -g ZEB1 -s mRNA -t 5 -a
 
 ### NOTE: use the -h parameter to see the full help menu. ie.
 <full path to>/TRANSECT/bin/R3_analyse_GOI.sh -h
 
-### The analysis commands for GDC-TCGA and GTEx are similar but not identical. See the manual for full details.
+### The analysis commands for GDC-TCGA and GTEx are similar but not identical. Again, use -h or see the manual for full details.
 ```
 
 ## Output
@@ -191,7 +193,7 @@ TRANSECT takes in a cohort dataset and processes the data as follows.
 2)	Subsequently, TRANSECT compares the resulting strata, one to the other, to identify differentially expressed genes
 3)	And finally, TRANSECT uses the results from the DE analysis to run functional annotation and enrichment analyses
 
-The outputs from TRANSECT are likewise grouped into 3 categories and returned in three folders
+The outputs from TRANSECT are likewise grouped into 3 categories and returned in three folders in the working directory from where the program is executed
 
 **01-Stratification**
 The stratification process produces 2 tables, and 3 plots. 
