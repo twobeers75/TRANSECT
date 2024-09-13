@@ -73,7 +73,7 @@ USAGE: $(basename $0) [-h] -p <TCGAProjectID> -g <GOI> -s <StratifyBy> -t <Perce
 	-g Gene of interest: needs to be a valid HGNC symbol (ie. ZEB1). Required
 	-s Stratify by molecule: must match -g and can only be one of (mRNA or miRNA). Required
 	-t Percentile: startify data into top and bottom x percentile (valid x between 2 and 25). Required
-	-e Enrichment analyses: Run GSEA and WebGestalt on DE results (Default: False)
+	-e Enrichment analyses: Run GSEA on DE results (Default: Only run WebGestalt)
 	-S Switch pairwise comparison: find genes DE in low group compared to high group (Default: high compared to low)
 	-a Do all analyses
 	-c Do correlation analysis only
