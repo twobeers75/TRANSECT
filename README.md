@@ -189,7 +189,7 @@ cd ZEB1_PRAD_test
 <span id="#output"></span>
 
 TRANSECT takes in a cohort dataset and processes the data as follows. 
-1)	Transect first partition the data by the expression of a gene/s of interest into low and high strata 
+1)	First, TRANSECT partition the data by the expression of a gene/s of interest into low and high strata 
 2)	Subsequently, TRANSECT compares the resulting strata, one to the other, to identify differentially expressed genes
 3)	And finally, TRANSECT uses the results from the DE analysis to run functional annotation and enrichment analyses
 
