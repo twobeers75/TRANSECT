@@ -8,7 +8,7 @@
 ### Check conda is installed on system
 if [[ $(command -v conda) ]]; then 
 	echo "Conda installed"
-	conda_year=`conda --version | cut -f 2 -d " " | cut -f 1 -d "."`
+	conda_year=$(conda --version | cut -f 2 -d " " | cut -f 1 -d ".")
 	if [ "$conda_year" -lt 24 ]; then
 		echo "Conda version is too old, requires conda > 24.1.0"
 		echo "Please use the following command to update to latest release"

@@ -9,13 +9,13 @@
 #### Source setup
 #########
 SCRIPT_FOLDER=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-BASE_FOLDER=`dirname ${SCRIPT_FOLDER}`
+BASE_FOLDER=$(dirname ${SCRIPT_FOLDER})
 DATA_FOLDER="${BASE_FOLDER}/data/RECOUNT3"
 REF_FILES_FOLDER="${BASE_FOLDER}/REF_FILES"
 GSEA_EXE="${SCRIPT_FOLDER}/GSEA/gsea-cli.sh"
 
 ### and record where we start from
-working_folder=`pwd`
+working_folder=$(pwd)
 
 ##########################################################################################################
 #### Functions
@@ -37,7 +37,7 @@ de_analysis( ) {
 }
 
 trace () {
-stamp=`date +%Y-%m-%d_%H:%M:%S`
+stamp=$(date +%Y-%m-%d_%H:%M:%S)
 echo $stamp: $* >> SCA_command.log
 }
 

@@ -9,7 +9,7 @@
 #### Source setup
 #########
 SCRIPT_FOLDER=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-BASE_FOLDER=`dirname ${SCRIPT_FOLDER}`
+BASE_FOLDER=$(dirname ${SCRIPT_FOLDER})
 DATA_FOLDER="${BASE_FOLDER}/data/GTEx"
 REF_FILES_FOLDER="${BASE_FOLDER}/REF_FILES"
 
@@ -95,7 +95,7 @@ printf -v date '%(%Y-%m-%d)T' -1
 GTEx_dir_id="GTEx-v8"
 mkdir -p ${GTEx_dir_id}
 cd ${GTEx_dir_id}
-working_folder=`pwd`
+working_folder=$(pwd)
 
 ### first get sample annotation file if not already present
 echo "retrieving GTEx SampleAttributes data"

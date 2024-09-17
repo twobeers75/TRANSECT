@@ -9,7 +9,7 @@
 #### Source setup
 #########
 SCRIPT_FOLDER=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-BASE_FOLDER=`dirname ${SCRIPT_FOLDER}`
+BASE_FOLDER=$(dirname ${SCRIPT_FOLDER})
 DATA_FOLDER="${BASE_FOLDER}/data/GDC"
 REF_FILES_FOLDER="${BASE_FOLDER}/REF_FILES"
 
@@ -187,7 +187,7 @@ tcga_id_mod="${project_id}-${date}"
 ### setup parent directory for project
 mkdir -p ${project_id#*TCGA-}
 cd ${project_id#*TCGA-}
-working_folder=`pwd`
+working_folder=$(pwd)
 
 #### iterate through the expression data types requested
 if (${retrieve_all} || ${retrieve_counts})
