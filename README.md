@@ -74,7 +74,7 @@ rm -rf ~/miniconda3/miniconda.sh
 ### don't forget to initialize the bash shell. Mac users need to check their default shell and change the following command appropriately
 ~/miniconda3/bin/conda init bash
 
-*** Afterwards, you will be asked to restart your terminal whereby you should see (base) at the prompt. Ignore for now.
+### Afterwards, you will be asked to restart your terminal whereby you should see (base) at the prompt. Ignore for now.
 ```
 
 Create the TRANSECT Conda environment. In this step, we will create an environment with all the tools and dependencies required to run TRANSECT. 
