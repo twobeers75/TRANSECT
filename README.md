@@ -115,12 +115,13 @@ conda config --set auto_activate_base false
 # to check what environments you have on your system
 conda env list
 # You should see "base" and "TRANSECT" at the very least
-
-### To activate TRANSECT
+# To activate TRANSECT
 conda activate TRANSECT
-
-### Once you have finished with TRANSECT, deactivate the environment
+# Once you have finished with TRANSECT, to deactivate the environment
 conda deactivate
+
+### To remove/uninstall the TRANSECT environment
+conda remove -n TRANSECT --all
 ```
 
 More info about managing Conda environment can be found [here](https://docs.conda.io/projects/conda/en/4.6.0/user-guide/tasks/manage-environments.html)
