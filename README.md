@@ -107,7 +107,7 @@ A few extra commands for those not accustomed to Conda environments
 ### By default, Conda auto-activates the "base" default environment. 
 ### Each time you open a terminal you will automatically be within the (base) environment.
 ### I prefer not to have this happen. To disable, run the following commands
-# first, deactivate any environment until there is no () at the begining of the prompt, then turn off auto_activate_base
+# first, deactivate any environment until there is no () at the beginning of the prompt, then turn off auto_activate_base
 conda deactivate
 conda config --set auto_activate_base false
 
