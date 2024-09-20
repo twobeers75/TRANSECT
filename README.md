@@ -8,7 +8,7 @@
 
 TRANSECT stratifies cohort data into user defined strata (groups) based solely on expression, and subsequently compares the strata one to the other. This version of TRANSECT is tuned specifically for the interrogation of gene/s from publicly available tissue-specific gene expression data.
 
-Currently, there are many global efforts to collect and collate tissue-specific gene expression (RNA-sequencing) data from large cohorts of diseased and non-diseased subjects for public use (GTEx, TCGA, …, to name only a few). These data sets are used to bolster and aid in the investigation of gene specific expression and regulation as well as several other biological queries. One such application that is currently underutilised is the stratification and subsequent differential expression of single or composite genes in order to assess "transcriptome state". This type of analysis has only in recent times become feasible thanks to the large number of participants in cohort studies and, will only intensify in power and usefulness as these collections continue to grow in number and diversity. The results from this type of analysis can be used to rapidly investigate transcriptome state within natural physiological expression levels without economic burden. This can be applied before laboratory investigations and/or between the transition from *in vitro* to *in vivo* studies in order to assess the feasibility of further, possibly expensive, experimentation.
+Currently, there are many global efforts to collect and collate tissue-specific gene expression (RNA-sequencing) data from large cohorts of diseased and non-diseased subjects for public use (GTEx, TCGA, …, to name only a few). These data sets are used to bolster and aid in the investigation of gene specific expression and regulation as well as several other biological queries. One such application that is currently underutilised is the stratification and subsequent differential expression of single or composite genes in order to assess "transcriptome state". This type of analysis has only in recent times become feasible thanks to the large number of participants in cohort studies and, will only intensify in power and usefulness as these collections continue to grow in number and diversity. The results from this type of analysis can be used to rapidly investigate transcriptome state within natural physiological expression levels without economic burden.
 
 ## TRANSECT Web-application
 A web-accessible version is freely available for use [here](https://transect.au)
@@ -197,42 +197,19 @@ TRANSECT takes in a cohort dataset and processes the data as follows.
 The outputs from TRANSECT are likewise grouped into 3 categories and returned in three folders in the working directory from where the program is executed
 
 **01-Stratification**
-The stratification process produces 2 tables, and 3 plots. 
-
-1. GOI_exp_raw_OG.tsv contain the raw original expression (TPM) data for all gene/s of interest 
-2. GOI_exp_with_strat.tsv contains the same data sorted with additional columns relating to the participants ranking score, percentiles and quantile values.
-3. TPM_histogram.html or TPM_Boxplot_Sina.html or TPM_Scatter.html, all which plot data from the two tables above differently depending on the chosen TRANSECT mode in an attempt to describe the distribution of gene expression across the cohort participants
-4. TPM_N-T_boxplot.html which shows the distribution of expression partitioned by disease state when available 
-5. TPM_strat_boxplot.html which plots the low and high strata participants resulting from the stratification process
+The stratification process produces 2 expression and stratification tables, and 3 descriptive plots. 
 
 **02-DE**
-The DE analysis produces many tables and plots most easily described as follows.
-
-1. DE Setup – design.tsv and gene_raw_expression_data_cpm.csv 
-2. DE QC – bcv and mean_var.png plots as well as the MDS-Plot.html in the glimma-plots folder
-3. Normalised expression tables - gene_normalised_expression_data_cpm.csv (also in log form)
-4. DE result tables - High_Vs_Low _de_sigFC.csv and top_tags.csv
-5. DE result plots - High_Vs_Low_volcano.png and High_Vs_Low_heatmap.png as well as an interactive version of the volcano plot in the glimma-plots folder
-6. The glimma-plots folder containing the interactive web plots and associated data
+The DE analysis produces many tables and plots typical of an expression analysis.
 
 **03-Enrichment**
-The 2 enrichment analyses result in the production of two folders each with a separate collection of tables and plots.
-
-1. GSEA
-
-   When selected, this folder contains the output folders from running GSEA against the Hallmark as well as the Curated MSigDB collections respectively. Within each folder, users can open the index.html file to access and interact with the results in a web browser. In addition, the results are summarised and provided in tabular form (.csv) as well as interactive form (.html)
-
-   GSEA input data – 3 text files used for the GSEA analysis are saved in the top-level folder. The default GSEA method used by TRANSECT is the pre-ranked method. Input for this analysis can be found in the .rnk file. Provided but not used by TRANSECT are alternate GSEA input files (.cls and .txt).
-
-2. WebGestalt
-
-   The ORA results are presented in six folders; two each for disease, gene ontology and pathway enrichment, for up and down regulated genes separately (when available). Within each folder, users can open the .html file to access and interact with the results in a web browser.
+The enrichment analyses (GSEA when selected and WebGestalt) result in the production of two folders each with a separate collection of tables and plots.
 
 ## Manual
 
 <span id="#manual"></span>
 
-...
+The TRANSECT manual with further details and useful information can be found in the MANUAL folder. 
 
 ## Publication
 

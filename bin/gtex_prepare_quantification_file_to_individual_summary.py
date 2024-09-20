@@ -18,16 +18,25 @@ exp_datafile = sys.argv[2]
 date_stamp = sys.argv[3]
 data_type = sys.argv[4]
 
+### store column names for filtering and spliting
+filter_column = "SMAFRZE"
+#split_column = "SMTS"
+split_column = "SMTSD"
+
 ### Read in sample attributes
 sam_attr_data = pd.read_csv(sam_attr , sep='\t', index_col=0)
 
 ### Retain only the columns we need
-sam_attr_data_cut = sam_attr_data[['SMTS', 'SMAFRZE']]
-sam_attr_data_cut = sam_attr_data_cut.loc[sam_attr_data_cut['SMAFRZE'] == "RNASEQ"]
+sam_attr_data_cut = sam_attr_data[[split_column, filter_column]]
+sam_attr_data_cut = sam_attr_data_cut.loc[sam_attr_data_cut[filter_column] == "RNASEQ"]
 
 ### Get only unique elements for tissue type
-sam_attr_data_cut['SMTS'] = sam_attr_data_cut['SMTS'].str.replace(' ', '_')
-SMTS_unique_list = list(sam_attr_data_cut['SMTS'].unique())
+# specifically for SMTSD columns
+sam_attr_data_cut[split_column] = sam_attr_data_cut[split_column].str.split('(').str[0].str.strip()
+sam_attr_data_cut[split_column] = sam_attr_data_cut[split_column].str.replace(' - ', '_')
+# for SMTS and SMTSD columns
+sam_attr_data_cut[split_column] = sam_attr_data_cut[split_column].str.replace(' ', '_')
+SMTS_unique_list = list(sam_attr_data_cut[split_column].unique())
 SMTS_unique_list_len = str(len(SMTS_unique_list))
 
 ### Create a directory to hold each tissue types data
@@ -35,7 +44,7 @@ for dirname in SMTS_unique_list:
 	Path(dirname).mkdir(parents=True, exist_ok=True)
 
 ### Subset the data by tissue type and save
-group_by_sam_attr_data_cut = sam_attr_data_cut.groupby(sam_attr_data_cut['SMTS'])
+group_by_sam_attr_data_cut = sam_attr_data_cut.groupby(sam_attr_data_cut[split_column])
 
 index_number = 1
 for key, values in group_by_sam_attr_data_cut: 
