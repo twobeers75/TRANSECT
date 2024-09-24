@@ -137,19 +137,17 @@ TRANSECT has two main operations; **Prepare** and **Analyse**.
 **Prepare** is a process that retrieves the raw data from online repositories and prepares it (if required) for analysis. TRANSECT comes bundled with three different prepare scripts, one each for RECOUNT3, GDC-TCGA and GTEx data. 
 
 Example prepare command for RECOUNT3 TCGA PRAD cohort;
+*(approx. 5mins)*
 
 ```sh
 ### First, if not already make sure to activate the TRANSECT environment
 conda activate TRANSECT
 
-### RECOUNT3 (approx. 5mins)
-# change into the top directory of TRANSECT
-cd <path to>/TRANSECT
-# run the RECOUNT3 prepare script for TCGA-PRAD
-bin/R3_prepare_directories.sh -p PRAD
+### run the RECOUNT3 prepare script for TCGA-PRAD
+R3_prepare_directories.sh -p PRAD
 
 ### NOTE: you can use the -h parameter to see the full help menu. ie.
-bin/R3_prepare_directories.sh -h
+R3_prepare_directories.sh -h
 
 ### The prepare commands for GDC-TCGA and GTEx are similar but not identical. Use -h and see the manual for full details.
 ```
@@ -165,19 +163,18 @@ All downloaded data is stored in "TRANSECT/data/<GDC|GTEx|RECOUNT3>" in appropri
 **Analyse** is a process that uses the prepared public data from above conducts the stratified differential expression and produces all the outputs. Like with the prepare operation, TRANSECT comes bundled with three analyse scripts, one each for RECOUNT3, GDC-TCGA and GTEx data.
 
 Example analyse command for the gene ZEB1 in the RECOUNT3 TCGA PRAD cohort;
+*(approx. 5-10mins)*
 
 ```sh
 ### You should still be in the TRANSECT environment but if not, make sure to activate it again
 
-### RECOUNT3 (approx. 5-10mins)
-# change into the top directory of TRANSECT if not already there
+### change into the output directory of TRANSECT
 # TRANSECT saves output in the current working folder so best to create a folder specifically for each run 
 cd <path to>/TRANSECT/output/RECOUNT3
 mkdir -p ZEB1_PRAD_test
 cd ZEB1_PRAD_test
-# Now, run the RECOUNT3 prepare script using the PRAD data we just retreived, investigating the gene ZEB1, with all outputs.
-# because we are not in the script folder and have not added these to our PATH variable, you will need to provide the full path to the script
-<full path to>/TRANSECT/bin/R3_analyse_GOI.sh -p PRAD -g ZEB1 -s mRNA -t 5 -a
+### Now, run the RECOUNT3 prepare script using the PRAD data we just retreived, investigating the gene ZEB1, with all outputs.
+R3_analyse_GOI.sh -p PRAD -g ZEB1 -s mRNA -t 5 -a
 
 ### NOTE: use the -h parameter to see the full help menu. ie.
 <full path to>/TRANSECT/bin/R3_analyse_GOI.sh -h
@@ -213,7 +210,7 @@ The TRANSECT manual with further details and useful information can be found in 
 
 ## Publication
 
-Citation details to come (hopefully!)
+Publication details to come (hopefully!)
 
 ## Licence
 
