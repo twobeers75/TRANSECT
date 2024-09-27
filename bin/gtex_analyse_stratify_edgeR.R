@@ -61,6 +61,8 @@ setwd(file.path(main_dir, "DE_Analysis"))
 ###*****************************************************************************
 ## Setup custom thresholds ####
 ###*****************************************************************************
+# remove GOI(s) from DE analyses
+remove_GsOI <- FALSE
 # filter lowly expressed genes threshold - require CPM > threshold in half the samples
 low_gene_thrs <- 5
 # decideTests pvalue and lfc
@@ -428,6 +430,12 @@ raw_data <- fread(file=gene_counts_filename, sep='\t', header=TRUE, check.names=
 colnames(raw_data)[1] <- 'gene_name'
 message(paste("Raw count expression data loaded for", GOI, ":", ncol(raw_data)-1, "patients and", nrow(raw_data), "genes"))
 
+### If requested, remove GOI from datatable to negate the influence of these genes on the MDS
+### Also, removes these points from volcano and heatmap and associated DE tables and others
+if(remove_GsOI) {
+  raw_data <- raw_data[!raw_data$gene_name == GsOI_split,]
+}
+
 ### Subset data
 # dim(raw_data)
 gene_counts <- raw_data[row.names(design)]
@@ -485,7 +493,7 @@ y <- calcNormFactors(y)
 y <- estimateDisp(y, design)
 
 ### Plot MDS, BCV and mean_var
-glMDSPlot(y,labels=colnames(y$counts), groups=group, 
+temp <- glMDSPlot(y,labels=colnames(y$counts), groups=group, 
           main=paste(GOI_label,"MDS-Plot",sep="-",collapse=""), 
           html=paste(GOI_label,"MDS-Plot",sep="-",collapse=""), launch=FALSE)
 # png("multi_dimensional_scaling_plot.png")

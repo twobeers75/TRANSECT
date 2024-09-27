@@ -111,7 +111,10 @@ for i in range(0, uuid_list_len, post_request_max):
 	print("\tretrieving files " + str(file_start+1) + " to " + str(file_end) + " of " + str(uuid_list_len) + " in uuid list")
 	params = {"ids": file_uuid_list[file_start:file_end]}
 	response = requests.post(data_endpt, data = json.dumps(params), headers = {"Content-Type": "application/json"})
-	response_head_cd = response.headers["Content-Disposition"]
+	try:
+		response_head_cd = response.headers["Content-Disposition"]
+	except KeyError:
+		sys.exit(1)
 	file_name = re.findall("filename=(.+)", response_head_cd)[0]
 	
 	with open(file_name, "wb") as output_file:

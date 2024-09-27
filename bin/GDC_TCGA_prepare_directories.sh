@@ -27,7 +27,6 @@ process_folder( ) {
 #	echo "Processing ${folder_name}"
 	get_files
 	process_files
-	#if [ ${rna_type} = "mRNA" ]; then extract_files; fi # no longer required
 	rename_files
 	get_clin_data
 	create_summary
@@ -41,6 +40,14 @@ get_files( ) {
 	cd ${folder_name}
 	${SCRIPT_FOLDER}/GDC_API/Download_SampleSheet.py ${project_id} ${folder_name}
 	${SCRIPT_FOLDER}/GDC_API/Download_Files.py ${project_id} ${folder_name}
+	if [ $? -eq 1 ]; then 
+		echo ""
+		echo "TRANSECT error: The retrieval of data failed irrecoverably. Please clear the ${folder_name} folder and try again"
+		echo "Removing possibly corrupt downloaded files in ${folder_name}"
+		rm gdc_download*tar.gz
+		echo ""
+		exit
+	fi
 	tar -xif gdc_download_*.tar.gz
 }
 
@@ -51,6 +58,7 @@ process_files( ) {
 	mv .original original
 	mkdir -p ${gene_exp_folder_name}
 	cp original/*/*${file_ext_orig} ${gene_exp_folder_name}
+	cp original/sample_sheet.tsv ./
 	cd ${gene_exp_folder_name}
 }
 
@@ -116,7 +124,7 @@ keep_data=false
 non_tcga_data=false
 
 ### Parse command line options
-usage="Retrieve and prepare TCGA RNA-seq data for in-house custom analyses.
+usage="Retrieve and prepare GDC TCGA RNA-seq data for in-house custom analyses.
 
 USAGE: $(basename $0) [-h] -p <TCGA Project ID> [-a -c -r -R -k -n]
 	where:
@@ -127,13 +135,13 @@ USAGE: $(basename $0) [-h] -p <TCGA Project ID> [-a -c -r -R -k -n]
 	-r retrieve only miR RPMs
 	-R retrieve only isomiR RPMs
 	-k keep all data (Default: False)
-	-n data is not from TCGA study (Default: False)
+	-n data is not from TCGA study. Ue this flag when retrieving non-TCGA studies from GDC (Default: False)
 
 To retrieve and prepare more than one TCGA cancer dataset use a bash for loop like this;
 for tcga_code in TCGA-COAD TCGA-SARC TCGA-LAML; do GDC_TCGA_prepare_directories.sh -p \$tcga_code; done
 
-To retrieve and prepare all TCGA cancer datasets you can loop through all lines in GDC_API/TCGA_Study_Abbreviations.tsv (WARNING: requires lots of time, network and disc space)
-while read tcga_code; do GDC_TCGA_prepare_directories.sh -p \$tcga_code; done < <(cut -f1 GDC_API/TCGA_Study_Abbreviations.tsv | tail -n +2)
+To retrieve and prepare all TCGA cancer datasets you can loop through all lines in GDC_API/GDC_Study_Abbreviations.tsv (WARNING: requires lots of time, network and disc space)
+while read tcga_code; do GDC_TCGA_prepare_directories.sh -p \$tcga_code; done < <(cut -f1 GDC_API/GDC_Study_Abbreviations.tsv | tail -n +2)
 "
 ### parse all command line options
 while getopts hp:acrRkn opt; do
@@ -155,7 +163,7 @@ done
 ### check that -p has been used
 if ! ${pflag}
 then
-	echo "-p must be used to pass a vaild TCGA Project ID" >&2
+	echo "-p must be used to pass a vaild GDC TCGA Project ID" >&2
 	echo""; echo "${usage}"
 	exit 1
 fi
@@ -168,15 +176,15 @@ then
 	exit 1
 fi
 
-### finally, check if user input a valid TCGA/GDC code
-if grep -Fxq "${project_id}" <(cut -f 1 ${REF_FILES_FOLDER}/study_abbreviations/TCGA_Study_Abbreviations.tsv)
+### finally, check if user input a valid GDC/TCGA code
+if grep -Fxq "${project_id}" <(cut -f 1 ${REF_FILES_FOLDER}/study_abbreviations/GDC_Study_Abbreviations.tsv)
 then
 	### Sign on
 	echo "Starting retrieval of data and preparation of local repository for ${project_id}"
 else
-	echo "${project_id} not a valid TCGA study code, check your choice against the list below and try again"
+	echo "${project_id} not a valid GDC TCGA study code, check your choice against the list below and try again"
 	echo ""
-	cat ${REF_FILES_FOLDER}/study_abbreviations/TCGA_Study_Abbreviations.tsv
+	cat ${REF_FILES_FOLDER}/study_abbreviations/GDC_Study_Abbreviations.tsv
 	exit 1
 fi
 
@@ -211,13 +219,13 @@ then
 	process_folder isomiR_expression_rpm miR_gene_expr_files .quantification.txt .quantification.txt ${tcga_id_mod}_RPM-miRNAisoform isomiRNA
 fi
 
-### Finally, create a combined mRNA-miRNA spreadsheet
-if (${retrieve_all}) || (${retrieve_counts} && ${retrieve_isomiR_rpms})
-then
-	echo ""
-	echo "Combining mRNA FPKM and isomiR RPM data"
-	combine_summary
-fi
+### Finally, create a combined mRNA-miRNA spreadsheet. REMOVING THIS - No longer required
+#if (${retrieve_all}) || (${retrieve_counts} && ${retrieve_isomiR_rpms})
+#then
+#	echo ""
+#	echo "Combining mRNA FPKM and isomiR RPM data"
+#	combine_summary
+#fi
 
 ### Sign off
 echo ""

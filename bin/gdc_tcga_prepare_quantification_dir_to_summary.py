@@ -94,7 +94,6 @@ if rna_type == 'mRNA':
 	### Create template df's that we will need 
 	lookup_df_filename = ref_file_folder + '/gencode.vXX.annotation.lookup'
 	tumor_df, normal_df, all_df = create_template_dfs('gene_name', lookup_df_filename)
-	fpkm_tumor_df, fpkm_normal_df, fpkm_all_df = create_template_dfs('gene_name', lookup_df_filename)
 	tpm_tumor_df, tpm_normal_df, tpm_all_df = create_template_dfs('gene_name', lookup_df_filename)
 	
 	### Start processing each of the individual files
@@ -106,7 +105,6 @@ if rna_type == 'mRNA':
 			temp_df = pd.read_csv(file, sep='\t', index_col=0, header=1)
 			tumor_df[GDC_barcode] = temp_df['unstranded']
 			all_df[GDC_barcode] = temp_df['unstranded']
-			fpkm_all_df[GDC_barcode] = temp_df['fpkm_unstranded']
 			tpm_all_df[GDC_barcode] = temp_df['tpm_unstranded']
 	else:
 		for file in mrna_files:
@@ -116,13 +114,11 @@ if rna_type == 'mRNA':
 				temp_df = pd.read_csv(file, sep='\t', index_col=0, header=1)
 				tumor_df[TCGA_barcode] = temp_df['unstranded']
 				all_df[TCGA_barcode] = temp_df['unstranded']
-				fpkm_all_df[TCGA_barcode] = temp_df['fpkm_unstranded']
 				tpm_all_df[TCGA_barcode] = temp_df['tpm_unstranded']
 			elif sample_code in SAMPLE_TYPE_NORMAL.keys():
 				temp_df = pd.read_csv(file, sep='\t', index_col=0, header=1)
 				normal_df[TCGA_barcode] = temp_df['unstranded']
 				all_df[TCGA_barcode] = temp_df['unstranded']
-				fpkm_all_df[TCGA_barcode] = temp_df['fpkm_unstranded']
 				tpm_all_df[TCGA_barcode] = temp_df['tpm_unstranded']
 			elif sample_code in SAMPLE_TYPE_OTHER.keys():
 				print('Skipping Other Sample Type with TCGA bacode: ' + TCGA_barcode)
@@ -135,11 +131,6 @@ if rna_type == 'mRNA':
 	all_df = all_df.drop_duplicates(subset='gene_name', keep='last')
 	all_df = all_df.drop(['mean'], axis=1)
 	
-	fpkm_all_df['mean'] = fpkm_all_df.mean(numeric_only=True, axis=1)
-	fpkm_all_df = fpkm_all_df.sort_values(by=['gene_name', 'mean'])
-	fpkm_all_df = fpkm_all_df.drop_duplicates(subset='gene_name', keep='last')
-	fpkm_all_df = fpkm_all_df.drop(['mean'], axis=1)
-	
 	tpm_all_df['mean'] = tpm_all_df.mean(numeric_only=True, axis=1)
 	tpm_all_df = tpm_all_df.sort_values(by=['gene_name', 'mean'])
 	tpm_all_df = tpm_all_df.drop_duplicates(subset='gene_name', keep='last')
@@ -147,10 +138,8 @@ if rna_type == 'mRNA':
 	
 	### write the normalised outputs here
 	if non_tcga_data == 'true':
-		fpkm_all_df.to_csv('GDC_' + tcga_ID + '_FPKM-mRNA_all.tsv', sep='\t', index=False)
-		tpm_all_df.to_csv('GDC_' + tcga_ID + '_TPM-mRNA_all.tsv', sep='\t', index=False)
+		tpm_all_df.to_csv('GDC_' + tcga_ID.replace("Count", "TPM") + '_all.tsv', sep='\t', index=False)
 	else:
-		fpkm_all_df.to_csv('GDC_' + tcga_ID.replace("Count", "FPKM") + '_all.tsv', sep='\t', index=False)
 		tpm_all_df.to_csv('GDC_' + tcga_ID.replace("Count", "TPM") + '_all.tsv', sep='\t', index=False)
 	
 elif rna_type == 'miRNA':
@@ -160,21 +149,29 @@ elif rna_type == 'miRNA':
 	
 	### Start processing each of the individual files
 	mir_files = glob.glob(exp_dir_name)
-	for file in mir_files:
-		TCGA_barcode, sample_code = get_sample_code(file)
-		
-		if sample_code in SAMPLE_TYPE_CANCER.keys():
+	if non_tcga_data == 'true':
+		for file in mir_files:
+			GDC_barcode = get_sample_code_non_TCGA(file)
+			
 			temp_df = pd.read_csv(file, sep='\t', index_col=0)
-			tumor_df[TCGA_barcode] = temp_df['reads_per_million_miRNA_mapped']
-			all_df[TCGA_barcode] = temp_df['reads_per_million_miRNA_mapped']
-		elif sample_code in SAMPLE_TYPE_NORMAL.keys():
-			temp_df = pd.read_csv(file, sep='\t', index_col=0)
-			normal_df[TCGA_barcode] = temp_df['reads_per_million_miRNA_mapped']
-			all_df[TCGA_barcode] = temp_df['reads_per_million_miRNA_mapped']
-		elif sample_code in SAMPLE_TYPE_OTHER.keys():
-			print('Skipping Other Sample Type with TCGA bacode: ' + TCGA_barcode)
-		else:
-			print('Unknown samplecode (' + sample_code + ') in TCGA bacode: ' + TCGA_barcode)
+			tumor_df[GDC_barcode] = temp_df['reads_per_million_miRNA_mapped']
+			all_df[GDC_barcode] = temp_df['reads_per_million_miRNA_mapped']
+	else:
+		for file in mir_files:
+			TCGA_barcode, sample_code = get_sample_code(file)
+			
+			if sample_code in SAMPLE_TYPE_CANCER.keys():
+				temp_df = pd.read_csv(file, sep='\t', index_col=0)
+				tumor_df[TCGA_barcode] = temp_df['reads_per_million_miRNA_mapped']
+				all_df[TCGA_barcode] = temp_df['reads_per_million_miRNA_mapped']
+			elif sample_code in SAMPLE_TYPE_NORMAL.keys():
+				temp_df = pd.read_csv(file, sep='\t', index_col=0)
+				normal_df[TCGA_barcode] = temp_df['reads_per_million_miRNA_mapped']
+				all_df[TCGA_barcode] = temp_df['reads_per_million_miRNA_mapped']
+			elif sample_code in SAMPLE_TYPE_OTHER.keys():
+				print('Skipping Other Sample Type with TCGA bacode: ' + TCGA_barcode)
+			else:
+				print('Unknown samplecode (' + sample_code + ') in TCGA bacode: ' + TCGA_barcode)
 	
 elif rna_type == 'isomiRNA': # this one is complicated!
 	### Create template df's that we will need 
@@ -190,10 +187,9 @@ elif rna_type == 'isomiRNA': # this one is complicated!
 		#	break
 		if i % 100 == 0:
 			print("processing file: " + str(i) + " of " + str(num_files))
-		
-		TCGA_barcode, sample_code = get_sample_code(file)
-		
-		if sample_code in SAMPLE_TYPE_CANCER.keys():
+		if non_tcga_data == 'true':
+			GDC_barcode = get_sample_code_non_TCGA(file)
+			
 			raw_df = pd.read_csv(file, sep='\t', index_col=0)
 			groupby_df = raw_df.groupby(raw_df['miRNA_region'])
 			temp_df = pd.DataFrame(data=None, index=None, columns=['MIMAT_ID', 'reads_per_million_miRNA_mapped'])
@@ -204,27 +200,44 @@ elif rna_type == 'isomiRNA': # this one is complicated!
 				temp_list.append(temp_dict)
 			temp_df = temp_df.from_records(temp_list)
 			temp_df = temp_df.set_index('MIMAT_ID')
-			temp_df.columns = [TCGA_barcode]
+			temp_df.columns = [GDC_barcode]
 			tumor_df = pd.concat([tumor_df, temp_df], axis=1, sort=False)
 			all_df = pd.concat([all_df, temp_df], axis=1, sort=False)
-		elif sample_code in SAMPLE_TYPE_NORMAL.keys():
-			raw_df = pd.read_csv(file, sep='\t', index_col=0)
-			groupby_df = raw_df.groupby(raw_df['miRNA_region'])
-			temp_df = pd.DataFrame(data=None, index=None, columns=['MIMAT_ID', 'reads_per_million_miRNA_mapped'])
-			temp_list = []
-			for key, values in groupby_df: 
-				#temp_df = temp_df.append({'MIMAT_ID': key, 'reads_per_million_miRNA_mapped': sum(values['reads_per_million_miRNA_mapped'])}, ignore_index=True)
-				temp_dict = {'MIMAT_ID': key, 'reads_per_million_miRNA_mapped': sum(values['reads_per_million_miRNA_mapped'])}
-				temp_list.append(temp_dict)
-			temp_df = temp_df.from_records(temp_list)
-			temp_df = temp_df.set_index('MIMAT_ID')
-			temp_df.columns = [TCGA_barcode]
-			normal_df = pd.concat([normal_df, temp_df], axis=1, sort=False)
-			all_df = pd.concat([all_df, temp_df], axis=1, sort=False)
-		elif sample_code in SAMPLE_TYPE_OTHER.keys():
-			print('Skipping Other Sample Type with TCGA bacode: ' + TCGA_barcode)
 		else:
-			print('Unknown samplecode (' + sample_code + ') in TCGA bacode: ' + TCGA_barcode)
+			TCGA_barcode, sample_code = get_sample_code(file)
+			
+			if sample_code in SAMPLE_TYPE_CANCER.keys():
+				raw_df = pd.read_csv(file, sep='\t', index_col=0)
+				groupby_df = raw_df.groupby(raw_df['miRNA_region'])
+				temp_df = pd.DataFrame(data=None, index=None, columns=['MIMAT_ID', 'reads_per_million_miRNA_mapped'])
+				temp_list = []
+				for key, values in groupby_df: 
+					#temp_df = temp_df.append({'MIMAT_ID': key, 'reads_per_million_miRNA_mapped': sum(values['reads_per_million_miRNA_mapped'])}, ignore_index=True)
+					temp_dict = {'MIMAT_ID': key, 'reads_per_million_miRNA_mapped': sum(values['reads_per_million_miRNA_mapped'])}
+					temp_list.append(temp_dict)
+				temp_df = temp_df.from_records(temp_list)
+				temp_df = temp_df.set_index('MIMAT_ID')
+				temp_df.columns = [TCGA_barcode]
+				tumor_df = pd.concat([tumor_df, temp_df], axis=1, sort=False)
+				all_df = pd.concat([all_df, temp_df], axis=1, sort=False)
+			elif sample_code in SAMPLE_TYPE_NORMAL.keys():
+				raw_df = pd.read_csv(file, sep='\t', index_col=0)
+				groupby_df = raw_df.groupby(raw_df['miRNA_region'])
+				temp_df = pd.DataFrame(data=None, index=None, columns=['MIMAT_ID', 'reads_per_million_miRNA_mapped'])
+				temp_list = []
+				for key, values in groupby_df: 
+					#temp_df = temp_df.append({'MIMAT_ID': key, 'reads_per_million_miRNA_mapped': sum(values['reads_per_million_miRNA_mapped'])}, ignore_index=True)
+					temp_dict = {'MIMAT_ID': key, 'reads_per_million_miRNA_mapped': sum(values['reads_per_million_miRNA_mapped'])}
+					temp_list.append(temp_dict)
+				temp_df = temp_df.from_records(temp_list)
+				temp_df = temp_df.set_index('MIMAT_ID')
+				temp_df.columns = [TCGA_barcode]
+				normal_df = pd.concat([normal_df, temp_df], axis=1, sort=False)
+				all_df = pd.concat([all_df, temp_df], axis=1, sort=False)
+			elif sample_code in SAMPLE_TYPE_OTHER.keys():
+				print('Skipping Other Sample Type with TCGA bacode: ' + TCGA_barcode)
+			else:
+				print('Unknown samplecode (' + sample_code + ') in TCGA bacode: ' + TCGA_barcode)
 	
 	### clean up all dfs of unwanted rows
 	if "precursor" in tumor_df.index:

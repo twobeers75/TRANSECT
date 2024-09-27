@@ -22,7 +22,7 @@ working_folder=$(pwd)
 #########
 corr_analysis( ) {
 	echo "Preparing to run Corr Analysis for ${GOI}"
-	tcga_z2n=(${DATA_FOLDER}/${tcga_code}/GDC_*_zero2nan.tsv)
+	tcga_z2n=(${DATA_FOLDER}/${tcga_code}/mRNA_expression_counts/GDC_*_TPM-mRNA_all.tsv)
 	Rscript --vanilla ${SCRIPT_FOLDER}/gdc_tcga_analyse_correlation_plots.R ${GOI} ${tcga_z2n[0]} ${REF_FILES_FOLDER}
 	cd ${working_folder}
 }
@@ -69,7 +69,7 @@ Additive example: ESR1+PGR+ERBB2 or Ratio example: ESRP1%ZEB1
 USAGE: $(basename $0) [-h] -p <TCGAProjectID> -g <GOI> -s <StratifyBy> -t <Percentile> -e -S -a -c -d
 	where:
 	-h Show this help text
-	-p TCGA project id: needs to be valid TCGA project id as at the GDC (ie. TCGA-BRCA). Required
+	-p GDC TCGA project id: needs to be valid GDC TCGA project id as at the GDC (ie. TCGA-BRCA). Required
 	-g Gene of interest: needs to be a valid HGNC symbol (ie. ZEB1). Required
 	-s Stratify by molecule: must match -g and can only be one of (mRNA or miRNA). Required
 	-t Percentile: startify data into top and bottom x percentile (valid x between 2 and 25). Required
@@ -107,14 +107,14 @@ then
 	exit 1
 fi
 
-### check if user input a valid TCGA/GDC code
-if grep -Fxq "${project_id^^}" <(cut -f 1 ${REF_FILES_FOLDER}/study_abbreviations/TCGA_Study_Abbreviations.tsv)
+### check if user input a valid GDC/TCGA code
+if grep -Fxq "${project_id^^}" <(cut -f 1 ${REF_FILES_FOLDER}/study_abbreviations/GDC_Study_Abbreviations.tsv)
 then
 	tcga_code=${project_id#*TCGA-}
 else
 	echo "${project_id} not a valid TCGA study code, check your choice against the list below and try again"
 	echo ""
-	cat ${REF_FILES_FOLDER}/study_abbreviations/TCGA_Study_Abbreviations.tsv
+	cat ${REF_FILES_FOLDER}/study_abbreviations/GDC_Study_Abbreviations.tsv
 	exit 1
 fi
 
