@@ -35,7 +35,7 @@ ref_files_folder <- args[3]
 ### Setup for analyses ####
 ###*****************************************************************************
 main_dir <- getwd()
-gencode_miRBase_lookup <- "gencode.v22.annotation-miRBase_21.lookup"
+gencode_miRBase_lookup <- "gencode.v22.annotation.lookup"
 
 ###*****************************************************************************
 ### Setup starting thresholds ####
@@ -51,7 +51,14 @@ message(paste("Beginning Corr Analysis for", GOI))
 ###*****************************************************************************
 ### Read in TCGA data ####
 ###*****************************************************************************
-df_tcga_data <- fread(file=tcga_z2n, sep='\t', header=TRUE, check.names=FALSE, stringsAsFactors=FALSE, data.table=FALSE)
+exp_data <- fread(file=tcga_z2n, sep='\t', header=TRUE, check.names=FALSE, stringsAsFactors=FALSE, data.table=FALSE)
+exp_data <- exp_data[order(exp_data[,'gene_name']),]
+exp_data <- exp_data[!duplicated(exp_data$gene_name),]
+rownames(exp_data) <- exp_data$gene_name
+exp_data <- subset(exp_data, select=-c(gene_name))
+df_tcga_data <- t(exp_data)
+#replace 0s with nan
+df_tcga_data[df_tcga_data == 0] <- NA
 
 ###*****************************************************************************
 ### Check there is enough data for the GOI ####
@@ -60,7 +67,7 @@ gene1 <- GOI
 gene1 <- toString(GOI)
 
 if (gene1 %in% colnames(df_tcga_data)) {
-  gene1_exp_value <- as.numeric(unlist(df_tcga_data[gene1]))
+  gene1_exp_value <- as.numeric(unlist(df_tcga_data[,gene1]))
   if (sum(is.finite(gene1_exp_value)) < 50 || sum(gene1_exp_value > 1, na.rm=T) < 10) {
     message(paste("Unfortunately, there is not enough observations in this dataset for", GOI))
     stop("Ending this process") 
@@ -89,7 +96,7 @@ for (row in 1:nrow(df_target_pairs)) {
   gene2 <- toString(gene2)
   
   if (gene2 %in% colnames(df_tcga_data)) {
-    gene2_exp_value <- as.numeric(unlist(df_tcga_data[gene2]))
+    gene2_exp_value <- as.numeric(unlist(df_tcga_data[,gene2]))
     if (sum(is.finite(gene2_exp_value)) < 50 || sum(gene2_exp_value > 1, na.rm=T) < 10) {
       df_target_pairs[row, 3:6] <- "low data"
     } else {
