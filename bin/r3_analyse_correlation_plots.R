@@ -1,5 +1,7 @@
 #!/usr/bin/env Rscript
 
+.libPaths( c( "/data/RLibs" , .libPaths() ) )
+
 ###*****************************************************************************
 ### Create correlation table and plots from RECODE3 data
 ### JToubia - January 2023
@@ -9,7 +11,7 @@
 ### Import libraries ####
 ###*****************************************************************************
 suppressMessages(if (!require("pacman")) install.packages("pacman"))
-p_load(data.table, rlogging)
+p_load(data.table, rlogging, plotly, htmlwidgets)
 #suppressMessages(library(data.table))
 
 SetLogFile(base.file=NULL)
@@ -23,18 +25,19 @@ if (length(args)==0) {
   stop("At least one argument must be supplied (GOI).n", call.=FALSE)
 } else if (length(args)==1) {
   # default to
-  args[2] = list.files("/home/jtoubia/Desktop/Projects/SRt/RECOUNT3/BRCA/", "R3-BRCA-*_tpm-mRNA.tsv", full.names=TRUE)
-  args[3] = "/home/jtoubia/Desktop/Projects/SRt/REF_FILES"
+  args[3] = list.files("/home/jtoubia/Desktop/Projects/SRt/RECOUNT3/BRCA/", "R3-BRCA-*_tpm-mRNA.tsv", full.names=TRUE)
+  args[4] = "/home/jtoubia/Desktop/Projects/SRt/REF_FILES"
 }
 
 GOI <- args[1]
-r3_z2n <- args[2]
-ref_files_folder <- args[3]
+outdir <- args[2]
+r3_z2n <- args[3]
+ref_files_folder <- args[4]
 
 ###*****************************************************************************
 ### Setup for analyses ####
 ###*****************************************************************************
-main_dir <- getwd()
+# main_dir <- getwd()
 gencode_lookup <- "gencode.v26.annotation.lookup"
 
 ###*****************************************************************************
@@ -69,13 +72,14 @@ if (gene1 %in% colnames(df_r3_data)) {
   gene1_exp_value <- as.numeric(unlist(df_r3_data[,gene1]))
   if (sum(is.finite(gene1_exp_value)) < 50 || sum(gene1_exp_value > 1, na.rm=T) < 10) {
     message(paste("Unfortunately, there is not enough observations in this dataset for", GOI))
-    stop("Ending this process") 
+    message("Ending this process")
+    quit("no", 2, FALSE)
   }
 }
 
-dir.create(file.path(main_dir, "Corr_Analysis"))
-dir.create(file.path(main_dir, "Corr_Analysis", "plots"))
-setwd(file.path(main_dir, "Corr_Analysis"))
+dir.create(file.path(outdir, "Corr_Analysis"))
+dir.create(file.path(outdir, "Corr_Analysis", "plots"))
+setwd(file.path(outdir, "Corr_Analysis"))
 
 ###*****************************************************************************
 ### Create Pairs ####
@@ -85,6 +89,8 @@ df_target_pairs <- read.delim(paste(ref_files_folder, gencode_lookup,
 df_target_pairs$gene1_id <- gsub('-', '.', GOI)
 df_target_pairs$gene2_id <- gsub('-', '.', df_target_pairs$gene2_id)
 df_target_pairs[,c("Cor","Pvalue","logExp_Cor","logExp_Pvalue")] <- ""
+
+high_expr_df = data.frame(Names=row.names(df_r3_data)) # my website needs this data
 
 ###*****************************************************************************
 ### Corr Analysis ####
@@ -108,6 +114,9 @@ for (row in 1:nrow(df_target_pairs)) {
       
       if(!is.na(log_cor_stats$estimate)){
         if (abs(signif(as.numeric(log_cor_stats$estimate))) > corr_plot_thrs) {
+          # adding exprs to new df, to be outputted in the outputs
+          high_expr_df[gene2] <- df_r3_data[,gene2]
+          
           png(paste("plots/", gene1, "_", gene2, ".png", sep=""))
           cor_1 <- log_cor_stats
           lm1 <- lm(log2(gene1_exp_value)~log2(gene2_exp_value))
@@ -126,6 +135,8 @@ for (row in 1:nrow(df_target_pairs)) {
     df_target_pairs[row, 3:6] <- "no data"
   }
 }
+
+write.table(high_expr_df, paste(GOI, "most_correlated_gene_exprs.tsv", sep="_"), sep='\t', row.names=FALSE)
 
 ###*****************************************************************************
 ### Filter/Sort/Padjust/Write to file and plot then return to main working dir
@@ -148,20 +159,26 @@ write.table(df_target_pairs, paste(GOI, "corr.tsv", sep="_"), sep='\t', row.name
 df_target_pairs$logExp_FDR[df_target_pairs$logExp_FDR == 0] = 1E-320
 df_target_pairs <- transform(df_target_pairs, logExp_Cor = as.numeric(logExp_Cor))
 
-png(paste(GOI, "corr_volcano.png", sep="_"))
-par(mar=c(5,6,4,2))
-with(df_target_pairs, plot(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.25, col="grey", main="Pearson's Correlations", 
-              xlab="R", ylab="-log10(FDR)", xlim=c(-1,1), ylim=c(0,310), cex.main=2.5, cex.lab=2.5, cex.axis=2.0))
+y_axis_max = max(-log10(df_target_pairs$logExp_FDR))
 
-### Add colored points:
-# with(subset(df_target_pairs, logExp_Cor > 0.5 ), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.25, col="orange"))
-# with(subset(df_target_pairs, logExp_Cor < -0.5 ), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.25, col="orange"))
-with(subset(df_target_pairs, logExp_FDR < 1E-50), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.25, col="green"))
-with(subset(df_target_pairs, logExp_FDR < 1E-150 & logExp_Cor > corr_plot_thrs), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.75, col="red"))
-with(subset(df_target_pairs, logExp_FDR < 1E-150 & logExp_Cor < -corr_plot_thrs), points(logExp_Cor, -log10(logExp_FDR), pch=20, cex=0.75, col="blue"))
-invisible(dev.off())
+p <- ggplot(df_target_pairs, aes(x = logExp_Cor, y = -log10(logExp_FDR))) +
+  geom_point(shape = 20, size = 0.25, color = "grey") + # adding additoinal points layer with the subset of data we want
+  geom_point(data = subset(df_target_pairs, logExp_FDR < 1E-50), shape=20, size=0.25, color="green") +
+  geom_point(data = subset(df_target_pairs, logExp_FDR < 1E-150 & logExp_Cor > corr_plot_thrs), shape=20, size=0.75, color="red") +
+  geom_point(data = subset(df_target_pairs, logExp_FDR < 1E-150 & logExp_Cor < -corr_plot_thrs), shape=20, size=0.75, color="blue") +
+  labs(title = "Pearson's Correlations", x = "R", y = "-log10(FDR)") +
+  theme_classic() +
+  theme(text=element_text(size=30)) +
+  xlim(-1, 1) +
+  ylim(0, y_axis_max + 10)
 
-setwd(main_dir)
+p_ly = ggplotly(p) %>% style(text = paste("<b>Gene 2:</b>", df_target_pairs$gene2_id, 
+                                          "<br><b>logExp_Cor:</b>", df_target_pairs$logExp_Cor,
+                                          "<br><b>logExp_Pvalue:</b>", df_target_pairs$logExp_Pvalue,
+                                          "<br><b>logExp_Bonferroni:</b>", df_target_pairs$logExp_Bonferroni,
+                                          "<br><b>logExp_FDR:</b>", df_target_pairs$logExp_FDR
+                                          ))
+saveWidget(ggplotly(p_ly), file = paste(GOI, "corr_volcano.html", sep="_"))
 
 ### all done, sign off
 message(paste("Finished Corr Analysis for", GOI))
