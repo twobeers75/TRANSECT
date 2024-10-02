@@ -1,5 +1,7 @@
 #!/usr/bin/env Rscript
 
+.libPaths( c( "/data/RLibs" , .libPaths() ) )
+
 ###*****************************************************************************
 ### DO DE analysis on GTEx stratified data
 ### JToubia - January 2021
@@ -29,34 +31,35 @@ if (length(args)==0) {
 	stop("At least one argument must be supplied (GOI).n", call.=FALSE)
 } else if (length(args)==1) {
 	# default to
-  args[2] = "mRNA"
-  args[3] = 5
-  args[4] = "false"
-  args[5] = "SCA/REF_FILES"
-  args[6] = "SCA/bin/GSEA/gsea-cli.sh GSEAPreranked" 
-  args[7] = list.files("SCA/data/", "GTEx/GTEx-v8/Breast", "GTEx-Breast-*_tpm-mRNA.tsv", full.names=TRUE)
-  args[8] = list.files("SCA/data/", "GTEx/GTEx-v8/Breast", "GTEx-Breast-*_count-mRNA.tsv", full.names=TRUE)
-  args[9] = ""
-  arg2[10] = ""
+  args[2] = "/home/jtoubia/Desktop/Projects/SRt" # output
+  args[3] = "mRNA"
+  args[4] = 5
+  args[5] = "false"
+  args[6] = "SCA/REF_FILES"
+  args[7] = "SCA/bin/GSEA/gsea-cli.sh GSEAPreranked" 
+  args[8] = list.files("SCA/data/", "GTEx/GTEx-v8/Breast", "GTEx-Breast-*_tpm-mRNA.tsv", full.names=TRUE)
+  args[9] = list.files("SCA/data/", "GTEx/GTEx-v8/Breast", "GTEx-Breast-*_count-mRNA.tsv", full.names=TRUE)
+  args[10] = ""
+  arg2[11] = ""
 }
 
 GOI <- args[1]
-rna_species <- args[2]
-percentile <- as.integer(args[3])
-switchDE <- args[4]
-ref_files_folder <- args[5]
-gsea_exe <- args[6]
-gene_fpkm_filename <- args[7]
-gene_counts_filename <- args[8]
-isomir_rpm_filename <- args[9]
+outdir <- args[2]
+rna_species <- args[3]
+percentile <- as.integer(args[4])
+switchDE <- args[5]
+ref_files_folder <- args[6]
+gsea_exe <- args[7]
+gene_fpkm_filename <- args[8]
+gene_counts_filename <- args[9]
+isomir_rpm_filename <- args[10]
 normals <- ""
 
 ###*****************************************************************************
 # Setup ####
 ###*****************************************************************************
-main_dir <- getwd()
-dir.create(file.path(main_dir, "DE_Analysis"))
-setwd(file.path(main_dir, "DE_Analysis"))
+dir.create(file.path(outdir, "DE_Analysis"))
+setwd(file.path(outdir, "DE_Analysis"))
 
 ###*****************************************************************************
 ## Setup custom thresholds ####
@@ -417,7 +420,8 @@ message(paste("Finished stratification of", GOI))
 if (!run_DE) {
   warning(paste("Unfortunately, there is not enough observations in this dataset for", GOI))
   warning("Try inspecting the distribution plots to identify the cause")
-  stop("Ending this process") 
+  message(("Ending this process") )
+  quit("no", 2, FALSE)
 }
 
 message(paste("Beginning DE Analysis for", GOI))
@@ -745,9 +749,8 @@ if (gsea_exe != "false"){
   gsea_exe <- paste(gsea_exe, "GSEAPreranked", sep =" ")
   message(paste("Starting GSEA Analysis for", GOI))
   
-  main_dir <- getwd()
-  dir.create(file.path(main_dir, "GSEA"))
-  outdir <- paste(main_dir, "GSEA", sep="/")
+  dir.create(file.path(outdir, "GSEA"))
+  gsea_outdir <- paste(outdir, "GSEA", sep="/")
   
   if (rna_species == "mRNA"){
     ### Hallmark
@@ -761,7 +764,7 @@ if (gsea_exe != "false"){
     gsea_params1 <- "-collapse No_Collapse -mode Max_probe -norm meandiv -nperm 1000 -scoring_scheme weighted" 
     gsea_params2 <- "-create_svgs true -include_only_symbols true -make_sets true -plot_top_x 20"
     gsea_params3 <- "-rnd_seed timestamp -set_max 2000 -set_min 15 -zip_report false"
-    gsea_out <- paste("-out ", outdir, sep="")
+    gsea_out <- paste("-out ", gsea_outdir, sep="")
     gsea_command <- paste(gsea_exe, gsea_gmx, gsea_rnk, gsea_chip, gsea_label, gsea_params1, gsea_params2, gsea_params3, gsea_out, sep=" ") 
     
     system(gsea_command, ignore.stdout=TRUE, ignore.stderr=TRUE, wait=TRUE)
@@ -786,7 +789,7 @@ if (gsea_exe != "false"){
     gsea_params1 <- "-collapse No_Collapse -mode Max_probe -norm meandiv -nperm 1000 -scoring_scheme weighted" 
     gsea_params2 <- "-create_svgs true -include_only_symbols true -make_sets true -plot_top_x 20"
     gsea_params3 <- "-rnd_seed timestamp -set_max 2000 -set_min 15 -zip_report false"
-    gsea_out <- paste("-out ", outdir, sep="")
+    gsea_out <- paste("-out ", gsea_outdir, sep="")
     gsea_command <- paste(gsea_exe, gsea_gmx, gsea_rnk, gsea_chip, gsea_label, gsea_params1, gsea_params2, gsea_params3, gsea_out, sep=" ") 
     
     system(gsea_command, ignore.stdout=TRUE, ignore.stderr=TRUE, wait=TRUE)
@@ -797,7 +800,7 @@ if (gsea_exe != "false"){
   ### Create summary plots
   Sys.sleep(10)
   ### get dir and file names and process iteratively
-  GSEA_output_dirs <- list.dirs(outdir, full.names=TRUE, recursive=FALSE)
+  GSEA_output_dirs <- list.dirs(gsea_outdir, full.names=TRUE, recursive=FALSE)
   for (GSEA_output_dir in GSEA_output_dirs){
     combined_gsea_sig_results <- data.frame()
     GSEA_output_report_files <- list.files(path=GSEA_output_dir, pattern="gsea_report.*tsv", full.names=TRUE)
@@ -826,12 +829,14 @@ if (gsea_exe != "false"){
             theme(legend.position="none", axis.title.y=element_blank(), 
                   axis.title.x=element_text(size=20), axis.text.x=element_text(size=18))
           
-          setwd(outdir) # to bypass html files directory creation when saving into a folder
+          setwd(gsea_outdir) # to bypass html files directory creation when saving into a folder
+          json_data <- plotly_json(ggplotly(gseaplot))
+          writeLines(json_data, paste(sample_name, ".json", sep=""))
+          
           saveWidget(ggplotly(gseaplot), file = paste(sample_name, ".html", sep=""), selfcontained=TRUE)
-          setwd(main_dir)
           
           write.csv(combined_gsea_sig_results[,1:(length(combined_gsea_sig_results)-2)], 
-                    paste(outdir, "/",sample_name, ".csv", sep=""), row.names=FALSE)
+                    paste(gsea_outdir, "/",sample_name, ".csv", sep=""), row.names=FALSE)
         } else {
           message("No significant GSEA results to plot")
         }
