@@ -10,12 +10,11 @@
 #########
 SCRIPT_FOLDER=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 BASE_FOLDER=$(dirname ${SCRIPT_FOLDER})
-DATA_FOLDER="${BASE_FOLDER}/data/GTEx/GTEx-v8"
+DATA_FOLDER="/home/yasir/Desktop/projects/SCA/data/GTEx/GTEx-v8"
 REF_FILES_FOLDER="${BASE_FOLDER}/REF_FILES"
 GSEA_EXE="${SCRIPT_FOLDER}/GSEA/gsea-cli.sh"
 
 ### and record where we start from
-working_folder=$(pwd)
 
 ##########################################################################################################
 #### Functions
@@ -23,8 +22,13 @@ working_folder=$(pwd)
 corr_analysis( ) {
 	echo "Preparing to run Corr Analysis for ${GOI}"
 	GTEx_z2n=(${DATA_FOLDER}/${GTEx_code}/GTEx-*_tpm-mRNA.tsv)
-	Rscript --vanilla ${SCRIPT_FOLDER}/gtex_analyse_correlation_plots.R ${GOI} ${GTEx_z2n[0]} ${REF_FILES_FOLDER}
-	cd ${working_folder}
+	Rscript --vanilla ${SCRIPT_FOLDER}/gtex_analyse_correlation_plots.R ${GOI} ${output_folder} ${GTEx_z2n[0]} ${REF_FILES_FOLDER}
+	return_code=$?
+	if [[ $return_code -ne 0 ]]
+	then
+		return $return_code
+	fi 
+	cd ${output_folder}
 }
 
 de_analysis( ) {
@@ -32,8 +36,14 @@ de_analysis( ) {
 	GTEx_tpm=(${DATA_FOLDER}/${GTEx_code}/GTEx-*_tpm-mRNA.tsv)
 	GTEx_counts=(${DATA_FOLDER}/${GTEx_code}/GTEx-*_count-mRNA.tsv)
 	GTEx_rpm=""
-	Rscript --vanilla ${SCRIPT_FOLDER}/gtex_analyse_stratify_edgeR.R ${GOI} ${strat_by} ${percentile} ${switch} ${REF_FILES_FOLDER} ${GSEA_EXE} ${GTEx_tpm[0]} ${GTEx_counts[0]} ${GTEx_rpm[0]}
-	cd ${working_folder}
+
+	Rscript --vanilla ${SCRIPT_FOLDER}/gtex_analyse_stratify_edgeR.R ${GOI} ${output_folder} ${strat_by} ${percentile} ${switch} ${REF_FILES_FOLDER} ${GSEA_EXE} ${GTEx_tpm[0]} ${GTEx_counts[0]} ${GTEx_rpm[0]}
+	return_code=$?
+	if [[ $return_code -ne 0 ]]
+	then
+		return $return_code
+	fi 
+	cd ${output_folder}
 }
 
 trace () {
@@ -57,6 +67,7 @@ switch=false
 do_all=false
 do_corr=false
 do_de=false
+output_flag=false
 
 ### Parse command line options
 usage="Differential expression analysis of GTEx data stratified into high and low groups by gene of interest 
@@ -66,7 +77,7 @@ NOTE: Composite analyses can be run using the plus charater (+) for additive com
 by using the modulus character (%) for ratio. The two special characters are used between gene names like so
 Additive example: ESR1+PGR+ERBB2 or Ratio example: ESRP1%ZEB1
 
-USAGE: $(basename $0) [-h] -p <GTExTissueID> -g <GOI> -s <StratifyBy> -t <Percentile> -e -S -a -c -d
+USAGE: $(basename $0) [-h] -p <GTExTissueID> -g <GOI> -s <StratifyBy> -t <Percentile> -e -S -a -c -d -o
 	where:
 	-h Show this help text
 	-p GTEx tissue id: needs to be valid GTEx tissue id as at GTEx (ie. Breast). Required
@@ -77,17 +88,19 @@ USAGE: $(basename $0) [-h] -p <GTExTissueID> -g <GOI> -s <StratifyBy> -t <Percen
 	-S Switch pairwise comparison: find genes DE in low group compared to high group (Default: high compared to low)
 	-a Do all analyses
 	-c Do correlation analysis only
-	-d Do differential expression analysis only 
+	-d Do differential expression analysis only
+	-o Path to where the analysis should be stored
 "
 
 ### parse all command line options
-while getopts hg:p:s:t:eSacd opt; do
+while getopts hg:p:s:t:o:eSacd opt; do
 	case "$opt" in
 		h) echo "$usage"; exit;;
 		p) pflag=true; project_id=$OPTARG;;
 		g) gflag=true; GOI=$OPTARG;;
 		s) sflag=true; strat_by=$OPTARG;;
 		t) tflag=true; percentile=$OPTARG;;
+		o) output_flag=true; output_folder=$OPTARG;;
 		e) gsea=true;;
 		S) switch=true;;
 		a) do_all=true;;
@@ -100,11 +113,22 @@ while getopts hg:p:s:t:eSacd opt; do
 done
 
 ### check that all required flags have been given
-if ! (${pflag} && ${gflag} && ${sflag} && ${tflag})
-then
-	echo "Missing arguments. Please check your commanline call" >&2
-	echo""; echo "${usage}"
-	exit 1
+# changed such that we no longer need to provide s/tflag for correlation analysis only
+if (${do_all} || ${do_de})
+then 
+	if ! (${pflag} && ${gflag} && ${sflag} && ${tflag} && ${output_flag})
+	then
+		echo "Missing arguments. Please check your commanline call" >&2
+		echo""; echo "${usage}"
+		exit 1
+	fi
+else
+	if ! (${pflag} && ${gflag} && ${output_flag})
+	then
+		echo "Missing arguments. Please check your commanline call" >&2
+		echo""; echo "${usage}"
+		exit 1
+	fi
 fi
 
 ### check if user input a valid GTEx code
@@ -138,19 +162,22 @@ else
 fi
 
 ### check if user input a valid RNA species
-if [ "${strat_by}" != "mRNA" ]
+if (${do_all} || ${do_de})
 then
-	echo "Stratification can only be done by mRNA" >&2
-	echo""; echo "${usage}"
-	exit 1
-fi
+	if [ "${strat_by}" != "mRNA" ]
+	then
+		echo "Stratification can only be done by mRNA" >&2
+		echo""; echo "${usage}"
+		exit 1
+	fi
 
-### check if user input a valid integer
-if ((${percentile%.*} < 2 || ${percentile%.*} > 25))
-then
-	echo "Percentile must be an integer in the range 2 - 25" >&2
-	echo""; echo "${usage}"
-	exit 1
+	### check if user input a valid integer
+	if ((${percentile%.*} < 2 || ${percentile%.*} > 25))
+	then
+		echo "Percentile must be an integer in the range 2 - 25" >&2
+		echo""; echo "${usage}"
+		exit 1
+	fi
 fi
 
 ### if no analysis defined ask for one
@@ -177,6 +204,12 @@ if (${do_all} || ${do_corr})
 then
 	echo "Corr Analysis selected"
 	corr_analysis
+
+	return_code=$?
+	if [[ $return_code -ne 0 ]]
+	then
+		exit $return_code
+	fi 
 fi
 
 if (${do_all} || ${do_de})
@@ -190,27 +223,25 @@ then
 	fi
 	
 	de_analysis
+
+	return_code=$?
+	if [[ $return_code -ne 0 ]]
+	then
+		exit $return_code
+	fi 
 fi
 
 ### Final clean up
-cd $working_folder
+cd $output_folder
 find . -type d -empty -delete
 if (${do_all} || ${do_de})
 then
 	cd DE_Analysis
 	${SCRIPT_FOLDER}/post_analysis_organisation.sh
-	cd $working_folder
+	cd $output_folder
 fi
 
 trace Finished SCA
 
 ### Sign off
 echo "Finished running all analyses for ${GOI}"
-
-
-
-
-
-
-
-
