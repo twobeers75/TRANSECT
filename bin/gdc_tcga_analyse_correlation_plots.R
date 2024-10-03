@@ -91,7 +91,8 @@ df_target_pairs$gene1_id <- gsub('-', '.', GOI)
 df_target_pairs$gene2_id <- gsub('-', '.', df_target_pairs$gene2_id)
 df_target_pairs[,c("Cor","Pvalue","logExp_Cor","logExp_Pvalue")] <- ""
 
-high_expr_df = data.frame(Names=df_tcga_data[,1]) # my website needs this data
+high_expr_df = data.frame(Names=rownames(df_tcga_data)) # my website needs this data
+high_expr_df[gene1] <- df_tcga_data[, gene1]
 
 ###*****************************************************************************
 ### Corr Analysis ####
@@ -116,7 +117,7 @@ for (row in 1:nrow(df_target_pairs)) {
       
       if (abs(signif(as.numeric(log_cor_stats$estimate))) > corr_plot_thrs) {
         # adding exprs to new df, to be outputted in the outputs
-        high_expr_df[gene2] <- df_tcga_data[gene2]
+        high_expr_df[gene2] <- df_tcga_data[, gene2]
 
         png(paste("plots/", gene1, "_", gene2, ".png", sep=""))
         cor_1 <- log_cor_stats

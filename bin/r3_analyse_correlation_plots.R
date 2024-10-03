@@ -90,7 +90,8 @@ df_target_pairs$gene1_id <- gsub('-', '.', GOI)
 df_target_pairs$gene2_id <- gsub('-', '.', df_target_pairs$gene2_id)
 df_target_pairs[,c("Cor","Pvalue","logExp_Cor","logExp_Pvalue")] <- ""
 
-high_expr_df = data.frame(Names=row.names(df_r3_data)) # my website needs this data
+high_expr_df = data.frame(Names=rownames(df_r3_data)) # my website needs this data
+high_expr_df[gene1] <- df_r3_data[,gene1]
 
 ###*****************************************************************************
 ### Corr Analysis ####

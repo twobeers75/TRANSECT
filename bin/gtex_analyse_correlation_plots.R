@@ -90,11 +90,14 @@ df_target_pairs$gene1_id <- gsub('-', '.', GOI)
 df_target_pairs$gene2_id <- gsub('-', '.', df_target_pairs$gene2_id)
 df_target_pairs[,c("Cor","Pvalue","logExp_Cor","logExp_Pvalue")] <- ""
 
-high_expr_df = data.frame(Names=row.names(df_gtex_data)) # my website needs this data
+high_expr_df = data.frame(Names=rownames(df_gtex_data)) # my website needs this data
 
 ###*****************************************************************************
 ### Corr Analysis ####
 ###*****************************************************************************
+
+high_expr_df[gene1] <- df_gtex_data[,gene1] # adding this manually as below method will skip gene of same name
+
 for (row in 1:nrow(df_target_pairs)) {
 # for (row in 1:10) { 
   gene2 <- df_target_pairs[row, "gene2_id"]
