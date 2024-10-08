@@ -237,7 +237,7 @@ find . -type d -empty -delete
 if (${do_all} || ${do_de})
 then
 	cd DE_Analysis
-	${SCRIPT_FOLDER}/post_analysis_organisation.sh
+	#${SCRIPT_FOLDER}/post_analysis_organisation.sh
 	cd $output_folder
 fi
 
