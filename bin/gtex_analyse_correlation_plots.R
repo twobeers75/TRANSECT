@@ -184,5 +184,6 @@ p_ly = ggplotly(p) %>% style(text = paste("<b>Gene 2:</b>", df_target_pairs$gene
 saveWidget(ggplotly(p_ly), file = paste(GOI, "corr_volcano.html", sep="_"))
 
 ### all done, sign off
+zip(paste(outdir, ".zip"), outdir)
 message(paste("Finished Corr Analysis for", GOI))
 

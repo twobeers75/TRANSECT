@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-.libPaths( c( "/data/RLibs" , .libPaths() ) )
+.libPaths( c( "/Users/yasir/anaconda3/envs/website_sa_path/lib/R/library" , .libPaths() ) )
 
 ###*****************************************************************************
 ### Create correlation table and plots from TCGA data
@@ -183,5 +183,7 @@ p_ly = ggplotly(p) %>% style(text = paste("<b>Gene 2:</b>", df_target_pairs$gene
 saveWidget(ggplotly(p_ly), file = paste(GOI, "corr_volcano.html", sep="_"))
 
 ### all done, sign off
+zip(paste(outdir, ".zip"), outdir)
 message(paste("Finished Corr Analysis for", GOI))
+
 
