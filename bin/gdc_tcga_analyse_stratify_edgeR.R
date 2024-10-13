@@ -765,13 +765,13 @@ sink()
 message(paste("Finished WebGestalt Analysis for", GOI))
 
 # copy current results to "outdir_no_gsea" and sort there
-dir.create(paste(outdir, "_no_gsea"))
-file.copy(list.files(outdir, full.names = TRUE), paste(outdir, "_no_gsea"), recursive=TRUE)
-setwd(paste(outdir, "_no_gsea/DE_Analysis"))
+dir.create(paste(outdir, "_no_gsea", sep=""))
+file.copy(list.files(outdir, full.names = TRUE), paste(outdir, "_no_gsea", sep=""), recursive=TRUE)
+setwd(paste(outdir, "_no_gsea/DE_Analysis", sep=""))
 system(output_sort_script, ignore.stdout=TRUE, ignore.stderr=TRUE, wait=TRUE)
 setwd(file.path(outdir, "DE_Analysis"))
-zip(paste(outdir, "_no_gsea.zip"), paste(outdir, "_no_gsea"))
-unlink(paste(outdir, "_no_gsea"), recursive=TRUE)
+zip(paste(outdir, "_no_gsea.zip", sep=""), paste(outdir, "_no_gsea", sep=""))
+unlink(paste(outdir, "_no_gsea", sep=""), recursive=TRUE)
 
 ###*****************************************************************************
 ## Do GSEA ####
@@ -883,4 +883,4 @@ if (gsea_exe != "false"){
 
 setwd(file.path(outdir, "DE_Analysis"))
 system(output_sort_script, ignore.stdout=TRUE, ignore.stderr=TRUE, wait=TRUE)
-zip(paste(outdir, ".zip"), outdir)
+zip(paste(outdir, ".zip", sep=""), outdir)
