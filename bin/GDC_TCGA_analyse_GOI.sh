@@ -13,6 +13,7 @@ BASE_FOLDER=$(dirname ${SCRIPT_FOLDER})
 DATA_FOLDER="/home/yasir/Desktop/projects/SCA/data/GDC"
 REF_FILES_FOLDER="${BASE_FOLDER}/REF_FILES"
 GSEA_EXE="${SCRIPT_FOLDER}/GSEA/gsea-cli.sh"
+OUTPUT_SORT_SCRIPT="${SCRIPT_FOLDER}/post_analysis_organisation.sh"
 
 ### and record where we start from
 
@@ -38,7 +39,7 @@ de_analysis( ) {
 	tcga_rpm=(${DATA_FOLDER}/${tcga_code}/isomiR_expression_rpm/GDC_*_RPM-miRNAisoform_all.tsv)
 	# in additition to the output folder I made, J added a "GSEA.exe path"
 	
-	Rscript --vanilla ${SCRIPT_FOLDER}/gdc_tcga_analyse_stratify_edgeR.R ${GOI} ${output_folder} ${strat_by} ${percentile} ${switch} ${REF_FILES_FOLDER} ${GSEA_EXE} ${tcga_fpkm[0]} ${tcga_counts[0]} ${tcga_rpm[0]}
+	Rscript --vanilla ${SCRIPT_FOLDER}/gdc_tcga_analyse_stratify_edgeR.R ${GOI} ${output_folder} ${strat_by} ${percentile} ${switch} ${REF_FILES_FOLDER} ${GSEA_EXE} ${OUTPUT_SORT_SCRIPT} ${tcga_fpkm[0]} ${tcga_counts[0]} ${tcga_rpm[0]}
 	return_code=$?
 	if [[ $return_code -ne 0 ]]
 	then

@@ -36,11 +36,12 @@ if (length(args)==0) {
   args[4] = 5
   args[5] = "false"
   args[6] = "SCA/REF_FILES"
-  args[7] = "SCA/bin/GSEA/gsea-cli.sh GSEAPreranked" 
-  args[8] = list.files("SCA/data/GDC/", "BRCA/mRNA_expression_fpkm", "GDC_TCGA-BRCA.*FPKM-mRNA_toTPM_all.tsv", full.names=TRUE)
-  args[9] = list.files("SCA/data/GDC/", "BRCA/mRNA_expression_counts", "GDC_TCGA-BRCA.*Count-mRNA_all.tsv", full.names=TRUE)
-  args[10] = list.files("SCA/data/GDC/", "BRCA/isomiR_expression_rpm", "GDC_TCGA-BRCA.*RPM-miRNAisoform_all.tsv", full.names=TRUE)
-  args[11] = ""
+  args[7] = "SCA/bin/GSEA/gsea-cli.sh GSEAPreranked"
+  args[8] = "post_analysis_organisation.sh"
+  args[9] = list.files("SCA/data/GDC/", "BRCA/mRNA_expression_fpkm", "GDC_TCGA-BRCA.*FPKM-mRNA_toTPM_all.tsv", full.names=TRUE)
+  args[10] = list.files("SCA/data/GDC/", "BRCA/mRNA_expression_counts", "GDC_TCGA-BRCA.*Count-mRNA_all.tsv", full.names=TRUE)
+  args[11] = list.files("SCA/data/GDC/", "BRCA/isomiR_expression_rpm", "GDC_TCGA-BRCA.*RPM-miRNAisoform_all.tsv", full.names=TRUE)
+  args[12] = ""
 }
 
 GOI <- args[1]
@@ -50,9 +51,10 @@ percentile <- as.numeric(args[4])
 switchDE <- args[5]
 ref_files_folder <- args[6]
 gsea_exe <- args[7]
-gene_fpkm_filename <- args[8]
-gene_counts_filename <- args[9]
-isomir_rpm_filename <- args[10]
+output_sort_script <- args[8]
+gene_fpkm_filename <- args[9]
+gene_counts_filename <- args[10]
+isomir_rpm_filename <- args[11]
 normals <- ""
 
 ###*****************************************************************************
@@ -762,6 +764,15 @@ sink()
 ### All done for WebGestalt
 message(paste("Finished WebGestalt Analysis for", GOI))
 
+# copy current results to "outdir_no_gsea" and sort there
+dir.create(paste(outdir, "_no_gsea"))
+file.copy(list.files(outdir, full.names = TRUE), paste(outdir, "_no_gsea"), recursive=TRUE)
+setwd(paste(outdir, "_no_gsea/DE_Analysis"))
+system(output_sort_script, ignore.stdout=TRUE, ignore.stderr=TRUE, wait=TRUE)
+setwd(file.path(outdir, "DE_Analysis"))
+zip(paste(outdir, "_no_gsea.zip"), paste(outdir, "_no_gsea"))
+unlink(paste(outdir, "_no_gsea"), recursive=TRUE)
+
 ###*****************************************************************************
 ## Do GSEA ####
 ###*****************************************************************************
@@ -788,6 +799,7 @@ if (gsea_exe != "false"){
     gsea_out <- paste("-out ", gsea_outdir, sep="")
     gsea_command <- paste(gsea_exe, gsea_gmx, gsea_rnk, gsea_chip, gsea_label, gsea_params1, gsea_params2, gsea_params3, gsea_out, sep=" ")
   
+    message(gsea_command)
     system(gsea_command, ignore.stdout=TRUE, ignore.stderr=TRUE, wait=TRUE)
   
     ### Curated
@@ -869,3 +881,6 @@ if (gsea_exe != "false"){
   message(paste("Finished GSEA Analysis for", GOI))
 } 
 
+setwd(file.path(outdir, "DE_Analysis"))
+system(output_sort_script, ignore.stdout=TRUE, ignore.stderr=TRUE, wait=TRUE)
+zip(paste(outdir, ".zip"), outdir)

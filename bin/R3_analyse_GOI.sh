@@ -10,9 +10,10 @@
 #########
 SCRIPT_FOLDER=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 BASE_FOLDER=$(dirname ${SCRIPT_FOLDER})
-DATA_FOLDER="/home/yasir/Desktop/projects/SCA/projects/RECOUNT3"
+DATA_FOLDER="/home/yasir/Desktop/projects/SCA/data/GDC"
 REF_FILES_FOLDER="${BASE_FOLDER}/REF_FILES"
 GSEA_EXE="${SCRIPT_FOLDER}/GSEA/gsea-cli.sh"
+OUTPUT_SORT_SCRIPT="${SCRIPT_FOLDER}/post_analysis_organisation.sh"
 
 ### and record where we start from
 
@@ -38,7 +39,7 @@ de_analysis( ) {
 	R3_counts=(${DATA_FOLDER}/${R3_code}/R3-*_count-mRNA.tsv)
 	R3_rpm=""
 	
-	Rscript --vanilla ${SCRIPT_FOLDER}/r3_analyse_stratify_edgeR.R ${GOI} ${output_folder} ${strat_by} ${percentile} ${switch} ${REF_FILES_FOLDER} ${GSEA_EXE} ${R3_tpm[0]} ${R3_counts[0]} ${R3_rpm[0]}
+	Rscript --vanilla ${SCRIPT_FOLDER}/r3_analyse_stratify_edgeR.R ${GOI} ${output_folder} ${strat_by} ${percentile} ${switch} ${REF_FILES_FOLDER} ${GSEA_EXE} ${OUTPUT_SORT_SCRIPT} ${R3_tpm[0]} ${R3_counts[0]} ${R3_rpm[0]}
 	return_code=$?
 	if [[ $return_code -ne 0 ]]
 	then
