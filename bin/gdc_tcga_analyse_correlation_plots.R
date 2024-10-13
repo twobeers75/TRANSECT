@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-.libPaths( c( "/Users/yasir/anaconda3/envs/website_sa_path/lib/R/library" , .libPaths() ) )
+.libPaths( c( "/data/RLibs" , .libPaths() ) )
 
 ###*****************************************************************************
 ### Create correlation table and plots from TCGA data
