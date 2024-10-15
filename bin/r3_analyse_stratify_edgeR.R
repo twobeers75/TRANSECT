@@ -775,8 +775,8 @@ file.copy(list.files(outdir, full.names = TRUE), paste(outdir, "_no_gsea", sep="
 setwd(paste(outdir, "_no_gsea/DE_Analysis", sep=""))
 system(output_sort_script, ignore.stdout=TRUE, ignore.stderr=TRUE, wait=TRUE)
 
-setwd(file.path(outdir, ".."))
-zip(paste(outdir, "_no_gsea.zip", sep=""), paste(basename(outdir), "_no_gsea", sep=""), flags = "-r")
+setwd(file.path(paste(outdir, "_no_gsea", sep="")))
+zip(paste(outdir, "_no_gsea.zip", sep=""), list.files(".", full.names=FALSE), flags = "-r")
 unlink(paste(outdir, "_no_gsea", sep=""), recursive=TRUE)
 setwd(file.path(outdir, "DE_Analysis"))
 
@@ -888,7 +888,12 @@ if (gsea_exe != "false"){
 }  
 
 setwd(file.path(outdir, "DE_Analysis"))
+
+dir.create(paste(outdir, "_tmp", sep=""))
+file.copy(list.files(outdir, full.names = TRUE), paste(outdir, "_tmp", sep=""), recursive=TRUE)
+setwd(paste(outdir, "_tmp/DE_Analysis", sep=""))
 system(output_sort_script, ignore.stdout=TRUE, ignore.stderr=TRUE, wait=TRUE)
 
-setwd(file.path(outdir, ".."))
-zip(paste(outdir, ".zip", sep=""), basename(outdir), flags = "-r")
+setwd(file.path(paste(outdir, "_tmp", sep="")))
+zip(paste(outdir, ".zip", sep=""), list.files(".", full.names=FALSE), flags = "-r")
+unlink(paste(outdir, "_tmp", sep=""), recursive=TRUE)

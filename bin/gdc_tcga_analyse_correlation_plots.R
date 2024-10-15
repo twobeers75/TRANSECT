@@ -185,8 +185,8 @@ saveWidget(ggplotly(p_ly), file = paste(GOI, "corr_volcano.html", sep="_"))
 ### all done, sign off
 #files_to_zip <- list.files(outdir, recursive = TRUE, full.names = FALSE)
 #print(files_to_zip)
-setwd(file.path(outdir, ".."))
-zip(paste(outdir, ".zip", sep=""), basename(outdir), flags = "-r")
+setwd(file.path(outdir))
+zip(paste(outdir, ".zip", sep=""), list.files(".", full.names=FALSE), flags = "-r")
 message(paste("Finished Corr Analysis for", GOI))
 
 
