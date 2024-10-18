@@ -734,6 +734,32 @@ if (FDR_sig_df_ord_down_test){
   message("Not enough DE down regulated genes to execute WebGestalt")
 }
 sink()
+
+### iterate over WG returned folders and build summary plots
+WG_output_dirs <- list.dirs(WG_outdir, full.names=TRUE, recursive=FALSE)
+for (WG_output_dir in WG_output_dirs){
+  sample_name <- strsplit(basename(WG_output_dir),"[.]")[[1]][1]
+  sample_name <- gsub("Project", "Summary", sample_name)
+  WG_output_report_file <- list.files(path=WG_output_dir, pattern="enrichment_results_enrichDatabase.*Reg.txt", full.names=TRUE)
+  er_table <- read.csv(WG_output_report_file, sep = "\t", header = TRUE)
+  er_table_cut <- er_table[c("description","enrichmentRatio","FDR")]
+  er_table_cut <- er_table_cut[order(er_table_cut$enrichmentRatio),]
+  er_table_cut <- er_table_cut[er_table_cut$FDR < 0.05, ]
+  er_table_cut <- head(er_table_cut, n=10)
+  er_table_cut$cols_column <- ifelse(er_table_cut$FDR < 0.05, "#00008B", "#ADD8E6")
+  
+  gseaplot <- ggplot(data=er_table_cut, aes(x=enrichmentRatio, y=description)) + 
+    geom_bar(stat="identity", fill=er_table_cut$cols_column) +
+    scale_y_discrete(limits=er_table_cut$description) + 
+    theme_minimal() + xlab("Enrichment Score") +
+    theme(legend.position="none", axis.title.y=element_blank(), 
+          axis.title.x=element_text(size=20), axis.text.x=element_text(size=18))
+  
+  setwd(WG_output_dir) # to bypass html files directory creation when saving into a folder
+  saveWidget(ggplotly(gseaplot), file = paste(sample_name, ".html", sep=""), selfcontained=TRUE)
+  setwd(main_dir)
+}
+
 ### All done for WebGestalt
 message(paste("Finished WebGestalt Analysis for", GOI))
 
