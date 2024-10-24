@@ -734,6 +734,9 @@ if (FDR_sig_df_ord_up_test){
 } else {
   message("Not enough DE up regulated genes to execute WebGestalt")
 }
+sink()
+
+sink(nullfile()) # don't want console messages
 if (FDR_sig_df_ord_down_test){
   message("Passing DE Down regulated geneset to WebGestalt ORA")
   for (i in 1:length(enrichDBs)) { 
@@ -762,17 +765,20 @@ for (WG_output_dir in WG_output_dirs){
   sample_name <- gsub("Project", "Summary", sample_name)
   WG_output_report_file <- list.files(path=WG_output_dir, pattern="enrichment_results_enrichDatabase.*Reg.txt", full.names=TRUE)
   er_table <- read.csv(WG_output_report_file, sep = "\t", header = TRUE)
-  er_table_cut <- er_table[c("description","enrichmentRatio","FDR")]
+  er_table_cut <- er_table[c("geneSet","description","enrichmentRatio","FDR")]
+  er_table_cut$ID <- paste(er_table_cut$geneSet, er_table_cut$description)
   er_table_cut <- er_table_cut[order(er_table_cut$enrichmentRatio),]
-  er_table_cut <- er_table_cut[er_table_cut$FDR < 0.05, ]
+  #er_table_cut <- er_table_cut[er_table_cut$FDR < 0.05, ]
   er_table_cut <- head(er_table_cut, n=10)
-  er_table_cut$cols_column <- ifelse(er_table_cut$FDR < 0.05, "#00008B", "#ADD8E6")
+  #er_table_cut$cols_column <- ifelse(er_table_cut$FDR < 0.05, "#00008B", "#ADD8E6") 
+  er_table_cut$Legend <- ifelse(er_table_cut$FDR < 0.05, "FDR<0.05", "FDR>0.05")
   
-  gseaplot <- ggplot(data=er_table_cut, aes(x=enrichmentRatio, y=description)) + 
-    geom_bar(stat="identity", fill=er_table_cut$cols_column) +
-    scale_y_discrete(limits=er_table_cut$description) + 
+  gseaplot <- ggplot(data=er_table_cut, aes(x=enrichmentRatio, y=ID, color=Legend)) + 
+    geom_bar(stat="identity", fill="white") +
+    scale_color_manual(values=c("FDR<0.05"="#00008B", "FDR>0.05"="#ADD8E6")) +
+    scale_y_discrete(limits=er_table_cut$ID) + 
     theme_minimal() + xlab("Enrichment Score") +
-    theme(legend.position="none", axis.title.y=element_blank(), 
+    theme(legend.position="right", axis.title.y=element_blank(), 
           axis.title.x=element_text(size=20), axis.text.x=element_text(size=18))
   
   setwd(WG_output_dir) # to bypass html files directory creation when saving into a folder
