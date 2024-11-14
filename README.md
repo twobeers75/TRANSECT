@@ -210,7 +210,7 @@ The TRANSECT manual with further details and useful information can be found in 
 
 ## Publication
 
-Publication details to come (hopefully!)
+Currently unpublished.
 
 ## Licence
 
