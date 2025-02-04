@@ -78,7 +78,7 @@ rename_files( ) {
 get_clin_data( ) {
 	echo "getting clinical data"
 	cd ${working_folder}/${folder_name}
-	mani_tsv=(${working_folder}/${folder_name}/original/MANIFEST.txt)
+	mani_tsv=(${working_folder}/${folder_name}/original/MOCK_MANIFEST.txt)
 	${SCRIPT_FOLDER}/GDC_API/gdc-tsv-tool.py -c -o "${tcga_id_mod}_${rna_type}_clinical" ${mani_tsv}
 }
 

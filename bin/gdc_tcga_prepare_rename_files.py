@@ -27,3 +27,8 @@ for index, row_data in sample_sheet_df.iterrows():
 	os_mv_command = "mv " + filename + " " + SampleID_filename
 	os.system(os_mv_command)
 
+### prepare mock manifest file
+outfile = os.path.join(os.path.dirname(sample_sheet), "MOCK_MANIFEST.txt")
+mock_manifest = sample_sheet_df[["id","file_name"]]
+mock_manifest.to_csv(outfile, sep='\t', index=False)
+

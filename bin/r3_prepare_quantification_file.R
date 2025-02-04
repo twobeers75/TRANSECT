@@ -155,9 +155,11 @@ rm(list=c("gene_tpm_df_mod","gene_tpm_df_mod_sorted"))
 message("Finished creating formatted copies of data")
 
 ### write tables to file
-message("Writing data to file")
+message("Writing count data to file")
 write.table(gene_counts_df_mod_sorted_dedup, paste(file_out_suffix, "_count-mRNA.tsv", sep=""), row.names = FALSE, quote = FALSE, sep = "\t")
 write.table(gene_tpm_df_mod_sorted_dedup, paste(file_out_suffix, "_tpm-mRNA.tsv", sep=""), row.names = FALSE, quote = FALSE, sep = "\t")
+message("Writing clinical data to file")
+write.table(colData(rse_gene_data), paste(file_out_suffix, "_clinical.tsv", sep=""), row.names = FALSE, quote = FALSE, sep = "\t")
 
 ### Misc. summary stats
 # ### some summary stuff
