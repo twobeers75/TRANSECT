@@ -20,7 +20,7 @@ for r3_code in BRCA BREAST PRAD PROSTATE LAML BLOOD; do ${TRANSECT_bindir}/R3_pr
 # GDC-TCGA
 for tcga_code in TCGA-BRCA TCGA-PRAD TCGA-LAML; do ${TRANSECT_bindir}/GDC_TCGA_prepare_directories.sh -p $tcga_code -a; done
 # GTEx
-${TRANSECT_bindir}/GTEx_prepare_directories.sh -a
+${TRANSECT_bindir}/GTEx_prepare_directories.sh -a -v
 
 ##########################################################################################################
 #### Single test
@@ -43,7 +43,7 @@ ${TRANSECT_bindir}/GDC_TCGA_analyse_GOI.sh -p TCGA-PRAD -g ZEB1 -s mRNA -t 5 -a 
 echo ""; echo ""
 # GTEx Single ZEB1 with corr analysis
 cd ${test_prostate}/GTEx_Prostrate_ZEB1
-${TRANSECT_bindir}/GTEx_analyse_GOI.sh -p Prostate -g ZEB1 -s mRNA -t 10 -a -e
+${TRANSECT_bindir}/GTEx_analyse_GOI.sh -p Prostate -g ZEB1 -s mRNA -t 10 -a -e -v
 echo ""; echo ""
 
 ##########################################################################################################
@@ -67,7 +67,7 @@ ${TRANSECT_bindir}/GDC_TCGA_analyse_GOI.sh -p TCGA-BRCA -g ESR1+PGR+ERBB2 -s mRN
 echo ""; echo ""
 # GTEx Additive TNBC genes with switch
 cd ${test_breast}/GTEx_Breast_ESR1+PGR+ERBB2
-${TRANSECT_bindir}/GTEx_analyse_GOI.sh -p Breast_Mammary_Tissue -g ESR1+PGR+ERBB2 -s mRNA -t 6 -S -d -e
+${TRANSECT_bindir}/GTEx_analyse_GOI.sh -p Breast_Mammary_Tissue -g ESR1+PGR+ERBB2 -s mRNA -t 6 -S -d -e -v
 echo ""; echo ""
 
 # additionally do the ER+PGR- analysis
@@ -104,7 +104,7 @@ ${TRANSECT_bindir}/GDC_TCGA_analyse_GOI.sh -p TCGA-LAML -g IL3RA%CSF2RB -s mRNA 
 echo ""; echo ""
 # GTEx Additive TNBC genes with switch
 cd ${test_blood}/GTEx_Blood_IL3RA-CSF2RB
-${TRANSECT_bindir}/GTEx_analyse_GOI.sh -p Whole_Blood -g IL3RA%CSF2RB -s mRNA -t 3 -d -e
+${TRANSECT_bindir}/GTEx_analyse_GOI.sh -p Whole_Blood -g IL3RA%CSF2RB -s mRNA -t 3 -d -e -v
 echo ""; echo ""
 
 
