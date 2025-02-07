@@ -57,6 +57,7 @@ switch=false
 do_all=false
 do_corr=false
 do_de=false
+name_check_off=false
 
 ### Parse command line options
 usage="Differential expression analysis of RECOUNT3 data stratified into high and low groups by gene of interest 
@@ -66,22 +67,23 @@ NOTE: Composite analyses can be run using the plus charater (+) for additive com
 by using the modulus character (%) for ratio. The two special characters are used between gene names like so
 Additive example: ESR1+PGR+ERBB2 or Ratio example: ESRP1%ZEB1
 
-USAGE: $(basename $0) [-h] -p <RECOUNT3 projectID> -g <GOI> -s <StratifyBy> -t <Percentile> -e -S -a -c -d
+USAGE: $(basename $0) [-h] -p <RECOUNT3 projectID> -g <GOI> -s <StratifyBy> -t <Percentile> -e -S -a -c -d -x
 	where:
 	-h Show this help text
 	-p RECOUNT3 tissue id: needs to be valid RECOUNT3 tissue id as at RECOUNT3 (ie. BRCA for TCGA or BREAST for GTEx). Required
 	-g Gene of interest: needs to be a valid HGNC symbol (ie. ZEB1). Required
 	-s Stratify by molecule: Must match -g and can only be mRNA at present. Required
-	-t Percentile: startify data into top and bottom x percentile (valid x between 2 and 25). Required
+	-t Percentile: stratify data into top and bottom x percentile (valid x between 2 and 25). Required
 	-e Enrichment analyses: Run GSEA on DE results (Default: Only run WebGestalt)
 	-S Switch pairwise comparison: find genes DE in low group compared to high group (Default: high compared to low)
 	-a Do all analyses
 	-c Do correlation analysis only
 	-d Do differential expression analysis only 
+	-x Don't check gene name. Use this only for custom DBs (Default: always check gene name)
 "
 
 ### parse all command line options
-while getopts hg:p:s:t:eSacd opt; do
+while getopts hg:p:s:t:eSacdx opt; do
 	case "$opt" in
 		h) echo "$usage"; exit;;
 		p) pflag=true; project_id=$OPTARG;;
@@ -93,6 +95,7 @@ while getopts hg:p:s:t:eSacd opt; do
 		a) do_all=true;;
 		c) do_corr=true;;
 		d) do_de=true;;
+		x) name_check_off=true;;
 		:)echo -e "Option -$OPTARG requires an argument.\n" >&2; echo "$usage" >&2; exit 1;;
 		\?) echo ""; echo "$usage" >&2; exit 1;;
 		*) echo ""; echo "$usage" >&2; exit 1;;
@@ -119,9 +122,9 @@ else
 fi
 
 ### check if user input a valid gene name
-if [[ "${GOI}" == *"+"* ]] || [[ "${GOI}" == *"%"* ]]
+if [[ "${GOI}" == *"+"* ]] || [[ "${GOI}" == *"%"* ]] || [[ "${name_check_off}" == "true" ]]
 then
-	echo "Complex analysis selected, not checking gene names, deactivating Corr Analyses"
+	echo "Complex or custom analysis selected, not checking gene names, deactivating Corr Analyses"
 	do_all=false
 	do_corr=false
 	do_de=true
@@ -131,7 +134,7 @@ else
 		GOI=${GOI^^}
 	else
 		echo "${GOI^^} is not a valid gene name or is not in the current build, check your spelling maybe?"
-		echo "ALternatively, look in this file (${REF_FILES_FOLDER}/gencode.v26.annotation.lookup)"
+		echo "Alternatively, look in this file (${REF_FILES_FOLDER}/gencode.v26.annotation.lookup)"
 		echo "for a complete list of valid gene names"
 		exit 1
 	fi
