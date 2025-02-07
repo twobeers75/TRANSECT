@@ -217,3 +217,5 @@ Currently unpublished.
 TRANSECT is made available under the terms of the MIT license, a copy of which is included in the distribution in the LICENSE file.
 
 GSEA is made available under the terms of a BSD-style license, a copy of which is included in the GSEA folder in the LICENSE.txt file. See that file for exact terms and conditions.
+
+This manual was produced in markdown using [typora](https://typora.io/) v1.9.5
