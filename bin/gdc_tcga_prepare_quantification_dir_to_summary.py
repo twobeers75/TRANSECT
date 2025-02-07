@@ -92,7 +92,7 @@ SAMPLE_TYPE_OTHER = {'20': 'Control Analyte',
 ### Note: these blocks are very similar but enough different that I have not created a single function
 if rna_type == 'mRNA':
 	### Create template df's that we will need 
-	lookup_df_filename = ref_file_folder + '/gencode.vXX.annotation.lookup'
+	lookup_df_filename = ref_file_folder + '/gencode.v36.annotation.lookup'
 	tumor_df, normal_df, all_df = create_template_dfs('gene_name', lookup_df_filename)
 	tpm_tumor_df, tpm_normal_df, tpm_all_df = create_template_dfs('gene_name', lookup_df_filename)
 	
