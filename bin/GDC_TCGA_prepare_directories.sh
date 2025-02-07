@@ -135,7 +135,7 @@ USAGE: $(basename $0) [-h] -p <TCGA Project ID> [-a -c -r -R -k -n]
 	-r retrieve only miR RPMs
 	-R retrieve only isomiR RPMs
 	-k keep all data (Default: False)
-	-n data is not from TCGA study. Ue this flag when retrieving non-TCGA studies from GDC (Default: False)
+	-n data is not from TCGA study. Use this flag when retrieving non-TCGA studies from GDC (Default: False)
 
 To retrieve and prepare more than one TCGA cancer dataset use a bash for loop like this;
 for tcga_code in TCGA-COAD TCGA-SARC TCGA-LAML; do GDC_TCGA_prepare_directories.sh -p \$tcga_code; done

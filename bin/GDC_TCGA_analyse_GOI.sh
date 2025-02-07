@@ -72,7 +72,7 @@ USAGE: $(basename $0) [-h] -p <TCGAProjectID> -g <GOI> -s <StratifyBy> -t <Perce
 	-p GDC TCGA project id: needs to be valid GDC TCGA project id as at the GDC (ie. TCGA-BRCA). Required
 	-g Gene of interest: needs to be a valid HGNC symbol (ie. ZEB1). Required
 	-s Stratify by molecule: must match -g and can only be one of (mRNA or miRNA). Required
-	-t Percentile: startify data into top and bottom x percentile (valid x between 2 and 25). Required
+	-t Percentile: stratify data into top and bottom x percentile (valid x between 2 and 25). Required
 	-e Enrichment analyses: Run GSEA on DE results (Default: Only run WebGestalt)
 	-S Switch pairwise comparison: find genes DE in low group compared to high group (Default: high compared to low)
 	-a Do all analyses
@@ -126,12 +126,12 @@ then
 	do_corr=false
 	do_de=true
 else
-	if grep -Fxq "${GOI^^}" <(cut -f 2 ${REF_FILES_FOLDER}/gencode.v26.annotation.lookup)
+	if grep -Fxq "${GOI^^}" <(cut -f 2 ${REF_FILES_FOLDER}/gencode.v36.annotation.lookup)
 	then
 		GOI=${GOI^^}
 	else
 		echo "${GOI^^} is not a valid gene name or is not in the current build, check your spelling maybe?"
-		echo "Alternatively, look in this file (${REF_FILES_FOLDER}/gencode.v26.annotation.lookup)"
+		echo "Alternatively, look in this file (${REF_FILES_FOLDER}/gencode.v36.annotation.lookup)"
 		echo "for a complete list of valid gene names"
 		exit 1
 	fi
