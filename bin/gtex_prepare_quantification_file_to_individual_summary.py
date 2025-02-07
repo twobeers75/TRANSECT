@@ -24,7 +24,7 @@ filter_column = "SMAFRZE"
 split_column = "SMTSD"
 
 ### Read in sample attributes
-sam_attr_data = pd.read_csv(sam_attr , sep='\t', index_col=0)
+sam_attr_data = pd.read_csv(sam_attr , sep='\t', index_col=0, dtype=object)
 
 ### Retain only the columns we need
 sam_attr_data_cut = sam_attr_data[[split_column, filter_column]]
@@ -47,17 +47,21 @@ for dirname in SMTS_unique_list:
 group_by_sam_attr_data_cut = sam_attr_data_cut.groupby(sam_attr_data_cut[split_column])
 
 index_number = 1
-for key, values in group_by_sam_attr_data_cut: 
-	print("\tsubsetting data for " + key + ": Dataset " + str(index_number) + " out of " + SMTS_unique_list_len)
-	cols_to_get = list(values.index)
-	cols_to_get = ["Description"] + cols_to_get
-	exp_data = pd.read_csv(exp_datafile , sep='\t', index_col=0, skiprows=2, usecols=cols_to_get)
-	### Do final cleaning
-	exp_data = exp_data[~exp_data.index.duplicated(keep='first')]
-	exp_data = exp_data.replace(0, np.nan)
-	### Save to file
-	exp_data.to_csv(key + '/' + "GTEx-" + key + "-" + date_stamp + "_" + data_type + '-mRNA.tsv', sep='\t')
-	index_number += 1
+for key, values in group_by_sam_attr_data_cut:
+	if len(values) < 100:
+		print("\tsubsetting data for " + key + ": Dataset contains insufficient numbers (" + str(len(values)) + ")")
+		index_number += 1
+	else: 
+		print("\tsubsetting data for " + key + ": Dataset " + str(index_number) + " out of " + SMTS_unique_list_len)
+		cols_to_get = list(values.index)
+		cols_to_get = ["Description"] + cols_to_get
+		exp_data = pd.read_csv(exp_datafile , sep='\t', index_col=0, skiprows=2, usecols=cols_to_get)
+		### Do final cleaning
+		exp_data = exp_data[~exp_data.index.duplicated(keep='first')]
+		exp_data = exp_data.replace(0, np.nan)
+		### Save to file
+		exp_data.to_csv(key + '/' + "GTEx-" + key + "-" + date_stamp + "_" + data_type + '-mRNA.tsv', sep='\t')
+		index_number += 1
 
 
 

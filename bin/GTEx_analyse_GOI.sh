@@ -10,7 +10,7 @@
 #########
 SCRIPT_FOLDER=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 BASE_FOLDER=$(dirname ${SCRIPT_FOLDER})
-DATA_FOLDER="${BASE_FOLDER}/data/GTEx/GTEx-v8"
+DATA_FOLDER="${BASE_FOLDER}/data/GTEx/GTEx-v10"
 REF_FILES_FOLDER="${BASE_FOLDER}/REF_FILES"
 GSEA_EXE="${SCRIPT_FOLDER}/GSEA/gsea-cli.sh"
 
@@ -57,6 +57,7 @@ switch=false
 do_all=false
 do_corr=false
 do_de=false
+use_v8=false
 
 ### Parse command line options
 usage="Differential expression analysis of GTEx data stratified into high and low groups by gene of interest 
@@ -69,19 +70,20 @@ Additive example: ESR1+PGR+ERBB2 or Ratio example: ESRP1%ZEB1
 USAGE: $(basename $0) [-h] -p <GTExTissueID> -g <GOI> -s <StratifyBy> -t <Percentile> -e -S -a -c -d
 	where:
 	-h Show this help text
-	-p GTEx tissue id: needs to be valid GTEx tissue id as at GTEx (ie. Breast). Required
+	-p GTEx tissue id: needs to be valid GTEx tissue id as at GTEx (ie. Breast_Mammary_Tissue). Required
 	-g Gene of interest: needs to be a valid HGNC symbol (ie. ZEB1). Required
 	-s Stratify by molecule: Must match -g and can only be mRNA at present. Required
-	-t Percentile: startify data into top and bottom x percentil (valid x between 2 and 25). Required
+	-t Percentile: stratify data into top and bottom x percentile (valid x between 2 and 25). Required
 	-e Enrichment analyses: Run GSEA on DE results (Default: Only run WebGestalt)
 	-S Switch pairwise comparison: find genes DE in low group compared to high group (Default: high compared to low)
 	-a Do all analyses
 	-c Do correlation analysis only
-	-d Do differential expression analysis only 
+	-d Do differential expression analysis only
+	-v use old GTEx version 8 (Default: GTEx V10)
 "
 
 ### parse all command line options
-while getopts hg:p:s:t:eSacd opt; do
+while getopts hg:p:s:t:eSacdv opt; do
 	case "$opt" in
 		h) echo "$usage"; exit;;
 		p) pflag=true; project_id=$OPTARG;;
@@ -93,6 +95,7 @@ while getopts hg:p:s:t:eSacd opt; do
 		a) do_all=true;;
 		c) do_corr=true;;
 		d) do_de=true;;
+		v) use_v8=true;;
 		:)echo -e "Option -$OPTARG requires an argument.\n" >&2; echo "$usage" >&2; exit 1;;
 		\?) echo ""; echo "$usage" >&2; exit 1;;
 		*) echo ""; echo "$usage" >&2; exit 1;;
@@ -107,14 +110,26 @@ then
 	exit 1
 fi
 
+### check if old v8 data requested 
+if (${use_v8})
+then
+	echo "GTEx-V8 data requested"
+	DATA_FOLDER="${BASE_FOLDER}/data/GTEx/GTEx-v8"
+	Study_Abbrev="${REF_FILES_FOLDER}/study_abbreviations/GTEx_Study_Abbreviations.tsv"
+	Gene_Anno="${REF_FILES_FOLDER}/gencode.v26.annotation.lookup"
+else
+	Study_Abbrev="${REF_FILES_FOLDER}/study_abbreviations/GTEx_v10_Study_Abbreviations.tsv"
+	Gene_Anno="${REF_FILES_FOLDER}/gencode.v39.annotation.lookup"
+fi
+
 ### check if user input a valid GTEx code
-if grep -Fxq "${project_id}" <(cut -f 1 ${REF_FILES_FOLDER}/study_abbreviations/GTEx_Study_Abbreviations.tsv)
+if grep -Fxq "${project_id}" <(cut -f 1 ${Study_Abbrev})
 then
 	GTEx_code=${project_id#*GTEx-}
 else
 	echo "${project_id} not a valid GTEx study code, check your choice against the list below and try again"
 	echo ""
-	cat ${REF_FILES_FOLDER}/study_abbreviations/GTEx_Study_Abbreviations.tsv
+	cat ${Study_Abbrev}
 	exit 1
 fi
 
@@ -126,12 +141,12 @@ then
 	do_corr=false
 	do_de=true
 else
-	if grep -Fxq "${GOI^^}" <(cut -f 2 ${REF_FILES_FOLDER}/gencode.v26.annotation.lookup)
+	if grep -Fxq "${GOI^^}" <(cut -f 2 ${Gene_Anno})
 	then
 		GOI=${GOI^^}
 	else
 		echo "${GOI^^} is not a valid gene name or is not in the current build, check your spelling maybe?"
-		echo "ALternatively, look in this file (${REF_FILES_FOLDER}/gencode.v26.annotation.lookup)"
+		echo "Alternatively, look in this file (${Gene_Anno})"
 		echo "for a complete list of valid gene names"
 		exit 1
 	fi
