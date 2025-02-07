@@ -103,7 +103,7 @@ cd ${test_blood}/TCGA_LAML_IL3RA-CSF2RB
 ${TRANSECT_bindir}/GDC_TCGA_analyse_GOI.sh -p TCGA-LAML -g IL3RA%CSF2RB -s mRNA -t 12 -d -e
 echo ""; echo ""
 # GTEx Additive TNBC genes with switch
-cd ${test_blood}/GTEx_Blood_IL3RA-CSF2RB
+cd ${test_blood}/GTEx_WholeBlood_IL3RA-CSF2RB
 ${TRANSECT_bindir}/GTEx_analyse_GOI.sh -p Whole_Blood -g IL3RA%CSF2RB -s mRNA -t 3 -d -e -v
 echo ""; echo ""
 
