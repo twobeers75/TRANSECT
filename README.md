@@ -212,6 +212,8 @@ The TRANSECT manual with further details and useful information can be found in 
 
 Currently unpublished.
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15083663.svg)](https://doi.org/10.5281/zenodo.15083663)
+
 ## Licence
 
 TRANSECT is made available under the terms of the MIT license, a copy of which is included in the distribution in the LICENSE file.
