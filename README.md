@@ -177,7 +177,7 @@ cd ZEB1_PRAD_test
 R3_analyse_GOI.sh -p PRAD -g ZEB1 -s mRNA -t 5 -a
 
 ### NOTE: use the -h parameter to see the full help menu. ie.
-<full path to>/TRANSECT/bin/R3_analyse_GOI.sh -h
+R3_analyse_GOI.sh -h
 
 ### The analysis commands for GDC-TCGA and GTEx are similar but not identical. Again, use -h or see the manual for full details.
 ```
