@@ -210,7 +210,7 @@ The TRANSECT manual with further details and useful information can be found in 
 
 ## Publication
 
-Currently unpublished.
+For additional details and example case studies, please see our [manuscript](https://doi.org/10.1093/nargab/lqaf041) in NAR Genomics and Bioinformatics.
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15083663.svg)](https://doi.org/10.5281/zenodo.15083663)
 
