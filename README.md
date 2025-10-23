@@ -85,7 +85,7 @@ Create the TRANSECT Conda environment. In this step, we will create an environme
 ### change into the top directory of the downloaded folder (TRANSECT) and navigate to the INSTALL folder
 cd <path to>/TRANSECT/INSTALL
 
-### First, run the conda install script
+### First, run the conda install script. This step may take some time, mostly at the "Solving environment" stage of the process. It may appear to be stuck - so be patient.
 ./TRANSECT_conda_install.sh
 
 ### Next, upon successful completion of the previous step, activate the newly created environment
