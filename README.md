@@ -85,6 +85,10 @@ Create the TRANSECT Conda environment. In this step, we will create an environme
 ### change into the top directory of the downloaded folder (TRANSECT) and navigate to the INSTALL folder
 cd <path to>/TRANSECT/INSTALL
 
+### UPDATE: Since July 2025, Anaconda ToS (Terms of Service) explicitly requires acceptance for their channels (see https://www.anaconda.com/docs/getting-started/tos-plugin). Run the following commands and read and accept the terms.
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
+
 ### First, run the conda install script. This step may take some time, mostly at the "Solving environment" stage of the process. It may appear to be stuck - so be patient.
 ./TRANSECT_conda_install.sh
 
